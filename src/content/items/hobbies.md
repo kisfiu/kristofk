@@ -3,6 +3,6 @@
 title: Hobbies
 icon: folder
 parent: desktop
-order: 2
+order: 3
 folder: hobbies
 ---

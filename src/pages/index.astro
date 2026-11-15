@@ -118,9 +118,9 @@ const description =
     </main>
 
     <footer class="taskbar">
-      <button type="button" class="start" popovertarget="start-menu"><Icon name="kk" size={20} /> start</button>
+      <button type="button" class="start" popovertarget="start-menu"><Icon name="kk" size={28} /> start</button>
       <div id="tasks" class="tasks" role="toolbar" aria-label="Open windows"></div>
-      <div class="tray"><time id="clock">--:--</time></div>
+      <div class="tray"><button type="button" id="clock" class="clock" popovertarget="calendar">--:--</button></div>
     </footer>
 
     <div id="start-menu" class="start-menu" popover>
@@ -136,7 +136,38 @@ const description =
     </div>
 
     <div role="region" aria-label="Notifications">
-      <div id="balloon" class="balloon" popover="manual">
+      <div id="calendar" class="calendar" popover role="dialog" aria-labelledby="cal-title">
+      <div class="title-bar">
+        <div class="title-bar-text" id="cal-title">Date and Time</div>
+        <div class="title-bar-controls"><button type="button" aria-label="Close" popovertarget="calendar" popovertargetaction="hide"></button></div>
+      </div>
+      <div class="cal-body">
+        <div>
+          <div class="cal-nav">
+            <button type="button" data-cal="-1" aria-label="Previous month">◀</button>
+            <b data-cal-title aria-live="polite"></b>
+            <button type="button" data-cal="1" aria-label="Next month">▶</button>
+          </div>
+          <table class="cal-grid">
+            <thead><tr>{["Mo", "Tu", "We", "Th", "Fr", "Sa", "Su"].map((d) => <th scope="col">{d}</th>)}</tr></thead>
+            <tbody data-cal-days></tbody>
+          </table>
+        </div>
+        <div class="cal-clock">
+          <svg viewBox="0 0 100 100" aria-hidden="true">
+            <circle cx="50" cy="50" r="46" fill="#fff" stroke="#7f9db9" stroke-width="3" />
+            {Array.from({ length: 12 }, (_, i) => <line x1="50" y1="8" x2="50" y2={i % 3 ? 13 : 17} stroke="#333" stroke-width={i % 3 ? 2 : 4} transform={`rotate(${i * 30} 50 50)`} />)}
+            <line data-hand="h" x1="50" y1="50" x2="50" y2="26" stroke="#1d2b4f" stroke-width="5" stroke-linecap="round" />
+            <line data-hand="m" x1="50" y1="50" x2="50" y2="15" stroke="#1d2b4f" stroke-width="3" stroke-linecap="round" />
+            <line data-hand="s" x1="50" y1="58" x2="50" y2="12" stroke="#d62a1a" stroke-width="1.5" />
+            <circle cx="50" cy="50" r="3" fill="#1d2b4f" />
+          </svg>
+          <p data-cal-time></p>
+        </div>
+      </div>
+    </div>
+
+    <div id="balloon" class="balloon" popover="manual">
         <button type="button" class="balloon-x" popovertarget="balloon" popovertargetaction="hide" aria-label="Close notification">×</button>
         <b data-title></b>
         <button type="button" class="balloon-text" data-text></button>
