@@ -40,7 +40,10 @@ const description =
     <Icons />
 
     <div id="boot" class="boot">
-      <div class="boot-logo"><span class="boot-kk">KK</span><span class="boot-ed">Personal Edition</span></div>
+      <div class="boot-logo">
+        <span class="wordart" role="img" aria-label="KristofK">{[..."KristofK"].map((c, i) => <span aria-hidden="true" style={`--i:${i}`}>{c}</span>)}</span>
+        <span class="boot-ed">Personal Edition</span>
+      </div>
       <div class="boot-bar" role="progressbar" aria-label="Loading"><i></i><i></i><i></i></div>
       <p class="boot-copy">© 2026 Kristóf Kovács</p>
       <button type="button" id="boot-skip" class="boot-skip">Skip ▸</button>

@@ -75,13 +75,25 @@
     justify-items: end;
     line-height: 1;
   }
-  .boot-kk {
+  /* deliberately tacky 2000s WordArt: chunky italic, blue gradient, dark outline, extruded shadow, wavy baseline */
+  .wordart {
+    display: flex;
     font:
-      italic bold 96px "Trebuchet MS",
-      var(--font);
-    background: linear-gradient(100deg, #fff 20%, #9fd0ff 50%, #ff9a2e 80%);
-    background-clip: text;
-    color: transparent;
+      italic 900 clamp(44px, 13vw, 104px) / 1.1 Impact,
+      "Arial Black",
+      "Haettenschweiler",
+      sans-serif;
+    letter-spacing: 1px;
+    transform: perspective(320px) rotateX(14deg) skewX(-6deg);
+    filter: drop-shadow(3px 3px 0 #0b1c5c) drop-shadow(3px 3px 0 #08134a) drop-shadow(0 6px 6px #0008);
+    & span {
+      display: inline-block;
+      background: linear-gradient(#ffffff 8%, #9ad7ff 30%, #2b7de9 52%, #0a3db8 70%, #5fb8ff 100%);
+      background-clip: text;
+      color: transparent;
+      -webkit-text-stroke: 2px #0a1f6e;
+      translate: 0 calc(sin(var(--i) * 0.75rad) * 0.14em);
+    }
   }
   .boot-ed {
     font-size: 18px;
