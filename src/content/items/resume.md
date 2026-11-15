@@ -5,14 +5,14 @@ label: My Resume
 icon: resume
 parent: desktop
 order: 1
-width: 620
+width: 680
 links:
 
 - { label: "LinkedIn", href: "https://www.linkedin.com/in/kkristof/" }
 
 ---
 
-<p class="pdf"><a class="button-link" href="Kristof-Kovacs-CV.pdf" download>💾 Download CV (PDF)</a></p>
+<p class="pdf"><button type="button" data-open="cv">📄 Open CV (PDF)</button> <a class="button-link icon-only" href="Kristof-Kovacs-CV.pdf" download title="Download CV (PDF)" aria-label="Download CV (PDF)">💾</a></p>
 
 # Kristóf Kovács
 

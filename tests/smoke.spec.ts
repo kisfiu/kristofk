@@ -62,7 +62,16 @@ test("deep link opens the resume without the boot screen", async ({ page }) => {
   await page.goto("./#resume");
   await expect(page.locator("#boot")).toBeHidden();
   await expect(page.getByRole("dialog", { name: /My Resume/ })).toBeVisible();
-  await expect(page.getByRole("link", { name: /Download CV/ })).toHaveAttribute("href", "Kristof-Kovacs-CV.pdf");
+  // the PDF opens in a viewer window instead of downloading; a small 💾 link still downloads directly
+  const resume = page.getByRole("dialog", { name: /My Resume/ });
+  const download = resume.getByRole("link", { name: "Download CV (PDF)" });
+  await expect(download).toHaveAttribute("href", "Kristof-Kovacs-CV.pdf");
+  await expect(download).toHaveAttribute("download", "");
+  const pdf = page.locator("#win-cv object");
+  expect(await pdf.getAttribute("data")).toBeNull(); // not loaded until someone opens it
+  await resume.getByRole("button", { name: /Open CV/ }).click();
+  await expect(page.getByRole("dialog", { name: /Kristof-Kovacs-CV\.pdf/ })).toBeVisible();
+  await expect(pdf).toHaveAttribute("data", /Kristof-Kovacs-CV\.pdf/);
   // LinkedIn is pinned at the bottom of the long resume, visible without scrolling
   await expect(
     page.getByRole("dialog", { name: /My Resume/ }).getByRole("link", { name: /LinkedIn/ }),
@@ -122,6 +131,9 @@ test("start menu, e-mail and shut down", async ({ page }) => {
   await page.locator(".window.active").getByRole("button", { name: "Address Book" }).dblclick();
   await expect(page.getByRole("link", { name: /@gmail\.com/ })).toHaveAttribute("href", /^mailto:.+@gmail\.com$/);
   await page.getByRole("button", { name: "start" }).click();
+  await page.locator("#start-menu").getByRole("button", { name: /My CV/ }).click();
+  await expect(page.getByRole("dialog", { name: /Kristof-Kovacs-CV\.pdf/ })).toBeVisible();
+  await page.getByRole("button", { name: "start" }).click();
   await page.getByRole("button", { name: /Shut down/ }).click();
   await expect(page.getByText("It is now safe to turn off your computer.")).toBeVisible();
   await page.getByRole("button", { name: "Restart" }).click();
@@ -155,7 +167,7 @@ test("internet respects reduced motion", async ({ page, isMobile }) => {
   await expect(surfer).toBeVisible();
   await expect.poll(() => surfer.locator("img").evaluate((i: HTMLImageElement) => i.currentSrc)).toContain("still.png");
   await (isMobile ? surfer.tap() : surfer.click());
-  await expect(win.getByRole("link", { name: /GitHub/ })).toBeVisible();
+  await expect(win.getByRole("link", { name: /LinkedIn/ })).toBeVisible();
 });
 
 test("windows move with the arrow keys from their title-bar icon (desktop only)", async ({ page, isMobile }) => {
@@ -308,6 +320,48 @@ test("the taskbar clock opens a calendar with today marked", async ({ page }) =>
   await expect(cal.locator('td[aria-current="date"]')).toHaveCount(0);
   await page.keyboard.press("Escape");
   await expect(cal).toBeHidden();
+});
+
+test("windows resize from the corner; maximize fills the whole desktop, also after resizing", async ({
+  page,
+  isMobile,
+}) => {
+  test.skip(isMobile, "phones show every window full screen");
+  await page.goto("./#resume");
+  await page.waitForFunction(() => document.getAnimations().length === 0);
+  const win = page.locator("#win-resume");
+  const before = (await win.boundingBox())!;
+  await page.mouse.move(before.x + before.width - 3, before.y + before.height - 3);
+  await page.mouse.down();
+  await page.mouse.move(before.x + before.width - 103, before.y + before.height - 63, { steps: 5 });
+  await page.mouse.up();
+  const after = (await win.boundingBox())!;
+  expect(after.width).toBeLessThan(before.width - 80);
+  expect(after.height).toBeLessThan(before.height - 40);
+  // the full-screen size must match the desktop above the taskbar
+  const { width, height } = page.viewportSize()!;
+  const taskbar = (await page.locator(".taskbar").boundingBox())!.height;
+  await win.getByRole("button", { name: "Maximize" }).click();
+  await expect.poll(async () => (await win.boundingBox())?.height).toBe(height - taskbar);
+  expect((await win.boundingBox())?.width).toBe(width);
+  // the CV viewer has its own height rule; maximized must still win
+  await win.getByRole("button", { name: /Open CV/ }).click();
+  const cv = page.locator("#win-cv");
+  await cv.getByRole("button", { name: "Maximize" }).click();
+  await expect.poll(async () => (await cv.boundingBox())?.height).toBe(height - taskbar);
+});
+
+test("the first line of Rotary and My Resume fits on one line", async ({ page, isMobile }) => {
+  test.skip(isMobile, "phone windows are full screen and may wrap");
+  for (const [id, sel] of [
+    ["rotary", ".doc > p:first-of-type"],
+    ["resume", ".doc h1 + p"],
+  ]) {
+    await page.goto(`./?open=${id}#${id}`); // a new query string forces a fresh load; the hash alone would not reopen
+    const line = page.locator(`#win-${id} ${sel}`);
+    const lineHeight = await line.evaluate((p) => Number.parseFloat(getComputedStyle(p).lineHeight));
+    expect((await line.boundingBox())?.height).toBeLessThan(lineHeight * 1.5);
+  }
 });
 
 test("NGOs is the second desktop icon and the Recycle Bin sits bottom right", async ({ page }) => {

@@ -115,6 +115,23 @@ const description =
           )}
         </Window>
       ))}
+      <Window id="cv" title="Kristof-Kovacs-CV.pdf - KK Reader" icon="resume" width={780}>
+        <div class="pdf-viewer">
+          <div class="pdf-bar">
+            <span>📄 Kristof-Kovacs-CV.pdf</span>
+            <a href="Kristof-Kovacs-CV.pdf" target="_blank" rel="noopener">Open in new tab ↗</a>
+            <a class="button-link" href="Kristof-Kovacs-CV.pdf" download>💾 Download</a>
+          </div>
+          <!-- data is set on first open, so the PDF only loads when someone wants it -->
+          <object class="pdf-frame" type="application/pdf" data-src="Kristof-Kovacs-CV.pdf#view=FitH" title="Kristóf Kovács, CV (PDF)">
+            <p class="pdf-fallback">
+              This browser can't show the PDF inside the page.<br />
+              <a href="Kristof-Kovacs-CV.pdf" target="_blank" rel="noopener">Open the CV in a new tab</a>{" or "}
+              <a href="Kristof-Kovacs-CV.pdf" download>download it</a>.
+            </p>
+          </object>
+        </div>
+      </Window>
     </main>
 
     <footer class="taskbar">
@@ -129,7 +146,7 @@ const description =
         {desktop.map((i) => (
           <li><button type="button" data-open={i.data.opens ?? i.id}><Icon name={i.data.icon} size={24} />{i.data.label ?? i.data.title}</button></li>
         ))}
-        <li class="sep"><a href="Kristof-Kovacs-CV.pdf" download><Icon name="disk" size={24} />Download CV (PDF)</a></li>
+        <li class="sep"><button type="button" data-open="cv"><Icon name="resume" size={24} />My CV (PDF)</button></li>
         <li><a href="https://www.linkedin.com/in/kkristof/" target="_blank" rel="noopener"><Icon name="contacts" size={24} />LinkedIn</a></li>
       </ul>
       <footer><button type="button" id="logoff-btn">🔑 Log off</button><button type="button" id="shutdown-btn">⏻ Shut down…</button></footer>
