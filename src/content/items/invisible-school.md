@@ -10,7 +10,7 @@ links:
 
 - { label: "Website", href: "https://lathatatlaniskola.hu/" }
 - { label: "Become a mentor", href: "https://lathatatlaniskola.hu/mentoralas-v2/" }
-- { label: "Donate", href: "https://lathatatlaniskola.myshoprenter.hu/" }
+- { label: "Donate", href: "https://www.lathatatlaniskola.hu/partnerek/" }
 - { label: "Facebook", href: "https://www.facebook.com/lathatatlaniskola" }
 
 ---
