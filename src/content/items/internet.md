@@ -10,7 +10,6 @@ width: 600
 links:
 
 - { label: "LinkedIn", href: "https://www.linkedin.com/in/kkristof/" }
-- { label: "GitHub", href: "https://github.com/kisfiu" }
 - { label: "Láthatatlan Iskola (Invisible School)", href: "https://lathatatlaniskola.hu/" }
 - { label: "Rotary Club Budapest City", href: "https://rcbudapestcity.org/" }
 
