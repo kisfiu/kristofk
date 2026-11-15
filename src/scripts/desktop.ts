@@ -223,8 +223,8 @@ const band = Object.assign(document.createElement("div"), { className: "marquee"
 $(".desktop")!.append(band); // inside the desktop layer, so on the desktop it stays behind open windows
 const desktopIcons = $(".desktop > .icons")!;
 const iconsIn = (area: Element) => [...area.querySelectorAll<HTMLElement>(":scope > li > .icon")];
-const clearSelection = (area?: Element) => {
-  for (const i of (area ?? document).querySelectorAll(".icon.selected")) i.classList.remove("selected");
+const clearSelection = () => {
+  for (const i of document.querySelectorAll(".icon.selected")) i.classList.remove("selected");
 };
 
 document.addEventListener("pointerdown", (e) => {
@@ -244,8 +244,8 @@ document.addEventListener("pointerdown", (e) => {
   const area = t.closest(".icons") ?? (t.closest(".window") ? null : t.closest(".desktop") && desktopIcons);
   if (!area) return;
   e.preventDefault(); // no text selection or native drag from this press
-  // ...which also keeps focus where it was, so drop it from a clicked icon: clicking the desktop unselects everything
-  if (document.activeElement?.closest(".icon")) (document.activeElement as HTMLElement).blur();
+  // ...which also keeps focus where it was: drop it (from an icon or a window), so a click unselects and Enter opens the selection
+  (document.activeElement as HTMLElement | null)?.blur();
   clearSelection();
   const icons = iconsIn(area);
   const x0 = e.clientX;
@@ -437,11 +437,7 @@ $("#shutdown-btn")!.addEventListener("click", () => {
   });
 });
 shutdown.querySelector("button")!.addEventListener("click", () => {
-  try {
-    sessionStorage.removeItem("kk-booted");
-  } catch {
-    /* ignore */
-  }
+  store.set(sessionStorage, "kk-booted", ""); // empty counts as "not booted", so the boot screen plays again
   location.replace(location.pathname);
 });
 
