@@ -1,0 +1,171 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1600 1000" preserveAspectRatio="xMidYMax slice">
+  <title>Hortobágy puszta with the Nine-hole Bridge, grey cattle, racka sheep and a far-away Parliament</title>
+  <!-- Original drawing for the KK desktop: the Hortobágy puszta with the Nine-hole Bridge,
+       grey cattle, racka sheep, a sweep well, and (impossibly) the Parliament on the horizon. -->
+  <defs>
+    <linearGradient id="sky" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0" stop-color="#2167d8" />
+      <stop offset=".45" stop-color="#5a9bec" />
+      <stop offset=".8" stop-color="#a9d2ff" />
+      <stop offset="1" stop-color="#e3f1ff" />
+    </linearGradient>
+    <linearGradient id="plain" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0" stop-color="#c9d98a" />
+      <stop offset=".18" stop-color="#a7c95c" />
+      <stop offset=".55" stop-color="#7fae3e" />
+      <stop offset="1" stop-color="#557f26" />
+    </linearGradient>
+    <linearGradient id="river" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0" stop-color="#7cbde6" />
+      <stop offset="1" stop-color="#3f88c8" />
+    </linearGradient>
+    <linearGradient id="stone" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0" stop-color="#f3ead7" />
+      <stop offset="1" stop-color="#d5c6a6" />
+    </linearGradient>
+    <linearGradient id="haze" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0" stop-color="#fff" stop-opacity="0" />
+      <stop offset=".6" stop-color="#fff" stop-opacity=".45" />
+      <stop offset="1" stop-color="#fff" stop-opacity="0" />
+    </linearGradient>
+    <filter id="soft"><feGaussianBlur stdDeviation="6" /></filter>
+
+    <!-- Hungarian grey cattle, facing left, lyre-shaped horns (local size ~135x92) -->
+    <g id="cow">
+      <g fill="#8f8a80">
+        <rect x="24" y="56" width="9" height="36" rx="3" />
+        <rect x="40" y="58" width="9" height="34" rx="3" />
+        <rect x="98" y="58" width="9" height="34" rx="3" />
+        <rect x="113" y="56" width="9" height="36" rx="3" />
+      </g>
+      <path d="M128 34 C134 44 133 58 131 66" stroke="#8f8a80" stroke-width="3" fill="none" />
+      <path d="M129 64 l4 8 l-6 -1 z" fill="#4a453e" />
+      <path d="M22 34 C20 18 42 12 72 13 C102 14 126 16 129 34 C131 52 120 63 100 64 L38 64 C24 62 23 48 22 34 Z" fill="#e2ded6" />
+      <path d="M40 60 C60 68 96 68 112 60 L112 64 L40 64 Z" fill="#c9c4ba" />
+      <path d="M26 28 L6 33 C0 37 1 47 8 50 L22 48 C27 42 28 35 26 28 Z" fill="#d3cec4" />
+      <ellipse cx="6" cy="45" rx="5" ry="4" fill="#3d3832" />
+      <path d="M22 30 l7 -5 l1 6 z" fill="#c4bfb5" />
+      <path d="M17 29 C6 22 2 10 10 0" stroke="#f1e8d4" stroke-width="3.5" fill="none" stroke-linecap="round" />
+      <path d="M20 29 C30 21 34 11 28 2" stroke="#e6dcc4" stroke-width="3.5" fill="none" stroke-linecap="round" />
+      <path d="M10 0 l-1 4 M28 2 l1 4" stroke="#3d3832" stroke-width="3.5" stroke-linecap="round" />
+    </g>
+
+    <!-- racka sheep, facing left, long spiral horns in a V (local size ~60x48) -->
+    <g id="sheep">
+      <g stroke="#3a332c" stroke-width="3" stroke-linecap="round">
+        <path d="M18 34 v13 M26 35 v12 M42 35 v12 M50 34 v13" />
+      </g>
+      <g fill="currentColor">
+        <circle cx="22" cy="24" r="11" />
+        <circle cx="34" cy="20" r="12" />
+        <circle cx="46" cy="24" r="11" />
+        <circle cx="28" cy="31" r="9" />
+        <circle cx="42" cy="31" r="9" />
+      </g>
+      <ellipse cx="9" cy="23" rx="7" ry="5" fill="#3a332c" />
+      <g stroke="#d9ccb2" stroke-width="2.5" stroke-dasharray="3 1.5" stroke-linecap="round">
+        <path d="M11 19 L4 2" />
+        <path d="M13 19 L20 3" />
+      </g>
+    </g>
+
+    <!-- a small cluster of Gothic pinnacles for the Parliament -->
+    <path id="spire" d="M0 0 l3 -14 l3 14 z" />
+  </defs>
+
+  <!-- sky and clouds -->
+  <rect width="1600" height="640" fill="url(#sky)" />
+  <g fill="#fff" opacity=".85" filter="url(#soft)">
+    <ellipse cx="330" cy="150" rx="150" ry="34" />
+    <ellipse cx="410" cy="130" rx="90" ry="30" />
+    <ellipse cx="930" cy="105" rx="120" ry="26" />
+    <ellipse cx="1360" cy="230" rx="170" ry="32" />
+    <ellipse cx="1440" cy="210" rx="80" ry="26" />
+  </g>
+
+  <!-- far horizon: the Parliament, small and hazy -->
+  <g fill="#94acc6" opacity=".85">
+    <rect x="1040" y="592" width="290" height="32" />
+    <rect x="1040" y="584" width="40" height="10" />
+    <rect x="1290" y="584" width="40" height="10" />
+    <rect x="1167" y="572" width="36" height="22" />
+    <path d="M1163 574 C1163 548 1207 548 1207 574 Z" />
+    <path d="M1182 552 l3 -26 l3 26 z" />
+    <rect x="1128" y="566" width="8" height="28" />
+    <rect x="1234" y="566" width="8" height="28" />
+    <path d="M1128 566 l4 -14 l4 14 z M1234 566 l4 -14 l4 14 z" />
+    <use href="#spire" x="1043" y="584" /><use href="#spire" x="1072" y="584" />
+    <use href="#spire" x="1293" y="584" /><use href="#spire" x="1322" y="584" />
+    <use href="#spire" x="1092" y="592" /><use href="#spire" x="1108" y="592" />
+    <use href="#spire" x="1146" y="592" /><use href="#spire" x="1214" y="592" />
+    <use href="#spire" x="1252" y="592" /><use href="#spire" x="1268" y="592" />
+  </g>
+  <g fill="#8fa98a" opacity=".6">
+    <ellipse cx="140" cy="618" rx="60" ry="12" />
+    <ellipse cx="610" cy="620" rx="40" ry="9" />
+    <ellipse cx="1490" cy="620" rx="70" ry="11" />
+  </g>
+
+  <!-- the plain -->
+  <rect y="620" width="1600" height="380" fill="url(#plain)" />
+  <rect y="590" width="1600" height="60" fill="url(#haze)" />
+  <g fill="#b9d06a" opacity=".5">
+    <ellipse cx="1150" cy="700" rx="380" ry="18" />
+    <ellipse cx="300" cy="760" rx="300" ry="16" />
+  </g>
+
+  <!-- the Hortobágy river flowing toward us under the bridge -->
+  <path d="M318 672 L878 672 C860 740 760 800 640 1000 L0 1000 L0 900 C140 850 270 760 318 672 Z" fill="url(#river)" />
+  <g stroke="#cfe8f8" stroke-width="3" stroke-linecap="round" opacity=".7">
+    <path d="M430 720 h60 M600 700 h80 M380 790 h90 M560 830 h70 M240 900 h110" />
+  </g>
+
+  <!-- the Nine-hole Bridge: stone, nine arches, a gentle hump -->
+  <path d="M250 676 L300 642 Q600 610 900 642 L950 676 Z" fill="url(#stone)" stroke="#b6a684" stroke-width="2" />
+  <path d="M300 640 Q600 608 900 640" stroke="#fbf6ea" stroke-width="5" fill="none" />
+  <g fill="#3f6680">
+    <path d="M309 676 v-10 a24 13 0 0 1 48 0 v10 z" />
+    <path d="M376 676 v-12 a24 15 0 0 1 48 0 v12 z" />
+    <path d="M442 676 v-13 a24 17 0 0 1 48 0 v13 z" />
+    <path d="M509 676 v-14 a24 18 0 0 1 48 0 v14 z" />
+    <path d="M576 676 v-14 a24 19 0 0 1 48 0 v14 z" />
+    <path d="M643 676 v-14 a24 18 0 0 1 48 0 v14 z" />
+    <path d="M710 676 v-13 a24 17 0 0 1 48 0 v13 z" />
+    <path d="M776 676 v-12 a24 15 0 0 1 48 0 v12 z" />
+    <path d="M843 676 v-10 a24 13 0 0 1 48 0 v10 z" />
+  </g>
+  <g fill="#2f5670" opacity=".35">
+    <path d="M309 676 h48 l-6 14 h-36 z M376 676 h48 l-6 15 h-36 z M442 676 h48 l-6 16 h-36 z M509 676 h48 l-6 16 h-36 z M576 676 h48 l-6 17 h-36 z M643 676 h48 l-6 16 h-36 z M710 676 h48 l-6 16 h-36 z M776 676 h48 l-6 15 h-36 z M843 676 h48 l-6 14 h-36 z" />
+  </g>
+
+  <!-- sweep well (gémeskút) with its trough -->
+  <g stroke="#6b4a2b" stroke-linecap="round" fill="none">
+    <path d="M1390 770 V608" stroke-width="9" />
+    <path d="M1390 612 l-9 -12 M1390 612 l9 -12" stroke-width="6" />
+    <path d="M1248 672 L1560 524" stroke-width="6" />
+    <path d="M1556 528 V708" stroke-width="3" />
+  </g>
+  <rect x="1236" y="664" width="22" height="16" rx="3" fill="#7d7468" />
+  <path d="M1547 706 h18 l-3 14 h-12 z" fill="#5a3d22" />
+  <rect x="1530" y="722" width="52" height="40" fill="#8a6038" stroke="#5a3d22" stroke-width="3" />
+  <rect x="1440" y="752" width="78" height="12" fill="#7a5532" />
+
+  <!-- animals -->
+  <g color="#f3efe6">
+    <use href="#sheep" transform="translate(960 742) scale(.8)" />
+    <use href="#sheep" transform="translate(1010 750) scale(.85)" />
+    <use href="#sheep" transform="translate(1062 738) scale(.75)" />
+  </g>
+  <use href="#sheep" transform="translate(1110 754) scale(.85)" color="#3b332c" />
+  <use href="#cow" transform="translate(1080 812) scale(1.1)" />
+  <use href="#cow" transform="translate(1250 842) scale(1.35)" />
+  <use href="#cow" transform="translate(880 790) scale(.8)" />
+
+  <!-- foreground grass tufts -->
+  <g stroke="#4c7a22" stroke-width="3" stroke-linecap="round" fill="none">
+    <path d="M760 940 l-6 -22 M766 940 l2 -26 M772 940 l8 -20" />
+    <path d="M1000 960 l-6 -22 M1006 960 l2 -26 M1012 960 l8 -20" />
+    <path d="M1480 930 l-6 -22 M1486 930 l2 -26 M1492 930 l8 -20" />
+    <path d="M1200 975 l-6 -22 M1206 975 l2 -26 M1212 975 l8 -20" />
+  </g>
+</svg>

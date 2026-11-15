@@ -24,14 +24,15 @@
   body {
     font-family: var(--font);
     font-size: 12px;
-    /* drawn wallpaper: blue sky, soft clouds, two green hills */
-    background:
-      radial-gradient(ellipse 34% 9% at 22% 20%, #fff9 40%, #fff0 70%),
-      radial-gradient(ellipse 26% 7% at 74% 30%, #fff8 40%, #fff0 70%),
-      radial-gradient(ellipse 120% 55% at 25% 108%, #79c63c 0 45%, #4f9a22 58%, #4f9a2200 58.5%),
-      radial-gradient(ellipse 110% 50% at 95% 112%, #5aa82a 0 50%, #3d8618 58%, #3d861800 58.5%),
-      linear-gradient(#1f63d6, #4d90ec 40%, #a9d2ff 72%, #d8ecff);
-    background-attachment: fixed;
+    /* drawn wallpaper: Hortobágy with the Nine-hole Bridge, grey cattle, racka sheep and a far-away Parliament.
+       Relative url so Vite fingerprints it and it works under any base path. */
+    background: #2167d8 url("../assets/hortobagy.svg") 62% 100% / cover no-repeat;
+    /* portrait phones: show ~1100 of the 1600 units across so the bridge and the Parliament both fit;
+       the sky above continues in the image's top colour */
+    @media (orientation: portrait) {
+      background-size: calc(100vw * 16 / 11) auto;
+      background-position: 58% 100%;
+    }
   }
 
   .sprite {
