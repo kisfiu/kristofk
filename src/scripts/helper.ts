@@ -12,14 +12,14 @@ const shortcut: Record<Role, [label: string, window: string]> = {
 };
 const tips = [
   "The wallpaper follows the real weather at Hortobágy, right now. Come back at night!",
-  "Drag on the desktop to select icons, just like in 2003. Enter opens them all.",
+  "Drag icons to move them around, or drag on empty space to select several. Arrow keys work too, and Start → Arrange icons tidies up.",
   "Windows can be resized from their bottom-right corner, and moved by their title bar.",
   "The Nine-hole Bridge on the wallpaper has only eight holes. Don't tell anyone.",
   "The Internet icon has a surprise. Surf's up!",
 ];
 const tour: { text: string; spot?: string }[] = [
   {
-    text: "These are the desktop icons. Double-click one to open it (one tap on a phone), or drag on empty space to select several.",
+    text: "These are the desktop icons. Double-click one to open it (one tap on a phone), drag it to move it, or drag on empty space to select several.",
     spot: ".desktop > .icons",
   },
   { text: "The Start menu lists everything in one place, plus Log off and Shut down.", spot: ".start" },
