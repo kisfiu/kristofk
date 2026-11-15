@@ -93,14 +93,18 @@ const description =
 
       <p class="counter">Visitors <output id="counter">000000</output></p>
 
-      {windows.map(({ id, data, Content }) => (
+      {windows.map(({ id, data, body, Content }) => (
         <Window id={id} title={data.title} icon={data.icon} width={data.width}>
           {data.folder ? (
-            <ul class="icons folder-view">
-              {inPlace(data.folder).map((c) => (
-                <li><button type="button" class="icon" data-open={c.data.opens ?? c.id}><Icon name={c.data.icon} /><span>{c.data.label ?? c.data.title}</span></button></li>
-              ))}
-            </ul>
+            <>
+              {/* a folder's own Markdown, if any, shows as an info bar above its icons */}
+              {body?.trim() && <div class="folder-note"><Content /></div>}
+              <ul class="icons folder-view">
+                {inPlace(data.folder).map((c) => (
+                  <li><button type="button" class="icon" data-open={c.data.opens ?? c.id}><Icon name={c.data.icon} /><span>{c.data.label ?? c.data.title}</span></button></li>
+                ))}
+              </ul>
+            </>
           ) : data.app === "pipeline" ? (
             <Pipeline />
           ) : data.app === "internet" ? (

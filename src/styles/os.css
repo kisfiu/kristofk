@@ -286,6 +286,35 @@
     line-height: 1;
   }
 
+  /* clickable wallpaper animals (the desktop covers them; scripts/desktop.ts looks through it) and their bubble */
+  .wallpaper .animal {
+    pointer-events: auto;
+  }
+  .animal-talk {
+    position: absolute;
+    z-index: 6; /* above the desktop icons, below any window */
+    max-width: min(280px, calc(100vw - 16px));
+    margin: 0;
+    padding: 8px 12px;
+    background: #fff;
+    color: #000;
+    border: 2px solid #000;
+    border-radius: 14px;
+    box-shadow: 3px 3px 0 #0005;
+    font: 13px / 1.45 var(--font);
+    pointer-events: none;
+    &::after {
+      content: "";
+      position: absolute;
+      left: 50%;
+      bottom: -12px;
+      translate: -50% 0;
+      border: 10px solid transparent;
+      border-top-color: #000;
+      border-bottom: 0;
+    }
+  }
+
   /* ---------- welcome: choose a user ---------- */
   .welcome {
     display: none;
@@ -505,6 +534,16 @@
     border: 1px solid #316ac5;
     background: rgb(49 106 197 / 0.25);
   }
+  .folder-note {
+    margin-bottom: 6px;
+    padding: 6px 10px;
+    background: #ffffe1;
+    border: 1px solid #c9c38a;
+    font: 13px / 1.45 var(--font);
+    & p {
+      margin: 0;
+    }
+  }
   .folder-view {
     height: auto;
     grid-auto-flow: row;
@@ -677,16 +716,6 @@
       white-space: pre-wrap;
       font-size: 13px;
       padding: 10px;
-    }
-    & .photo {
-      margin: 0 0 8px;
-      text-align: center;
-      & img {
-        max-width: 100%;
-        height: auto;
-        border: 6px solid #fff;
-        box-shadow: 1px 1px 4px #0006;
-      }
     }
     & .contact {
       display: grid;

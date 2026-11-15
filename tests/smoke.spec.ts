@@ -99,7 +99,7 @@ test("every desktop icon and folder item opens its window", async ({ page, isMob
   const folders: Record<string, string[]> = {
     Hobbies: ["Books", "Marketplace", "Travel", "Renovation", "Baseball"],
     NGOs: ["Invisible School", "Rotary Club"],
-    "Other Stuff": ["Address Book", "Side Projects", "My Pictures", "readme.txt"],
+    "Other Stuff": ["Address Book", "Side Projects", "readme.txt"],
   };
   for (const name of desktop) {
     await openIcon(page, name, isMobile);
@@ -123,6 +123,7 @@ test("shortcut in Hobbies opens the NGOs folder", async ({ page, isMobile }) => 
   await openIcon(page, "Hobbies", isMobile);
   await openIcon(page, "My NGOs", isMobile);
   await expect(page.locator(".window.active .title-bar-text")).toHaveText("NGOs");
+  await expect(page.locator(".window.active .folder-note")).toContainText("looking for volunteers");
 });
 
 test("taskbar minimizes and restores, Esc closes", async ({ page, isMobile }) => {
@@ -414,6 +415,60 @@ test("if the weather service is down, the desktop simply stays sunny", async ({ 
   await expect(page.locator("#weather")).toBeHidden();
   await expect(page.locator("[data-wx-text]")).toContainText("Couldn't reach the weather service");
   errors.length = 0; // the browser logs the failed request itself; the page must not break
+});
+
+test("clicking the wallpaper animals tells facts about Kristóf", async ({ page, isMobile }) => {
+  await page.addInitScript(() => sessionStorage.setItem("kk-booted", "1"));
+  await page.goto("./");
+  await page.waitForFunction(() => document.getAnimations().length === 0);
+  const size = page.viewportSize()!;
+  // a point on the animal that no desktop icon covers (on phones the Recycle Bin overlaps the black sheep)
+  const centreOf = async (selector: string) => {
+    for (const el of await page.locator(selector).all()) {
+      const b = await el.boundingBox();
+      if (!b || b.x < 0 || b.x + b.width > size.width || b.y + b.height > size.height - 50) continue;
+      for (const fx of [0.5, 0.3, 0.7, 0.15]) {
+        const p = { x: Math.round(b.x + b.width * fx), y: Math.round(b.y + b.height / 2) };
+        if (await page.evaluate(({ x, y }) => !document.elementFromPoint(x, y)?.closest(".icon"), p)) return p;
+      }
+    }
+    throw new Error(`no ${selector} free to click`);
+  };
+  const talk = page.locator(".animal-talk");
+  const cow = await centreOf(".wallpaper .cow");
+  const click = (p: { x: number; y: number }) =>
+    isMobile ? page.touchscreen.tap(p.x, p.y) : page.mouse.click(p.x, p.y);
+  await click(cow);
+  await expect(talk).toBeVisible();
+  await expect(talk).toContainText("Mooo!");
+  const first = await talk.textContent();
+  await page.getByRole("button", { name: "start" }).click(); // clicking anything else hides the bubble
+  await expect(talk).toBeHidden();
+  await page.keyboard.press("Escape");
+  await click(cow);
+  await expect(talk).toBeVisible();
+  await expect(talk).not.toHaveText(first ?? ""); // a new fact each click
+  await page.keyboard.press("Escape");
+  await expect(talk).toBeHidden();
+  await click(cow);
+  if (isMobile) {
+    // phones snap taps near the Recycle Bin onto it, and the black sheep sits right beside it: use a white one
+    await click(await centreOf(".wallpaper .sheep:not(.black)"));
+    await expect(talk).toContainText("Baa!");
+  } else {
+    await click(await centreOf(".wallpaper .sheep.black"));
+    await expect(talk).toContainText("black sheep");
+  }
+  if (!isMobile) {
+    // a selection drag that ends on an animal is not a click on it
+    await page.reload();
+    await page.waitForFunction(() => document.getAnimations().length === 0);
+    await page.mouse.move(cow.x + 150, cow.y - 120);
+    await page.mouse.down();
+    await page.mouse.move(cow.x, cow.y, { steps: 5 });
+    await page.mouse.up();
+    await expect(talk).toBeHidden();
+  }
 });
 
 test("NGOs is the second desktop icon and the Recycle Bin sits bottom right", async ({ page }) => {

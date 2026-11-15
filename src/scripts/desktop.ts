@@ -221,6 +221,7 @@ narrow.addEventListener("change", syncHandles);
 syncHandles();
 
 // ---------- rubber-band selection, like the XP desktop (also inside folder windows) ----------
+let dragged = false;
 const band = Object.assign(document.createElement("div"), { className: "marquee", hidden: true });
 $(".desktop")!.append(band); // inside the desktop layer, so on the desktop it stays behind open windows
 const desktopIcons = $(".desktop > .icons")!;
@@ -246,6 +247,7 @@ document.addEventListener("pointerdown", (e) => {
   const area = t.closest(".icons") ?? (t.closest(".window") ? null : t.closest(".desktop") && desktopIcons);
   if (!area) return;
   e.preventDefault(); // no text selection or native drag from this press
+  dragged = false;
   // ...which also keeps focus where it was: drop it (from an icon or a window), so a click unselects and Enter opens the selection
   (document.activeElement as HTMLElement | null)?.blur();
   clearSelection();
@@ -262,6 +264,7 @@ document.addEventListener("pointerdown", (e) => {
     if (band.hidden && width + height < 4) return; // a click, not a drag
     Object.assign(band.style, { left: `${left}px`, top: `${top}px`, width: `${width}px`, height: `${height}px` });
     band.hidden = false;
+    dragged = true;
     // like XP: only the picture or the label text count, not the empty cell around them
     const touches = (el: Element | null) => {
       const r = el?.getBoundingClientRect();
@@ -289,6 +292,58 @@ document.addEventListener("keydown", (e) => {
   if (chosen.length < 2) return; // a single focused icon already opens through its own click
   e.preventDefault();
   for (const i of chosen) open(i.dataset.open!);
+});
+
+// ---------- the wallpaper's animals talk: click a cow or a sheep for a fact about Kristóf ----------
+const sayings: Record<"cow" | "sheep" | "black", string[]> = {
+  cow: [
+    "Mooo! Kristóf moved 18 teams and about 50 services from Jenkins to GitLab CI.",
+    "Mooo! With his setup scripts, a new developer laptop is ready to work in about 30 minutes.",
+    "Mooo! He replaced a 10-year-old wiki with GitBook and keeps hundreds of repositories in sync with it.",
+    "Mooo! At IBM he kept 3000+ Linux servers patched and compliant.",
+    "Mooo! He ran a 600-server high-availability environment. Steadier than a grey cattle herd.",
+    "Mooo! He's building a Playwright + TypeScript test framework for every developer at TOPdesk.",
+  ],
+  sheep: [
+    "Baa! He interviewed 18 developer teams about what slows them down, and turned it into backlog work and two OKRs.",
+    "Baa! In 2022/23 he was the youngest Rotary club president in Hungary's history.",
+    "Baa! He co-founded the Invisible School: 400+ children tutored, 80 volunteers today.",
+    "Baa! He mentors new engineers. Baa-sically a shepherd.",
+    "Baa! Seven years in infrastructure and platform engineering, from IBM to TOPdesk.",
+  ],
+  black: [
+    "Baa! The black sheep's secret: he renovates his own flat, from the bricks up.",
+    "Baa! Every flock needs a black sheep, and every team needs someone who asks how the developers feel.",
+  ],
+};
+const said = { cow: 0, sheep: 0, black: 0 };
+const talk = Object.assign(document.createElement("p"), { className: "animal-talk", hidden: true });
+$(".desktop")!.append(talk);
+let talkTimer = 0;
+const hideTalk = () => {
+  clearTimeout(talkTimer);
+  talk.hidden = true;
+};
+// any press anywhere (or Esc) dismisses the bubble; a press on another animal then shows its new fact on click
+document.addEventListener("pointerdown", hideTalk, true);
+document.addEventListener("keydown", (e) => e.key === "Escape" && hideTalk());
+
+document.addEventListener("click", (e) => {
+  const t = e.target as Element;
+  if (dragged || !(t.matches(".desktop, .desktop > .icons") || t === document.body)) return;
+  // the wallpaper sits under the desktop, so look through it for an animal at the click point
+  const animal = document.elementsFromPoint(e.clientX, e.clientY).find((el) => el.matches(".animal"));
+  if (!animal) return;
+  const kind = animal.classList.contains("black") ? "black" : animal.classList.contains("cow") ? "cow" : "sheep";
+  const lines = sayings[kind];
+  talk.textContent = lines[said[kind]++ % lines.length];
+  talk.hidden = false;
+  const r = talk.getBoundingClientRect();
+  talk.style.left = `${Math.min(Math.max(e.clientX - r.width / 2, 8), innerWidth - r.width - 8)}px`;
+  talk.style.top = `${Math.max(e.clientY - r.height - 24, 8)}px`;
+  announce(talk.textContent);
+  clearTimeout(talkTimer);
+  talkTimer = window.setTimeout(hideTalk, 7_000);
 });
 
 // ---------- taskbar clock ----------

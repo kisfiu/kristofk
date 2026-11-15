@@ -6,4 +6,4 @@ parent: hobbies
 order: 3
 ---
 
-I travel a lot. One Erasmus year in Portugal and a B2 in Estonian later, I still want to see one more place.
+I travel a lot: **37 countries** so far, including an Erasmus year in Portugal, and I still want to see one more place.
