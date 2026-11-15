@@ -650,6 +650,19 @@
     right: 8px;
     bottom: 8px;
   }
+  /* after an icon is dragged, every desktop icon keeps a free position (scripts/desktop.ts) */
+  .desktop > .icons {
+    position: relative;
+  }
+  .desktop > .icons.free > li {
+    position: absolute;
+    right: auto;
+    bottom: auto;
+  }
+  .desktop > .icons > li.moving {
+    z-index: 2;
+    opacity: 0.85;
+  }
   /* the desktop's empty space takes drags for the selection rectangle instead of panning */
   .desktop > .icons {
     touch-action: none;

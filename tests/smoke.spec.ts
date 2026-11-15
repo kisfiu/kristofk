@@ -525,6 +525,74 @@ test("Racka slides in, introduces itself, gives a tour and can be sent away", as
   await expect(racka).toContainText("Welcome back!");
 });
 
+test("desktop icons drag onto the grid, never onto each other, alone or as a group, remembered", async ({
+  page,
+  isMobile,
+}) => {
+  test.skip(isMobile, "icons stay in their column on phones");
+  await page.addInitScript(() => sessionStorage.setItem("kk-booted", "1"));
+  await page.goto("./");
+  await settled(page);
+  const icons = page.locator(".desktop > .icons");
+  const box = async (name: string) => (await icons.getByRole("button", { name, exact: true }).boundingBox())!;
+  const onGrid = (b: { x: number; y: number }) => (b.x - 8) % 94 === 0 && (b.y - 8) % 94 === 0;
+  const drag = async (from: { x: number; y: number }, to: { x: number; y: number }) => {
+    await page.mouse.move(from.x, from.y);
+    await page.mouse.down();
+    await page.mouse.move(to.x, to.y, { steps: 8 });
+    await page.mouse.up();
+  };
+  const ngos = await box("NGOs");
+  await drag({ x: ngos.x + 40, y: ngos.y + 30 }, { x: 640, y: 300 });
+  const dropped = await box("NGOs");
+  expect(onGrid(dropped)).toBe(true); // snapped to the grid cell nearest the drop
+  expect(Math.abs(dropped.x + 40 - 640)).toBeLessThan(94);
+  expect((await box("My Resume")).x).toBe(8); // the others stay put
+  await expect(page.locator(".window:not([hidden])")).toHaveCount(0); // dragging doesn't open it
+
+  // dropping onto another icon lands in the nearest free cell instead
+  const hobbies = await box("Hobbies");
+  await drag({ x: hobbies.x + 40, y: hobbies.y + 30 }, { x: dropped.x + 40, y: dropped.y + 30 });
+  const next = await box("Hobbies");
+  expect(onGrid(next)).toBe(true);
+  expect(next.x === dropped.x && next.y === dropped.y).toBe(false);
+  expect(Math.hypot(next.x - dropped.x, next.y - dropped.y)).toBeLessThanOrEqual(94 * 1.5);
+
+  // group drag: select two with the rectangle, drag one, both move by the same whole number of cells
+  await drag({ x: 400, y: 20 }, { x: 20, y: 380 });
+  const group = [await box("My Resume"), await box("Other Stuff")];
+  await drag({ x: group[0].x + 40, y: group[0].y + 30 }, { x: group[0].x + 340, y: group[0].y + 30 });
+  const after = [await box("My Resume"), await box("Other Stuff")];
+  const moved = after.map((a, k) => a.x - group[k].x);
+  expect(moved[0]).toBe(moved[1]);
+  expect(moved[0] % 94).toBe(0);
+
+  await page.reload(); // remembered in this browser
+  await settled(page);
+  expect(await box("NGOs")).toEqual(dropped);
+  await page.getByRole("button", { name: "start" }).click();
+  await page.getByRole("button", { name: "Arrange icons" }).click();
+  expect((await box("NGOs")).x).toBe(8);
+});
+
+test("arrow keys move between desktop icons; Shift extends the selection; Enter opens it", async ({ page }) => {
+  await page.addInitScript(() => sessionStorage.setItem("kk-booted", "1"));
+  await page.goto("./");
+  const icons = page.locator(".desktop > .icons");
+  const resume = icons.getByRole("button", { name: "My Resume", exact: true });
+  await resume.focus();
+  await page.keyboard.press("ArrowDown");
+  const ngos = icons.getByRole("button", { name: "NGOs", exact: true });
+  await expect(ngos).toBeFocused();
+  await expect(icons.locator(".icon.selected")).toHaveCount(1);
+  await page.keyboard.press("Shift+ArrowDown");
+  await expect(icons.getByRole("button", { name: "Hobbies", exact: true })).toBeFocused();
+  await expect(icons.locator(".icon.selected")).toHaveCount(2);
+  await page.keyboard.press("Enter");
+  await expect(page.getByRole("dialog", { name: "NGOs" })).toBeVisible();
+  await expect(page.getByRole("dialog", { name: "Hobbies" })).toBeVisible();
+});
+
 test("NGOs is the second desktop icon and the Recycle Bin sits bottom right", async ({ page }) => {
   await skipBoot(page);
   const icons = page.locator(".desktop > .icons .icon span");

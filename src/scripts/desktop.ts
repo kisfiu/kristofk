@@ -235,9 +235,10 @@ document.addEventListener("pointerdown", (e) => {
   if (e.button !== 0) return;
   const icon = t.closest<HTMLElement>(".icon");
   if (icon) {
-    // plain click selects just this icon; Ctrl/⌘+click adds or removes it
+    // plain click selects just this icon (a press on an already-selected one keeps the group, to drag it);
+    // Ctrl/⌘+click adds or removes it
     if (e.ctrlKey || e.metaKey) icon.classList.toggle("selected");
-    else {
+    else if (!icon.classList.contains("selected")) {
       clearSelection();
       icon.classList.add("selected");
     }
@@ -282,6 +283,176 @@ document.addEventListener("pointerdown", (e) => {
     },
     { once: true },
   );
+});
+
+// ---------- move desktop icons by dragging (not on phones), positions remembered in this browser ----------
+const ICONS_KEY = "kk-icons";
+const desktopItems = () => [...desktopIcons.querySelectorAll<HTMLElement>(":scope > li")];
+const keyOf = (li: HTMLElement) => li.querySelector<HTMLElement>(".icon")!.dataset.open!;
+
+function placeIcon(li: HTMLElement, x: number, y: number) {
+  const max = desktopIcons.getBoundingClientRect();
+  li.style.left = `${Math.min(Math.max(x, 0), max.width - li.offsetWidth)}px`;
+  li.style.top = `${Math.min(Math.max(y, 0), max.height - li.offsetHeight)}px`;
+}
+// the desktop grid: 88px cells with 6px gaps from 8px padding, as in the CSS icon column
+const PITCH = 94;
+const PAD = 8;
+const cellOf = (li: HTMLElement) => [
+  Math.round((li.offsetLeft - PAD) / PITCH),
+  Math.round((li.offsetTop - PAD) / PITCH),
+];
+const cellKey = (c: number, r: number) => `${c},${r}`;
+/** Put an icon in the free grid cell nearest to where it is now, so icons never land on each other. */
+function snapIcon(li: HTMLElement, taken: Set<string>) {
+  const box = desktopIcons.getBoundingClientRect();
+  const cols = Math.max(1, Math.floor((box.width - PAD) / PITCH));
+  const rows = Math.max(1, Math.floor((box.height - PAD) / PITCH));
+  const [c0, r0] = cellOf(li);
+  let best: [number, number] | null = null;
+  let bestDistance = Infinity;
+  for (let c = 0; c < cols; c++)
+    for (let r = 0; r < rows; r++) {
+      const d = (c - c0) ** 2 + (r - r0) ** 2;
+      if (d < bestDistance && !taken.has(cellKey(c, r))) [best, bestDistance] = [[c, r], d];
+    }
+  if (!best) return;
+  taken.add(cellKey(...best));
+  li.style.left = `${PAD + best[0] * PITCH}px`;
+  li.style.top = `${PAD + best[1] * PITCH}px`;
+}
+const snapAll = () => {
+  const taken = new Set<string>();
+  for (const li of desktopItems()) snapIcon(li, taken);
+};
+/** Switch from the automatic column to free grid positions, keeping every icon (nearly) where it is now. */
+function freeIcons() {
+  if (desktopIcons.classList.contains("free")) return;
+  const base = desktopIcons.getBoundingClientRect();
+  const spots = desktopItems().map((li) => li.getBoundingClientRect());
+  desktopIcons.classList.add("free");
+  for (const [i, li] of desktopItems().entries()) placeIcon(li, spots[i].left - base.left, spots[i].top - base.top);
+  snapAll();
+}
+function saveIcons() {
+  store.set(
+    localStorage,
+    ICONS_KEY,
+    JSON.stringify(Object.fromEntries(desktopItems().map((li) => [keyOf(li), [li.offsetLeft, li.offsetTop]]))),
+  );
+}
+function columnIcons() {
+  desktopIcons.classList.remove("free");
+  for (const li of desktopItems()) li.removeAttribute("style");
+}
+function restoreIcons() {
+  let saved: Record<string, [number, number]> | null = null;
+  try {
+    saved = JSON.parse(store.get(localStorage, ICONS_KEY) ?? "null");
+  } catch {
+    /* ignore a damaged value */
+  }
+  if (!saved || narrow.matches) return columnIcons();
+  freeIcons();
+  for (const li of desktopItems()) {
+    const spot = saved[keyOf(li)];
+    if (spot) placeIcon(li, spot[0], spot[1]);
+  }
+  snapAll(); // a smaller screen than last time may have pushed icons together
+}
+$("#arrange-btn")!.addEventListener("click", () => {
+  $("#start-menu")?.hidePopover();
+  columnIcons();
+  try {
+    localStorage.removeItem(ICONS_KEY);
+  } catch {
+    /* private mode */
+  }
+});
+
+document.addEventListener("pointerdown", (e) => {
+  const icon = (e.target as Element).closest<HTMLElement>(".desktop > .icons .icon");
+  if (!icon || e.button !== 0 || narrow.matches || e.ctrlKey || e.metaKey) return;
+  const x0 = e.clientX;
+  const y0 = e.clientY;
+  let group: { li: HTMLElement; x: number; y: number }[] | null = null;
+  const move = (m: PointerEvent) => {
+    if (!group) {
+      if (Math.abs(m.clientX - x0) + Math.abs(m.clientY - y0) < 6) return; // still a click
+      freeIcons();
+      const lis = desktopItems().filter((li) => li.querySelector(".icon.selected"));
+      group = lis.map((li) => ({ li, x: li.offsetLeft, y: li.offsetTop }));
+      for (const g of group) g.li.classList.add("moving");
+    }
+    for (const g of group) placeIcon(g.li, g.x + m.clientX - x0, g.y + m.clientY - y0);
+  };
+  icon.setPointerCapture(e.pointerId);
+  icon.addEventListener("pointermove", move);
+  icon.addEventListener(
+    "lostpointercapture",
+    () => {
+      icon.removeEventListener("pointermove", move);
+      if (group) {
+        // drop into the grid: the cells of the icons that stayed are taken, so a drop onto one lands next to it
+        const moved = new Set(group.map((g) => g.li));
+        const taken = new Set(
+          desktopItems()
+            .filter((li) => !moved.has(li))
+            .map((li) => cellKey(...(cellOf(li) as [number, number]))),
+        );
+        for (const g of group) {
+          g.li.classList.remove("moving");
+          snapIcon(g.li, taken);
+        }
+        saveIcons();
+      } else {
+        // a plain click on an icon of a group leaves just that icon selected
+        clearSelection();
+        icon.classList.add("selected");
+      }
+    },
+    { once: true },
+  );
+});
+addEventListener("resize", () => {
+  if (desktopIcons.classList.contains("free")) snapAll();
+});
+narrow.addEventListener("change", restoreIcons);
+restoreIcons();
+
+// ---------- arrow keys move between icons (Shift adds to the selection), on the desktop and in folders ----------
+const DIRECTION: Record<string, [number, number]> = {
+  ArrowLeft: [-1, 0],
+  ArrowRight: [1, 0],
+  ArrowUp: [0, -1],
+  ArrowDown: [0, 1],
+};
+document.addEventListener("keydown", (e) => {
+  const from = (e.target as Element).closest?.<HTMLElement>(".icon");
+  const dir = DIRECTION[e.key];
+  if (!from || !dir) return;
+  const centre = (el: Element) => {
+    const r = el.getBoundingClientRect();
+    return [r.left + r.width / 2, r.top + r.height / 2];
+  };
+  const [fx, fy] = centre(from);
+  let best: HTMLElement | null = null;
+  let bestScore = Infinity;
+  for (const icon of iconsIn(from.closest(".icons")!)) {
+    const [x, y] = centre(icon);
+    const along = (x - fx) * dir[0] + (y - fy) * dir[1]; // distance in the arrow's direction
+    const across = Math.abs((x - fx) * dir[1] + (y - fy) * dir[0]);
+    if (icon === from || along < 10) continue;
+    const score = along + across * 2; // prefer icons straight ahead
+    if (score < bestScore) [best, bestScore] = [icon, score];
+  }
+  if (!best) return;
+  e.preventDefault();
+  if (!e.shiftKey) clearSelection();
+  from.classList.add("selected");
+  best.classList.add("selected");
+  if (!e.shiftKey) from.classList.remove("selected");
+  best.focus();
 });
 
 // Enter opens every selected desktop icon, as on XP (only when no window or control has focus)
