@@ -80,10 +80,16 @@
   /* deliberately tacky 2000s WordArt: chunky italic, blue gradient, dark outline, extruded shadow, wavy baseline */
   .wordart {
     display: flex;
+    /* without Impact (Linux, Android), stay tall and narrow via narrow fonts rather than a wide sans.
+       No font-stretch: lightningcss folds it into the shorthand as a percentage, which browsers reject. */
     font:
       italic 900 clamp(44px, 13vw, 104px) / 1.1 Impact,
-      "Arial Black",
       "Haettenschweiler",
+      "Arial Narrow",
+      "Liberation Sans Narrow",
+      "Nimbus Sans Narrow",
+      sans-serif-condensed,
+      "Arial Black",
       sans-serif;
     letter-spacing: 1px;
     transform: perspective(320px) rotateX(14deg) skewX(-6deg);
@@ -386,12 +392,18 @@
     flex-direction: column;
     width: min(var(--w, 460px), calc(100vw - 16px));
     max-height: calc(100dvh - var(--taskbar) - 16px);
-    transition:
-      opacity 0.15s,
-      scale 0.15s;
+    /* entry via @starting-style, exit by transitioning display (allow-discrete) once [hidden] is set */
+    transition-property: opacity, scale, display;
+    transition-duration: 0.15s;
+    transition-behavior: allow-discrete;
     @starting-style {
       opacity: 0;
       scale: 0.96;
+    }
+    &[hidden] {
+      opacity: 0;
+      scale: 0.96;
+      pointer-events: none;
     }
     &:focus {
       outline: none;
@@ -400,8 +412,25 @@
       filter: saturate(0.35) brightness(1.18);
     }
     & .title-bar {
+      cursor: grab;
       touch-action: none;
+      -webkit-user-select: none;
       user-select: none;
+      &.dragging {
+        cursor: grabbing;
+      }
+      & button {
+        cursor: default;
+      }
+    }
+    & .move-handle {
+      all: unset;
+      display: inline-flex;
+      cursor: grab;
+      &:focus-visible {
+        outline: 1px dotted #fff;
+        outline-offset: 1px;
+      }
     }
     & .title-bar-text {
       display: flex;
@@ -593,6 +622,31 @@
     color: #fff;
     border-left: 1px solid #0f3fa6;
     background: linear-gradient(#0c59b9, #139ee9 10%, #18b9f1 20%, #0c8de4 80%, #1167c8);
+  }
+
+  /* ---------- popovers (Start menu, balloon): animate into and out of the top layer ---------- */
+  .start-menu,
+  .balloon {
+    opacity: 0;
+    scale: 0.96;
+    transition-property: opacity, scale, display, overlay;
+    transition-duration: 0.15s;
+    transition-timing-function: ease-out;
+    transition-behavior: allow-discrete;
+    &:popover-open {
+      opacity: 1;
+      scale: 1;
+      @starting-style {
+        opacity: 0;
+        scale: 0.96;
+      }
+    }
+  }
+  .start-menu {
+    transform-origin: bottom left;
+  }
+  .balloon {
+    transform-origin: bottom right;
   }
 
   /* ---------- start menu (Popover API) ---------- */

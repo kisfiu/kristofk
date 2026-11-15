@@ -157,24 +157,65 @@ document.addEventListener("keydown", (e) => {
   if (w) close(w);
 });
 
-// Drag by the title bar (mouse, pen and touch through Pointer Events).
+/** Clamp so part of the title bar stays reachable; shared by pointer, keyboard and resize. */
+function moveTo(w: HTMLElement, left: number, top: number) {
+  w.style.left = `${Math.min(Math.max(left, 80 - w.offsetWidth), innerWidth - 80)}px`;
+  w.style.top = `${Math.min(Math.max(top, 0), innerHeight - 60)}px`;
+}
+const movable = (w: HTMLElement) => !narrow.matches && !w.classList.contains("max");
+
+// Drag by the title bar (mouse, pen and touch through Pointer Events); its window icon is the keyboard handle.
 document.addEventListener("pointerdown", (e) => {
-  const bar = (e.target as Element).closest<HTMLElement>(".title-bar");
-  if (!bar || (e.target as Element).closest("button") || narrow.matches) return;
+  const t = e.target as Element;
+  const bar = t.closest<HTMLElement>(".title-bar");
+  const control = t.closest("button, input, a");
+  if (!bar || e.button !== 0 || (control && !control.matches("[data-move]"))) return;
   const w = bar.closest<HTMLElement>(".window")!;
-  if (w.classList.contains("max")) return;
+  if (!movable(w)) return;
   const dx = e.clientX - w.offsetLeft;
   const dy = e.clientY - w.offsetTop;
   bar.setPointerCapture(e.pointerId);
   const move = (m: PointerEvent) => {
-    w.style.left = `${Math.min(Math.max(m.clientX - dx, 80 - w.offsetWidth), innerWidth - 80)}px`;
-    w.style.top = `${Math.min(Math.max(m.clientY - dy, 0), innerHeight - 60)}px`;
+    bar.classList.add("dragging");
+    moveTo(w, m.clientX - dx, m.clientY - dy);
   };
-  const up = () => bar.removeEventListener("pointermove", move);
   bar.addEventListener("pointermove", move);
-  bar.addEventListener("pointerup", up, { once: true });
-  bar.addEventListener("pointercancel", up, { once: true });
+  bar.addEventListener(
+    "lostpointercapture",
+    () => {
+      bar.classList.remove("dragging");
+      bar.removeEventListener("pointermove", move);
+    },
+    { once: true },
+  );
 });
+
+const STEP = 15;
+const arrows: Record<string, [number, number, string]> = {
+  ArrowLeft: [-STEP, 0, "left"],
+  ArrowRight: [STEP, 0, "right"],
+  ArrowUp: [0, -STEP, "up"],
+  ArrowDown: [0, STEP, "down"],
+};
+document.addEventListener("keydown", (e) => {
+  const handle = (e.target as Element).closest?.("[data-move]");
+  const step = arrows[e.key];
+  const w = handle?.closest<HTMLElement>(".window");
+  if (!step || !w || !movable(w)) return;
+  e.preventDefault();
+  moveTo(w, w.offsetLeft + step[0], w.offsetTop + step[1]);
+  announce(`${w.querySelector(".title-bar-text")?.textContent?.trim()} moved ${step[2]}`);
+});
+
+// Keep windows reachable when the browser window shrinks; on phones windows are full-screen, so no move handle.
+addEventListener("resize", () => {
+  for (const w of visible()) if (movable(w)) moveTo(w, w.offsetLeft, w.offsetTop);
+});
+const syncHandles = () => {
+  for (const h of document.querySelectorAll<HTMLButtonElement>("[data-move]")) h.disabled = narrow.matches;
+};
+narrow.addEventListener("change", syncHandles);
+syncHandles();
 
 // ---------- taskbar clock ----------
 const clock = $("#clock")!;
@@ -227,7 +268,22 @@ const balloonsFor = (r: Role | null) => {
   return first ? [first, ...generic.filter((g) => g.open !== first.open)] : generic;
 };
 const balloon = $("#balloon")!;
+const announcer = $("#announcer")!;
+
+/** Tell screen readers: ariaNotify() where supported, else the live region that exists since page load. */
+function announce(message: string) {
+  const doc = document as Document & { ariaNotify?: (message: string) => void };
+  if (doc.ariaNotify) return doc.ariaNotify(message);
+  announcer.textContent = message;
+  setTimeout(() => {
+    if (announcer.textContent === message) announcer.textContent = "";
+  }, 1_000);
+}
+
 let balloonTimer = 0;
+let nextTimer = 0;
+let focusBefore: Element | null = null;
+const nextBalloon = () => Number(store.get(sessionStorage, "kk-balloon") ?? 0);
 function showBalloon(i: number) {
   const b = balloonsFor(role())[i];
   // never pop up over the boot or welcome screen
@@ -237,20 +293,23 @@ function showBalloon(i: number) {
   const text = balloon.querySelector<HTMLElement>("[data-text]")!;
   text.textContent = b.text;
   text.dataset.open = b.open;
-  balloon.showPopover();
-  balloonTimer = window.setTimeout(() => hideBalloon(i), 12_000);
+  focusBefore = document.activeElement;
+  balloon.showPopover(); // shown without taking focus
+  announce(`${b.title}. ${b.text}`);
+  balloonTimer = window.setTimeout(() => balloon.hidePopover(), 12_000);
 }
-function hideBalloon(i: number) {
+const startBalloons = (delay = 5_000) => {
+  clearTimeout(nextTimer);
+  nextTimer = window.setTimeout(() => showBalloon(nextBalloon()), delay);
+};
+// However it closes (×, timeout, clicking its text, log off): give focus back if it was inside, queue the next tip.
+balloon.addEventListener("beforetoggle", (e) => {
+  if ((e as ToggleEvent).newState !== "closed") return;
   clearTimeout(balloonTimer);
-  if (balloon.matches(":popover-open")) balloon.hidePopover();
-  setTimeout(() => showBalloon(i + 1), 30_000);
-}
-balloon
-  .querySelector(".balloon-x")!
-  .addEventListener("click", () => hideBalloon(Number(store.get(sessionStorage, "kk-balloon")) - 1));
+  if (balloon.contains(document.activeElement) && focusBefore instanceof HTMLElement) focusBefore.focus();
+  startBalloons(30_000);
+});
 balloon.querySelector("[data-text]")!.addEventListener("click", () => balloon.hidePopover());
-const startBalloons = (delay = 5_000) =>
-  setTimeout(() => showBalloon(Number(store.get(sessionStorage, "kk-balloon") ?? 0)), delay);
 
 // ---------- shut down / restart ----------
 const shutdown = $("#shutdown")!;

@@ -11,7 +11,10 @@ const { id, title, icon, width } = Astro.props;
 ---
 <section class="window" id={`win-${id}`} role="dialog" aria-labelledby={`t-${id}`} tabindex="-1" hidden style={`--w:${width}px`}>
   <div class="title-bar">
-    <div class="title-bar-text" id={`t-${id}`}><Icon name={icon} size={16} /> {title}</div>
+    <div class="title-bar-text">
+      <button type="button" class="move-handle" data-move aria-label={`Move ${title} window. Use arrow keys to move.`}><Icon name={icon} size={16} /></button>
+      <span id={`t-${id}`}>{title}</span>
+    </div>
     <div class="title-bar-controls">
       <button type="button" aria-label="Minimize" data-act="min"></button>
       <button type="button" aria-label="Maximize" data-act="max"></button>

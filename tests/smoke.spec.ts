@@ -152,6 +152,43 @@ test("internet respects reduced motion", async ({ page, isMobile }) => {
   await expect(win.getByRole("link", { name: /GitHub/ })).toBeVisible();
 });
 
+test("windows move with the arrow keys from their title-bar icon (desktop only)", async ({ page, isMobile }) => {
+  await page.goto("/#resume");
+  const win = page.getByRole("dialog", { name: /My Resume/ });
+  const handle = win.getByRole("button", { name: /Move My Resume/ });
+  if (isMobile) {
+    await expect(handle).toBeDisabled(); // full-screen windows on phones don't move
+    return;
+  }
+  const before = await win.evaluate((w: HTMLElement) => w.offsetLeft);
+  await handle.focus();
+  await page.keyboard.press("ArrowRight");
+  await page.keyboard.press("ArrowRight");
+  expect(await win.evaluate((w: HTMLElement) => w.offsetLeft)).toBe(before + 30);
+});
+
+test("balloons sit in a Notifications region, are announced and close with ×", async ({ page }) => {
+  await page.addInitScript(() => {
+    const notes: string[] = [];
+    Object.assign(window, { notes });
+    // record announcements; ariaNotify isn't in TypeScript's DOM types yet
+    Object.defineProperty(Document.prototype, "ariaNotify", {
+      configurable: true,
+      value: (message: string) => notes.push(message),
+    });
+  });
+  await page.goto("/");
+  await page.getByRole("button", { name: "Skip" }).click();
+  await page.getByRole("button", { name: /IT recruiter/ }).click();
+  const region = page.getByRole("region", { name: "Notifications" });
+  await expect(region.getByText("Welcome, recruiter!")).toBeVisible({ timeout: 5000 });
+  expect(await page.evaluate(() => (window as unknown as { notes: string[] }).notes.join())).toContain(
+    "Welcome, recruiter!",
+  );
+  await region.getByRole("button", { name: "Close notification" }).click();
+  await expect(page.locator("#balloon")).toBeHidden();
+});
+
 test("pipeline game starts its timer on the first click", async ({ page, isMobile }) => {
   await skipBoot(page);
   await openIcon(page, "Pipeline Green", isMobile);
