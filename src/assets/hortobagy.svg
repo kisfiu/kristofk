@@ -1,5 +1,5 @@
 <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1600 1000" preserveAspectRatio="xMidYMax slice">
-  <title>Hortobágy puszta with the Nine-hole Bridge, grey cattle, racka sheep and a far-away Parliament</title>
+  <title>Hortobágy puszta with the Nine-hole Bridge (eight arches and a sun glint), grey cattle, racka sheep and a far-away Parliament</title>
   <!-- Original drawing for the KK desktop: the Hortobágy puszta with the Nine-hole Bridge,
        grey cattle, racka sheep, a sweep well, and (impossibly) the Parliament on the horizon. -->
   <defs>
@@ -10,10 +10,10 @@
       <stop offset="1" stop-color="#e3f1ff" />
     </linearGradient>
     <linearGradient id="plain" x1="0" y1="0" x2="0" y2="1">
-      <stop offset="0" stop-color="#c9d98a" />
-      <stop offset=".18" stop-color="#a7c95c" />
-      <stop offset=".55" stop-color="#7fae3e" />
-      <stop offset="1" stop-color="#557f26" />
+      <stop offset="0" stop-color="#e2d9a8" />
+      <stop offset=".18" stop-color="#d2c486" />
+      <stop offset=".55" stop-color="#b8a662" />
+      <stop offset="1" stop-color="#8f7f45" />
     </linearGradient>
     <linearGradient id="river" x1="0" y1="0" x2="0" y2="1">
       <stop offset="0" stop-color="#7cbde6" />
@@ -29,6 +29,16 @@
       <stop offset="1" stop-color="#fff" stop-opacity="0" />
     </linearGradient>
     <filter id="soft"><feGaussianBlur stdDeviation="6" /></filter>
+    <radialGradient id="glint" cx=".5" cy=".8" r=".8">
+      <stop offset="0" stop-color="#ffffff" />
+      <stop offset=".45" stop-color="#fff6c4" />
+      <stop offset="1" stop-color="#f1d98c" />
+    </radialGradient>
+    <radialGradient id="sunglow">
+      <stop offset="0" stop-color="#fffbe6" />
+      <stop offset=".3" stop-color="#fff3b8" stop-opacity=".9" />
+      <stop offset="1" stop-color="#fff3b8" stop-opacity="0" />
+    </radialGradient>
 
     <!-- Hungarian grey cattle, facing left, lyre-shaped horns (local size ~135x92) -->
     <g id="cow">
@@ -83,6 +93,10 @@
     <ellipse cx="1440" cy="210" rx="80" ry="26" />
   </g>
 
+  <!-- the sun, low over the bridge: it makes the "ninth hole" -->
+  <circle cx="600" cy="300" r="120" fill="url(#sunglow)" />
+  <circle cx="600" cy="300" r="30" fill="#fffbe6" />
+
   <!-- far horizon: the Parliament, small and hazy -->
   <g fill="#94acc6" opacity=".85">
     <rect x="1040" y="592" width="290" height="32" />
@@ -100,7 +114,7 @@
     <use href="#spire" x="1146" y="592" /><use href="#spire" x="1214" y="592" />
     <use href="#spire" x="1252" y="592" /><use href="#spire" x="1268" y="592" />
   </g>
-  <g fill="#8fa98a" opacity=".6">
+  <g fill="#a3a58a" opacity=".6">
     <ellipse cx="140" cy="618" rx="60" ry="12" />
     <ellipse cx="610" cy="620" rx="40" ry="9" />
     <ellipse cx="1490" cy="620" rx="70" ry="11" />
@@ -109,11 +123,22 @@
   <!-- the plain -->
   <rect y="620" width="1600" height="380" fill="url(#plain)" />
   <rect y="590" width="1600" height="60" fill="url(#haze)" />
-  <g fill="#b9d06a" opacity=".5">
+  <g fill="#e6dcae" opacity=".55">
     <ellipse cx="1150" cy="700" rx="380" ry="18" />
     <ellipse cx="300" cy="760" rx="300" ry="16" />
   </g>
 
+  <!-- pale alkaline (szikes) patches on the dry grass -->
+  <g fill="#efe9d2" opacity=".5">
+    <ellipse cx="1180" cy="712" rx="170" ry="9" />
+    <ellipse cx="1420" cy="790" rx="120" ry="10" />
+    <ellipse cx="980" cy="905" rx="150" ry="12" />
+  </g>
+  <!-- the only lush green: reeds and wet grass along the river banks -->
+  <g fill="#8d9a4a" opacity=".55">
+    <path d="M300 672 C260 760 150 850 0 900 L0 940 C170 880 300 780 330 672 Z" />
+    <path d="M884 672 C870 740 780 820 670 1000 L720 1000 C810 840 890 760 906 672 Z" />
+  </g>
   <!-- the Hortobágy river flowing toward us under the bridge -->
   <path d="M318 672 L878 672 C860 740 760 800 640 1000 L0 1000 L0 900 C140 850 270 760 318 672 Z" fill="url(#river)" />
   <g stroke="#cfe8f8" stroke-width="3" stroke-linecap="round" opacity=".7">
@@ -128,14 +153,25 @@
     <path d="M376 676 v-12 a24 15 0 0 1 48 0 v12 z" />
     <path d="M442 676 v-13 a24 17 0 0 1 48 0 v13 z" />
     <path d="M509 676 v-14 a24 18 0 0 1 48 0 v14 z" />
-    <path d="M576 676 v-14 a24 19 0 0 1 48 0 v14 z" />
     <path d="M643 676 v-14 a24 18 0 0 1 48 0 v14 z" />
     <path d="M710 676 v-13 a24 17 0 0 1 48 0 v13 z" />
     <path d="M776 676 v-12 a24 15 0 0 1 48 0 v12 z" />
     <path d="M843 676 v-10 a24 13 0 0 1 48 0 v10 z" />
   </g>
   <g fill="#2f5670" opacity=".35">
-    <path d="M309 676 h48 l-6 14 h-36 z M376 676 h48 l-6 15 h-36 z M442 676 h48 l-6 16 h-36 z M509 676 h48 l-6 16 h-36 z M576 676 h48 l-6 17 h-36 z M643 676 h48 l-6 16 h-36 z M710 676 h48 l-6 16 h-36 z M776 676 h48 l-6 15 h-36 z M843 676 h48 l-6 14 h-36 z" />
+    <path d="M309 676 h48 l-6 14 h-36 z M376 676 h48 l-6 15 h-36 z M442 676 h48 l-6 16 h-36 z M509 676 h48 l-6 16 h-36 z M643 676 h48 l-6 16 h-36 z M710 676 h48 l-6 16 h-36 z M776 676 h48 l-6 15 h-36 z M843 676 h48 l-6 14 h-36 z" />
+  </g>
+  <!-- the legend: only eight real arches; the "ninth hole" is the sun glinting on the water -->
+  <path d="M576 676 v-14 a24 19 0 0 1 48 0 v14 z" fill="url(#glint)" />
+  <path d="M600 648 l3 11 l11 3 l-11 3 l-3 11 l-3 -11 l-11 -3 l11 -3 z" fill="#fff" />
+  <g stroke="#fffbe6" stroke-linecap="round" opacity=".9">
+    <path d="M582 684 h36" stroke-width="4" />
+    <path d="M586 696 h28" stroke-width="3.5" />
+    <path d="M578 710 h44" stroke-width="3" />
+    <path d="M588 726 h24" stroke-width="3" />
+    <path d="M574 744 h40" stroke-width="2.5" />
+    <path d="M584 764 h22" stroke-width="2.5" />
+    <path d="M570 786 h32" stroke-width="2" />
   </g>
 
   <!-- sweep well (gémeskút) with its trough -->
@@ -162,7 +198,7 @@
   <use href="#cow" transform="translate(880 790) scale(.8)" />
 
   <!-- foreground grass tufts -->
-  <g stroke="#4c7a22" stroke-width="3" stroke-linecap="round" fill="none">
+  <g stroke="#7f7238" stroke-width="3" stroke-linecap="round" fill="none">
     <path d="M760 940 l-6 -22 M766 940 l2 -26 M772 940 l8 -20" />
     <path d="M1000 960 l-6 -22 M1006 960 l2 -26 M1012 960 l8 -20" />
     <path d="M1480 930 l-6 -22 M1486 930 l2 -26 M1492 930 l8 -20" />
