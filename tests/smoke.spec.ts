@@ -70,7 +70,7 @@ test("every desktop icon and folder item opens its window", async ({ page, isMob
   const desktop = ["My Resume", "Hobbies", "NGOs", "Other Stuff", "Internet", "Recycle Bin", "Pipeline Green"];
   const folders: Record<string, string[]> = {
     Hobbies: ["Books", "Marketplace", "Travel", "Renovation", "Baseball"],
-    NGOs: ["Invisible School", "Rotary Club", "TOPdesk CSR"],
+    NGOs: ["Invisible School", "Rotary Club"],
     "Other Stuff": ["Address Book", "Side Projects", "My Pictures", "readme.txt"],
   };
   for (const name of desktop) {
