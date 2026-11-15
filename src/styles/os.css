@@ -1,0 +1,640 @@
+@import "xp.css/dist/XP.css" layer(xp);
+
+@layer xp, os;
+
+@layer os {
+  :root {
+    --taskbar: 30px;
+    --sel: #316ac5;
+    --font: Tahoma, Verdana, "Segoe UI", sans-serif;
+    color-scheme: light;
+  }
+
+  [hidden] {
+    display: none !important;
+  }
+
+  html,
+  body {
+    height: 100%;
+    margin: 0;
+    overflow: hidden;
+  }
+
+  body {
+    font-family: var(--font);
+    font-size: 12px;
+    /* drawn wallpaper: blue sky, soft clouds, two green hills */
+    background:
+      radial-gradient(ellipse 34% 9% at 22% 20%, #fff9 40%, #fff0 70%),
+      radial-gradient(ellipse 26% 7% at 74% 30%, #fff8 40%, #fff0 70%),
+      radial-gradient(ellipse 120% 55% at 25% 108%, #79c63c 0 45%, #4f9a22 58%, #4f9a2200 58.5%),
+      radial-gradient(ellipse 110% 50% at 95% 112%, #5aa82a 0 50%, #3d8618 58%, #3d861800 58.5%),
+      linear-gradient(#1f63d6, #4d90ec 40%, #a9d2ff 72%, #d8ecff);
+    background-attachment: fixed;
+  }
+
+  .sprite {
+    position: absolute;
+    width: 0;
+    height: 0;
+    overflow: hidden;
+  }
+
+  .visually-hidden {
+    position: absolute;
+    width: 1px;
+    height: 1px;
+    overflow: hidden;
+    clip-path: inset(50%);
+    white-space: nowrap;
+  }
+
+  /* ---------- boot ---------- */
+  .boot {
+    display: none;
+  }
+  html[data-boot] .boot {
+    position: fixed;
+    inset: 0;
+    z-index: 10000;
+    background: #000;
+    color: #fff;
+    display: grid;
+    place-content: center;
+    justify-items: center;
+    gap: 48px;
+    font-family: var(--font);
+  }
+  html[data-boot] .desktop,
+  html[data-boot] .taskbar {
+    visibility: hidden;
+  }
+  .boot-logo {
+    display: grid;
+    justify-items: end;
+    line-height: 1;
+  }
+  .boot-kk {
+    font:
+      italic bold 96px "Trebuchet MS",
+      var(--font);
+    background: linear-gradient(100deg, #fff 20%, #9fd0ff 50%, #ff9a2e 80%);
+    background-clip: text;
+    color: transparent;
+  }
+  .boot-ed {
+    font-size: 18px;
+    color: #f0a030;
+    font-style: italic;
+  }
+  .boot-bar {
+    width: 160px;
+    height: 16px;
+    padding: 2px;
+    border: 2px solid #b2b2b2;
+    border-radius: 4px;
+    overflow: hidden;
+    display: flex;
+    gap: 2px;
+  }
+  .boot-bar i {
+    width: 8px;
+    flex: none;
+    border-radius: 1px;
+    background: linear-gradient(#a8c8ff, #2a5ee8 50%, #a8c8ff);
+    animation: boot-run 1.6s linear infinite;
+  }
+  @keyframes boot-run {
+    from {
+      transform: translateX(-30px);
+    }
+    to {
+      transform: translateX(170px);
+    }
+  }
+  .boot-copy {
+    position: absolute;
+    left: 24px;
+    bottom: 16px;
+    margin: 0;
+    color: #ccc;
+  }
+  .boot-skip {
+    position: absolute;
+    right: 24px;
+    bottom: 12px;
+  }
+
+  /* ---------- desktop + icons ---------- */
+  .desktop {
+    position: fixed;
+    inset: 0 0 var(--taskbar) 0;
+  }
+  .icons {
+    list-style: none;
+    margin: 0;
+    padding: 8px;
+    height: 100%;
+    box-sizing: border-box;
+    display: grid;
+    grid-auto-flow: column;
+    grid-template-rows: repeat(auto-fill, 88px);
+    grid-auto-columns: 88px;
+    gap: 6px;
+    justify-content: start;
+  }
+  .icon {
+    all: unset;
+    box-sizing: border-box;
+    width: 84px;
+    padding: 4px 2px;
+    cursor: default;
+    display: grid;
+    justify-items: center;
+    gap: 4px;
+    text-align: center;
+    color: #fff;
+    & span {
+      padding: 1px 3px;
+      text-shadow: 1px 1px 2px #000;
+      line-height: 1.25;
+      overflow-wrap: anywhere;
+    }
+    &:focus {
+      outline: none;
+    }
+    &:focus span {
+      background: var(--sel);
+      text-shadow: none;
+      outline: 1px dotted #fff;
+    }
+    &:focus .ico {
+      filter: brightness(0.75) sepia(1) hue-rotate(180deg) saturate(3);
+    }
+  }
+  .folder-view {
+    height: auto;
+    grid-auto-flow: row;
+    grid-template-columns: repeat(auto-fill, 88px);
+    grid-template-rows: none;
+    background: #fff;
+    min-height: 140px;
+    align-content: start;
+    & .icon {
+      color: #000;
+    }
+    & .icon span {
+      text-shadow: none;
+    }
+    & .icon:focus span {
+      color: #fff;
+      outline-color: #000;
+    }
+  }
+
+  .counter {
+    margin: 0;
+    position: absolute;
+    top: 10px;
+    right: 12px;
+    display: grid;
+    justify-items: center;
+    gap: 2px;
+    color: #fff;
+    text-shadow: 1px 1px 1px #000;
+    font-size: 11px;
+    & output {
+      font:
+        bold 16px "Courier New",
+        monospace;
+      letter-spacing: 2px;
+      color: #ff3b1f;
+      text-shadow: 0 0 4px #f00;
+      background: #111;
+      padding: 2px 6px;
+      border: 2px inset #888;
+    }
+  }
+
+  /* ---------- windows ---------- */
+  .window {
+    position: absolute;
+    box-sizing: border-box;
+    display: flex;
+    flex-direction: column;
+    width: min(var(--w, 460px), calc(100vw - 16px));
+    max-height: calc(100dvh - var(--taskbar) - 16px);
+    transition:
+      opacity 0.15s,
+      scale 0.15s;
+    @starting-style {
+      opacity: 0;
+      scale: 0.96;
+    }
+    &:focus {
+      outline: none;
+    }
+    &:not(.active) .title-bar {
+      filter: saturate(0.35) brightness(1.18);
+    }
+    & .title-bar {
+      touch-action: none;
+      user-select: none;
+    }
+    & .title-bar-text {
+      display: flex;
+      align-items: center;
+      gap: 4px;
+    }
+    & .window-body {
+      overflow: auto;
+      flex: 1;
+      min-height: 0;
+      container-type: inline-size;
+    }
+    &.max {
+      inset: 0 0 auto 0 !important;
+      width: 100%;
+      height: calc(100dvh - var(--taskbar));
+      max-height: none;
+    }
+  }
+  @media (max-width: 600px) {
+    .window {
+      inset: 0 0 auto 0 !important;
+      width: 100%;
+      height: calc(100dvh - var(--taskbar));
+      max-height: none;
+    }
+    .window [data-act="max"] {
+      display: none;
+    }
+    .counter {
+      display: none;
+    }
+  }
+
+  .doc {
+    background: #fff;
+    padding: 12px 16px;
+    font: 13px / 1.5 var(--font);
+    color: #111;
+    border: 1px solid #7f9db9;
+    & h1 {
+      font-size: 20px;
+      margin: 0 0 4px;
+    }
+    & h2 {
+      font-size: 14px;
+      margin: 14px 0 4px;
+      color: #0b3d91;
+      border-bottom: 1px solid #c5d3e8;
+    }
+    & ul {
+      padding-left: 18px;
+      margin: 4px 0;
+    }
+    & p {
+      margin: 6px 0;
+    }
+    & .pdf {
+      float: right;
+      margin: 0 0 8px 8px;
+    }
+    & .muted {
+      color: #666;
+    }
+    & .file-list {
+      list-style: none;
+      padding: 0;
+    }
+    & .notes {
+      white-space: pre-wrap;
+      font-size: 13px;
+      padding: 10px;
+    }
+    & .photo {
+      margin: 0 0 8px;
+      text-align: center;
+      & img {
+        max-width: 100%;
+        height: auto;
+        border: 6px solid #fff;
+        box-shadow: 1px 1px 4px #0006;
+      }
+    }
+    & .contact {
+      display: grid;
+      grid-template-columns: auto 1fr;
+      gap: 4px 12px;
+      & dt {
+        font-weight: bold;
+      }
+      & dd {
+        margin: 0;
+      }
+    }
+    & .browser-bar {
+      display: flex;
+      gap: 4px;
+      align-items: center;
+      margin: -12px -16px 12px;
+      padding: 4px 6px;
+      background: #ece9d8;
+      border-bottom: 1px solid #aaa;
+      & input {
+        flex: 1;
+        min-width: 0;
+      }
+    }
+  }
+  @container (max-width: 420px) {
+    .doc .pdf {
+      float: none;
+    }
+  }
+
+  .button-link {
+    display: inline-block;
+    padding: 4px 10px;
+    border: 1px solid #003c74;
+    border-radius: 3px;
+    color: #000;
+    text-decoration: none;
+    background: linear-gradient(#fff, #ece9d8 86%, #d8d0c4);
+  }
+
+  .links {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 6px 14px;
+    padding: 8px 2px 2px;
+  }
+
+  /* ---------- taskbar ---------- */
+  .taskbar {
+    position: fixed;
+    inset: auto 0 0 0;
+    height: var(--taskbar);
+    z-index: 5000;
+    display: flex;
+    align-items: stretch;
+    background: linear-gradient(#3168d5, #4993e6 8%, #2157d7 40%, #2157d7 88%, #1941a5);
+  }
+  .start {
+    all: unset;
+    display: flex;
+    align-items: center;
+    gap: 4px;
+    padding: 0 18px 0 8px;
+    margin-right: 8px;
+    font:
+      italic bold 18px "Trebuchet MS",
+      var(--font);
+    color: #fff;
+    text-shadow: 1px 1px 2px #0008;
+    border-radius: 0 12px 12px 0;
+    box-shadow: inset 0 0 6px #0005;
+    background: linear-gradient(#3c9f3c, #4cbf4c 20%, #2f932f 70%, #237d23);
+    &:hover {
+      filter: brightness(1.1);
+    }
+    &:focus-visible {
+      outline: 1px dotted #fff;
+      outline-offset: -4px;
+    }
+  }
+  .tasks {
+    flex: 1;
+    display: flex;
+    gap: 3px;
+    align-items: center;
+    overflow: hidden;
+    min-width: 0;
+    & button {
+      all: unset;
+      box-sizing: border-box;
+      height: 24px;
+      flex: 0 1 160px;
+      min-width: 40px;
+      padding: 0 8px;
+      color: #fff;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      border-radius: 3px;
+      background: linear-gradient(#5a95f5, #3c80f4);
+      box-shadow:
+        inset 0 0 1px #fff8,
+        1px 1px 1px #0004;
+      &[aria-pressed="true"] {
+        background: #1e52b7;
+        box-shadow: inset 1px 1px 2px #0008;
+      }
+      &:focus-visible {
+        outline: 1px dotted #fff;
+        outline-offset: -3px;
+      }
+    }
+  }
+  .tray {
+    display: flex;
+    align-items: center;
+    padding: 0 12px;
+    color: #fff;
+    border-left: 1px solid #0f3fa6;
+    background: linear-gradient(#0c59b9, #139ee9 10%, #18b9f1 20%, #0c8de4 80%, #1167c8);
+  }
+
+  /* ---------- start menu (Popover API) ---------- */
+  .start-menu {
+    inset: auto auto var(--taskbar) 0;
+    margin: 0;
+    padding: 0;
+    width: min(300px, 100vw);
+    border: 1px solid #0b3a9c;
+    border-radius: 8px 8px 0 0;
+    overflow: hidden;
+    background: #fff;
+    box-shadow: 2px -2px 10px #0006;
+    & header {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      padding: 8px;
+      color: #fff;
+      font-size: 14px;
+      text-shadow: 1px 1px 1px #0008;
+      background: linear-gradient(#1c5ad7, #3b81f2 50%, #1c5ad7);
+      & img {
+        border: 2px solid #fff;
+        border-radius: 3px;
+      }
+    }
+    & ul {
+      list-style: none;
+      margin: 0;
+      padding: 4px;
+    }
+    & li.sep {
+      border-top: 1px solid #ccd;
+      margin-top: 4px;
+      padding-top: 4px;
+    }
+    & li > button,
+    & li > a {
+      all: unset;
+      box-sizing: border-box;
+      width: 100%;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      padding: 4px 6px;
+      color: #000;
+      font-size: 12px;
+      cursor: default;
+      &:hover,
+      &:focus-visible {
+        background: var(--sel);
+        color: #fff;
+      }
+    }
+    & footer {
+      display: flex;
+      justify-content: flex-end;
+      padding: 6px;
+      background: linear-gradient(#3b81f2, #1c5ad7);
+    }
+  }
+
+  /* ---------- balloon tip ---------- */
+  .balloon {
+    inset: auto 8px calc(var(--taskbar) + 10px) auto;
+    margin: 0;
+    max-width: 260px;
+    padding: 8px 24px 8px 10px;
+    background: #ffffe1;
+    border: 1px solid #000;
+    border-radius: 8px;
+    box-shadow: 2px 2px 6px #0005;
+    overflow: visible;
+    font-family: var(--font);
+    & b {
+      display: block;
+      margin-bottom: 4px;
+    }
+    &::after {
+      content: "";
+      position: absolute;
+      right: 30px;
+      bottom: -10px;
+      border: 10px solid transparent;
+      border-top-color: #000;
+      border-bottom: 0;
+    }
+    & .balloon-x {
+      all: unset;
+      position: absolute;
+      top: 2px;
+      right: 6px;
+      cursor: pointer;
+      font-size: 14px;
+    }
+    & .balloon-text {
+      all: unset;
+      cursor: pointer;
+      text-decoration: underline;
+      color: #003399;
+    }
+  }
+
+  /* ---------- shut down ---------- */
+  .shutdown {
+    position: fixed;
+    inset: 0;
+    z-index: 20000;
+    background: #000;
+    display: grid;
+    place-content: center;
+    justify-items: center;
+    gap: 24px;
+    & p {
+      color: #f08a24;
+      font: 24px var(--font);
+      text-align: center;
+      margin: 0 16px;
+    }
+  }
+
+  /* ---------- Pipeline Green ---------- */
+  .pipe-game {
+    display: grid;
+    gap: 8px;
+  }
+  .pipe-help,
+  .pipe-msg {
+    margin: 0;
+  }
+  .pipe-msg {
+    min-height: 1.5em;
+    font-weight: bold;
+  }
+  .pipe-grid {
+    display: grid;
+    grid-template-columns: auto repeat(var(--n, 4), minmax(0, 44px)) auto;
+    justify-content: center;
+    background: #20303a;
+    padding: 6px;
+    border: 2px inset #999;
+  }
+  .pipe-end {
+    align-self: center;
+    color: #b6f28a;
+    font-size: 11px;
+    padding: 0 4px;
+    white-space: nowrap;
+  }
+  .pipe {
+    all: unset;
+    aspect-ratio: 1;
+    display: block;
+    background: #2c3e4a;
+    outline: 1px solid #20303a;
+    cursor: pointer;
+    & svg {
+      display: block;
+      width: 100%;
+      height: 100%;
+      stroke: #8a9aa6;
+      stroke-width: 10;
+      fill: #8a9aa6;
+      transition: rotate 0.1s;
+    }
+    &.wet svg {
+      stroke: #4cd137;
+      fill: #4cd137;
+    }
+    &:focus-visible {
+      outline: 2px solid #ffd34d;
+      z-index: 1;
+    }
+    &:disabled {
+      cursor: default;
+    }
+  }
+  .pipe-bar {
+    display: flex;
+    gap: 12px;
+    align-items: center;
+    justify-content: space-between;
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    *,
+    ::view-transition-group(*) {
+      animation: none !important;
+      transition: none !important;
+    }
+  }
+}

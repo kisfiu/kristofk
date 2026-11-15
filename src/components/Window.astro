@@ -1,0 +1,23 @@
+---
+import Icon from "./Icon.astro";
+
+interface Props {
+  id: string;
+  title: string;
+  icon: string;
+  width: number;
+}
+const { id, title, icon, width } = Astro.props;
+---
+<section class="window" id={`win-${id}`} role="dialog" aria-labelledby={`t-${id}`} tabindex="-1" hidden style={`--w:${width}px`}>
+  <div class="title-bar">
+    <div class="title-bar-text" id={`t-${id}`}><Icon name={icon} size={16} /> {title}</div>
+    <div class="title-bar-controls">
+      <button type="button" aria-label="Minimize" data-act="min"></button>
+      <button type="button" aria-label="Maximize" data-act="max"></button>
+      <button type="button" aria-label="Close" data-act="close"></button>
+    </div>
+  </div>
+  <div class="window-body"><slot /></div>
+  <slot name="status" />
+</section>

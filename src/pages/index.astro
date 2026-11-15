@@ -1,0 +1,113 @@
+---
+import "../styles/os.css";
+import { getCollection, render } from "astro:content";
+import Icon from "../components/Icon.astro";
+import Icons from "../components/Icons.astro";
+import Pipeline from "../components/Pipeline.astro";
+import Window from "../components/Window.astro";
+
+const items = (await getCollection("items")).sort((a, b) => a.data.order - b.data.order);
+const inPlace = (p: string) => items.filter((i) => i.data.parent === p);
+const windows = await Promise.all(
+  items.filter((i) => !i.data.opens).map(async (i) => ({ ...i, Content: (await render(i)).Content })),
+);
+const desktop = inPlace("desktop");
+const description =
+  "Kristóf Kovács: Developer Experience Engineer, founder of the Invisible School, Rotarian. A personal site that boots like it's 2003.";
+---
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>KK · Kristóf Kovács</title>
+    <meta name="description" content={description} />
+    <meta property="og:title" content="KK · Kristóf Kovács" />
+    <meta property="og:description" content={description} />
+    <meta property="og:image" content={new URL(`${import.meta.env.BASE_URL.replace(/\/?$/, "/")}profile.jpg`, Astro.site)} />
+    <meta name="theme-color" content="#245edb" />
+    <link rel="icon" href="favicon.svg" type="image/svg+xml" />
+    <script is:inline>
+      // Decide before first paint so the desktop never flashes before the boot screen.
+      try {
+        if (!sessionStorage.getItem("kk-booted") && !location.hash && !matchMedia("(prefers-reduced-motion: reduce)").matches)
+          document.documentElement.dataset.boot = "1";
+      } catch {}
+    </script>
+  </head>
+  <body>
+    <Icons />
+
+    <div id="boot" class="boot">
+      <div class="boot-logo"><span class="boot-kk">KK</span><span class="boot-ed">Personal Edition</span></div>
+      <div class="boot-bar" role="progressbar" aria-label="Loading"><i></i><i></i><i></i></div>
+      <p class="boot-copy">© 2026 Kristóf Kovács</p>
+      <button type="button" id="boot-skip" class="boot-skip">Skip ▸</button>
+    </div>
+
+    <main id="desktop" class="desktop">
+      <h1 class="visually-hidden">Kristóf Kovács, personal site</h1>
+      <ul class="icons">
+        {desktop.map((i) => (
+          <li><button type="button" class="icon" data-open={i.data.opens ?? i.id}><Icon name={i.data.icon} /><span>{i.data.label ?? i.data.title}</span></button></li>
+        ))}
+      </ul>
+
+      <p class="counter">Visitors <output id="counter">000000</output></p>
+
+      {windows.map(({ id, data, Content }) => (
+        <Window id={id} title={data.title} icon={data.icon} width={data.width}>
+          {data.folder ? (
+            <ul class="icons folder-view">
+              {inPlace(data.folder).map((c) => (
+                <li><button type="button" class="icon" data-open={c.data.opens ?? c.id}><Icon name={c.data.icon} /><span>{c.data.label ?? c.data.title}</span></button></li>
+              ))}
+            </ul>
+          ) : data.app === "pipeline" ? (
+            <Pipeline />
+          ) : (
+            <article class="doc"><Content /></article>
+          )}
+          {data.links.length > 0 && (
+            <nav class="links" aria-label="Links">
+              {data.links.map((l) => <a href={l.href} target="_blank" rel="noopener">{l.label} ↗</a>)}
+            </nav>
+          )}
+          {data.folder && (
+            <div class="status-bar" slot="status"><p class="status-bar-field">{inPlace(data.folder).length} objects</p></div>
+          )}
+        </Window>
+      ))}
+    </main>
+
+    <footer class="taskbar">
+      <button type="button" class="start" popovertarget="start-menu"><Icon name="kk" size={20} /> start</button>
+      <div id="tasks" class="tasks" role="toolbar" aria-label="Open windows"></div>
+      <div class="tray"><time id="clock">--:--</time></div>
+    </footer>
+
+    <div id="start-menu" class="start-menu" popover>
+      <header><img src="profile.jpg" alt="" width="40" height="40" /><b>Kristóf Kovács</b></header>
+      <ul>
+        {desktop.map((i) => (
+          <li><button type="button" data-open={i.data.opens ?? i.id}><Icon name={i.data.icon} size={24} />{i.data.label ?? i.data.title}</button></li>
+        ))}
+        <li class="sep"><a href="Kristof-Kovacs-CV.pdf" download><Icon name="disk" size={24} />Download CV (PDF)</a></li>
+        <li><a href="https://www.linkedin.com/in/kkristof/" target="_blank" rel="noopener"><Icon name="contacts" size={24} />LinkedIn</a></li>
+      </ul>
+      <footer><button type="button" id="shutdown-btn">⏻ Shut down…</button></footer>
+    </div>
+
+    <div id="balloon" class="balloon" popover="manual" role="status">
+      <button type="button" class="balloon-x" aria-label="Close notification">×</button>
+      <b data-title></b>
+      <button type="button" class="balloon-text" data-text></button>
+    </div>
+
+    <div id="shutdown" class="shutdown" hidden><p>It is now safe to turn off your computer.</p><button type="button">Restart</button></div>
+
+    <script>
+      import "../scripts/desktop";
+    </script>
+  </body>
+</html>
