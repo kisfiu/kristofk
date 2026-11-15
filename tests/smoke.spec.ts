@@ -1,10 +1,16 @@
 import { expect, type Page, test } from "@playwright/test";
 
 const errors: string[] = [];
-test.beforeEach(({ page }) => {
+const WEATHER = "**/api.open-meteo.com/**";
+const weather = (weather_code: number, is_day: 0 | 1, temperature_2m: number) => ({
+  json: { current: { weather_code, is_day, temperature_2m } },
+});
+test.beforeEach(async ({ page }) => {
   errors.length = 0;
   page.on("pageerror", (e) => errors.push(e.message));
   page.on("console", (m) => m.type() === "error" && errors.push(m.text()));
+  // never depend on the real weather service in tests: a clear day unless a test says otherwise
+  await page.route(WEATHER, (r) => r.fulfill(weather(0, 1, 18)));
 });
 test.afterEach(() => expect(errors).toEqual([]));
 
@@ -80,7 +86,16 @@ test("deep link opens the resume without the boot screen", async ({ page }) => {
 
 test("every desktop icon and folder item opens its window", async ({ page, isMobile }) => {
   await skipBoot(page);
-  const desktop = ["My Resume", "Hobbies", "NGOs", "Other Stuff", "Internet", "Recycle Bin", "Pipeline Green"];
+  const desktop = [
+    "My Resume",
+    "Hobbies",
+    "NGOs",
+    "Other Stuff",
+    "Internet",
+    "Weather",
+    "Recycle Bin",
+    "Pipeline Green",
+  ];
   const folders: Record<string, string[]> = {
     Hobbies: ["Books", "Marketplace", "Travel", "Renovation", "Baseball"],
     NGOs: ["Invisible School", "Rotary Club"],
@@ -362,6 +377,43 @@ test("the first line of Rotary and My Resume fits on one line", async ({ page, i
     const lineHeight = await line.evaluate((p) => Number.parseFloat(getComputedStyle(p).lineHeight));
     expect((await line.boundingBox())?.height).toBeLessThan(lineHeight * 1.5);
   }
+});
+
+test("the desktop follows the live Hortobágy weather", async ({ page }) => {
+  await page.route(WEATHER, (r) => r.fulfill(weather(63, 0, 6.6))); // moderate rain, night
+  await page.addInitScript(() => sessionStorage.setItem("kk-booted", "1")); // straight to the desktop
+  await page.goto("./");
+  const html = page.locator("html");
+  await expect(html).toHaveAttribute("data-weather", "rain");
+  await expect(html).toHaveAttribute("data-daylight", "night");
+  const tray = page.locator("#weather");
+  await expect(tray).toHaveText("🌧️ 7°C");
+  await expect(tray).toHaveAttribute("aria-label", "Hortobágy now: rain, 7°C");
+  // the overlay never blocks clicks on the desktop
+  expect(await page.locator(".weather").evaluate((w) => getComputedStyle(w).pointerEvents)).toBe("none");
+  // clicking the tray reading opens the Weather app, which shows the same live reading and explains the effect
+  await tray.click();
+  const app = page.getByRole("dialog", { name: "Hortobágy Weather" });
+  await expect(app).toBeVisible();
+  await expect(app.locator("[data-wx-text]")).toHaveText("Hortobágy now: rain, 7°C (night)");
+  await expect(app.getByRole("heading", { name: "How the desktop background works" })).toBeVisible();
+
+  await page.unroute(WEATHER);
+  await page.route(WEATHER, (r) => r.fulfill(weather(73, 1, -2))); // snow, day
+  await page.reload();
+  await expect(html).toHaveAttribute("data-weather", "snow");
+  await expect(tray).toHaveText("❄️ -2°C");
+});
+
+test("if the weather service is down, the desktop simply stays sunny", async ({ page }) => {
+  await page.unroute(WEATHER);
+  await page.route(WEATHER, (r) => r.fulfill({ status: 503, body: "down" }));
+  await page.goto("./#");
+  await page.waitForTimeout(500);
+  await expect(page.locator("html")).not.toHaveAttribute("data-weather", /.+/);
+  await expect(page.locator("#weather")).toBeHidden();
+  await expect(page.locator("[data-wx-text]")).toContainText("Couldn't reach the weather service");
+  errors.length = 0; // the browser logs the failed request itself; the page must not break
 });
 
 test("NGOs is the second desktop icon and the Recycle Bin sits bottom right", async ({ page }) => {

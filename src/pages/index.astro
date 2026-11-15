@@ -1,6 +1,7 @@
 ---
 import "../styles/os.css";
 import { getCollection, render } from "astro:content";
+import wallpaper from "../assets/hortobagy.svg?raw";
 import Icon from "../components/Icon.astro";
 import Icons from "../components/Icons.astro";
 import Internet from "../components/Internet.astro";
@@ -80,6 +81,8 @@ const description =
       </div>
     </div>
 
+    <div class="wallpaper" aria-hidden="true" set:html={wallpaper}></div>
+    <div class="weather" aria-hidden="true"></div>
     <main id="desktop" class="desktop">
       <h1 class="visually-hidden">Kristóf Kovács, personal site</h1>
       <ul class="icons">
@@ -137,7 +140,10 @@ const description =
     <footer class="taskbar">
       <button type="button" class="start" popovertarget="start-menu"><Icon name="kk" size={28} /> start</button>
       <div id="tasks" class="tasks" role="toolbar" aria-label="Open windows"></div>
-      <div class="tray"><button type="button" id="clock" class="clock" popovertarget="calendar">--:--</button></div>
+      <div class="tray">
+        <button type="button" id="weather" class="tray-weather" data-open="weather" hidden></button>
+        <button type="button" id="clock" class="clock" popovertarget="calendar">--:--</button>
+      </div>
     </footer>
 
     <div id="start-menu" class="start-menu" popover>
@@ -197,6 +203,7 @@ const description =
 
     <script>
       import "../scripts/desktop";
+      import "../scripts/weather";
     </script>
   </body>
 </html>

@@ -24,15 +24,57 @@
   body {
     font-family: var(--font);
     font-size: 12px;
-    /* drawn wallpaper: Hortobágy with the Nine-hole Bridge, grey cattle, racka sheep and a far-away Parliament.
-       Relative url so Vite fingerprints it and it works under any base path. */
-    background: #2167d8 url("../assets/hortobagy.svg") 62% 100% / cover no-repeat;
-    /* portrait phones: show ~1100 of the 1600 units across so the bridge and the Parliament both fit;
-       the sky above continues in the image's top colour */
-    @media (orientation: portrait) {
-      background-size: calc(100vw * 16 / 11) auto;
-      background-position: 58% 100%;
+    background: #2167d8; /* the wallpaper's top sky colour, behind the inline wallpaper below */
+  }
+
+  /* drawn wallpaper (Hortobágy, Nine-hole Bridge, cattle, racka sheep, far Parliament), inlined into the
+     page so the live weather can restyle its parts: the sun becomes a moon at night, and so on */
+  .wallpaper {
+    position: fixed;
+    inset: 0;
+    overflow: hidden;
+    pointer-events: none;
+    & svg {
+      position: absolute;
+      bottom: 0;
+      /* like background-size: cover, anchored at 62% across and the bottom edge */
+      width: max(100vw, 160dvh);
+      height: auto;
+      left: 62%;
+      translate: -62% 0;
     }
+  }
+  /* portrait phones: show ~1100 of the 1600 units across so the bridge and the Parliament both fit;
+     the sky above continues in the wallpaper's top colour */
+  @media (orientation: portrait) {
+    .wallpaper svg {
+      width: calc(100vw * 16 / 11);
+      left: 58%;
+      translate: -58% 0;
+    }
+  }
+  html[data-daylight="night"] .wallpaper {
+    & .sun {
+      display: none;
+    }
+    & .moon {
+      display: inline;
+    }
+    & .glint {
+      opacity: 0.55; /* moonlight makes a dimmer ninth hole */
+    }
+  }
+  /* behind clouds, fog, rain, snow or a storm the sun (or moon) and its glint fade */
+  html:is(
+      [data-weather="cloudy"],
+      [data-weather="fog"],
+      [data-weather="rain"],
+      [data-weather="snow"],
+      [data-weather="storm"]
+    )
+    .wallpaper
+    :is(.sun, .moon, .glint) {
+    opacity: 0.3;
   }
 
   .sprite {
@@ -145,6 +187,103 @@
     position: absolute;
     right: 24px;
     bottom: 12px;
+  }
+
+  /* ---------- live weather at Hortobágy, laid over the wallpaper (set by scripts/weather.ts) ---------- */
+  .weather {
+    position: fixed;
+    inset: 0 0 var(--taskbar) 0;
+    pointer-events: none;
+    &::before,
+    &::after {
+      content: "";
+      position: absolute;
+      inset: 0;
+    }
+  }
+  html[data-daylight="night"] .weather {
+    background: rgb(6 14 40 / 0.6);
+  }
+  html[data-weather="cloudy"] .weather::before {
+    background: linear-gradient(rgb(110 122 138 / 0.55), rgb(170 178 188 / 0.4) 60%, rgb(170 178 188 / 0.1));
+  }
+  html[data-weather="fog"] .weather::before {
+    background: linear-gradient(rgb(230 232 235 / 0.3), rgb(240 240 240 / 0.7) 55%, rgb(235 235 230 / 0.5));
+  }
+  html:is([data-weather="rain"], [data-weather="storm"], [data-weather="snow"]) .weather::before {
+    background: linear-gradient(rgb(90 100 115 / 0.65), rgb(140 148 160 / 0.45) 60%, rgb(120 128 140 / 0.25));
+  }
+  html[data-weather="storm"] .weather::before {
+    background: linear-gradient(rgb(40 46 62 / 0.75), rgb(80 88 104 / 0.55) 60%, rgb(60 66 80 / 0.35));
+  }
+  html:is([data-weather="rain"], [data-weather="storm"]) .weather::after {
+    background: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='90' height='90'%3E%3Cg stroke='white' stroke-opacity='.55' stroke-width='1.3' stroke-linecap='round'%3E%3Cpath d='M10 0l-4 14M40 30l-4 14M70 60l-4 14M25 55l-4 14M60 10l-4 14M82 38l-4 14M5 75l-4 14M48 70l-4 14'/%3E%3C/g%3E%3C/svg%3E");
+    animation: weather-rain 0.45s linear infinite;
+  }
+  html[data-weather="snow"] .weather::after {
+    background: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='140' height='140'%3E%3Cg fill='white' fill-opacity='.9'%3E%3Ccircle cx='12' cy='18' r='2.4'/%3E%3Ccircle cx='60' cy='8' r='1.6'/%3E%3Ccircle cx='104' cy='30' r='2.2'/%3E%3Ccircle cx='34' cy='62' r='1.8'/%3E%3Ccircle cx='88' cy='78' r='2.6'/%3E%3Ccircle cx='128' cy='100' r='1.7'/%3E%3Ccircle cx='20' cy='112' r='2'/%3E%3Ccircle cx='70' cy='126' r='2.3'/%3E%3C/g%3E%3C/svg%3E");
+    animation: weather-snow 7s linear infinite;
+  }
+  html[data-daylight="night"][data-weather="clear"] .weather::after {
+    background: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='200' height='200'%3E%3Cg fill='white'%3E%3Ccircle cx='20' cy='30' r='1.6'/%3E%3Ccircle cx='90' cy='12' r='2'/%3E%3Ccircle cx='150' cy='60' r='1.4'/%3E%3Ccircle cx='60' cy='110' r='1.8'/%3E%3Ccircle cx='175' cy='150' r='1.6'/%3E%3Ccircle cx='120' cy='170' r='1.3'/%3E%3C/g%3E%3C/svg%3E");
+    mask-image: linear-gradient(black 35%, transparent 60%); /* stars only in the sky */
+  }
+  html[data-weather="storm"] .weather {
+    animation: weather-lightning 9s infinite;
+  }
+  @keyframes weather-rain {
+    to {
+      background-position: -18px 90px;
+    }
+  }
+  @keyframes weather-snow {
+    to {
+      background-position: 20px 140px;
+    }
+  }
+  @keyframes weather-lightning {
+    0%,
+    90%,
+    94%,
+    100% {
+      background-color: rgb(6 14 40 / 0.3);
+    }
+    91%,
+    93% {
+      background-color: rgb(255 255 255 / 0.35);
+    }
+  }
+  .tray-weather {
+    all: unset;
+    margin-right: 10px;
+    padding: 4px 6px;
+    border-radius: 3px;
+    cursor: pointer;
+    &:hover {
+      background: #ffffff22;
+    }
+    &:focus-visible {
+      outline: 1px dotted #fff;
+    }
+    &[hidden] {
+      display: none;
+    }
+  }
+  .wx-now {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    padding: 8px 10px;
+    margin-bottom: 8px;
+    background: #eef4fd;
+    border: 1px solid #c5d3e8;
+    & p {
+      margin: 0;
+    }
+  }
+  .wx-icon {
+    font-size: 34px;
+    line-height: 1;
   }
 
   /* ---------- welcome: choose a user ---------- */
