@@ -15,7 +15,7 @@
     "test:unit": "vitest run --dir src",
     "test:e2e": "playwright test",
     "test": "npm run lint && npm run check && npm run test:unit && npm run build && npm run test:e2e",
-    "lighthouse": "lhci autorun"
+    "lighthouse": "CHROME_PATH=\"$(node -p \"require('playwright-core').chromium.executablePath()\")\" lhci autorun"
   },
   "dependencies": {
     "astro": "^7.4.12",
