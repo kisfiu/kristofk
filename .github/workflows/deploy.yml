@@ -20,7 +20,7 @@ jobs:
       # Pages path: "/" for <user>.github.io, "/<repo>" for any other repo name. Only the deploy build and its tests use it.
       PAGES_BASE: ${{ endsWith(github.event.repository.name, '.github.io') && '/' || format('/{0}', github.event.repository.name) }}
     steps:
-      - uses: actions/checkout@v5
+      - uses: actions/checkout@v7
       - uses: actions/setup-node@v5
         with:
           node-version: 24
