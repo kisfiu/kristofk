@@ -7,7 +7,6 @@ order: 1
 links:
 
 - { label: "LinkedIn", href: "https://www.linkedin.com/in/kkristof/" }
-- { label: "GitHub", href: "https://github.com/kisfiu" }
 
 ---
 
