@@ -57,7 +57,7 @@ jobs:
       - run: npm run test:e2e
         env:
           BASE_PATH: ${{ env.PAGES_BASE }}
-      - uses: actions/upload-pages-artifact@v4
+      - uses: actions/upload-pages-artifact@v5
         with:
           path: dist
 
