@@ -5,6 +5,11 @@ updates:
     schedule: { interval: monthly }
     groups:
       all: { patterns: ["*"] }
+    ignore:
+      # TypeScript 7 ships no compiler API, and astro check only supports TypeScript 5 and 6.
+      # Remove this once TypeScript 7.1 and Astro's replacement checker (@astrojs/ts-content-mapper) are stable.
+      - dependency-name: typescript
+        update-types: ["version-update:semver-major"]
   - package-ecosystem: github-actions
     directory: /
     schedule: { interval: monthly }
