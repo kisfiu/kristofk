@@ -265,6 +265,16 @@ test("the taskbar clock opens a calendar with today marked", async ({ page }) =>
   const title = cal.locator("[data-cal-title]");
   await expect(title).toHaveText(new RegExp(String(now.getFullYear())));
   await expect(cal.locator('td[aria-current="date"]')).toHaveText(String(now.getDate()));
+  // same size for every month: always six week rows; flip a year forward to hit 4-, 5- and 6-row months
+  await page.waitForFunction(() => document.getAnimations().length === 0); // let the open animation finish
+  const box = await cal.boundingBox();
+  for (let i = 0; i < 12; i++) {
+    await expect(cal.locator("[data-cal-days] tr")).toHaveCount(6);
+    expect((await cal.boundingBox())?.height).toBe(box?.height);
+    await cal.getByRole("button", { name: "Next month" }).click();
+  }
+  await cal.getByRole("button", { name: "Previous month" }).click();
+  for (let i = 0; i < 11; i++) await cal.getByRole("button", { name: "Previous month" }).click();
   const before = await title.textContent();
   await cal.getByRole("button", { name: "Next month" }).click();
   await expect(title).not.toHaveText(before ?? "");

@@ -307,7 +307,7 @@ function drawMonth() {
     ...Array(lead).fill(null),
     ...Array.from({ length: new Date(y, m + 1, 0).getDate() }, (_, i) => i + 1),
   ];
-  while (cells.length % 7) cells.push(null);
+  while (cells.length < 42) cells.push(null); // always 6 weeks (the most a month spans), so the popup never changes size
   let html = "";
   for (let r = 0; r < cells.length; r += 7) {
     html += `<tr>${cells
