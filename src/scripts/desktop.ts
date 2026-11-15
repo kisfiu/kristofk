@@ -14,7 +14,7 @@ function vt(change: () => void) {
   } else change();
 }
 
-const store = {
+export const store = {
   get: (s: Storage, k: string) => {
     try {
       return s.getItem(k);

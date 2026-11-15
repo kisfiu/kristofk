@@ -1,0 +1,47 @@
+<!-- Racka, Kristóf's helper and guide to the site: an original racka sheep head (scripts/helper.ts) -->
+<div class="helper" id="helper" hidden>
+  <div class="helper-bubble" id="helper-bubble" role="dialog" aria-label="Racka the guide" hidden>
+    <button type="button" class="helper-x" data-helper="dismiss" aria-label="Send Racka away">×</button>
+    <p data-helper="text" aria-live="polite"></p>
+    <div class="helper-actions" data-helper="actions"></div>
+  </div>
+  <button type="button" class="helper-head" data-helper="head" aria-label="Racka, your guide: click to talk">
+    <svg viewBox="0 0 100 92" width="86" height="80" aria-hidden="true">
+      <!-- long spiral racka horns in a V -->
+      <g stroke="#d9ccb2" stroke-width="6" stroke-linecap="round" stroke-dasharray="7 3" fill="none">
+        <path d="M40 30 L18 2" />
+        <path d="M60 30 L82 2" />
+      </g>
+      <!-- droopy ears -->
+      <ellipse cx="22" cy="46" rx="13" ry="6" fill="#3a332c" transform="rotate(-20 22 46)" />
+      <ellipse cx="78" cy="46" rx="13" ry="6" fill="#3a332c" transform="rotate(20 78 46)" />
+      <!-- face -->
+      <ellipse cx="50" cy="54" rx="21" ry="28" fill="#3a332c" />
+      <!-- woolly tuft on top -->
+      <g fill="#f6f2e8" stroke="#d6cdbb" stroke-width="1.5">
+        <circle cx="38" cy="30" r="9" />
+        <circle cx="50" cy="25" r="10" />
+        <circle cx="62" cy="30" r="9" />
+      </g>
+      <!-- eyes (blink) -->
+      <g class="helper-eyes" fill="#fff">
+        <ellipse cx="41" cy="50" rx="6" ry="6.5" />
+        <ellipse cx="59" cy="50" rx="6" ry="6.5" />
+      </g>
+      <g fill="#1a1612">
+        <circle cx="42.5" cy="51.5" r="3" />
+        <circle cx="60.5" cy="51.5" r="3" />
+      </g>
+      <g fill="#fff">
+        <circle cx="43.5" cy="50" r="1" />
+        <circle cx="61.5" cy="50" r="1" />
+      </g>
+      <!-- nose and smile -->
+      <ellipse cx="50" cy="70" rx="7" ry="4" fill="#5a4f45" />
+      <path d="M44 76 q6 5 12 0" stroke="#f6f2e8" stroke-width="2.2" fill="none" stroke-linecap="round" />
+    </svg>
+  </button>
+</div>
+<script>
+  import "../scripts/helper";
+</script>
