@@ -12,6 +12,8 @@ const skipBoot = async (page: Page) => {
   await page.goto("/");
   await page.getByRole("button", { name: "Skip" }).click();
   await expect(page.locator("#boot")).toBeHidden();
+  await page.getByRole("button", { name: /Other, guest/ }).click();
+  await expect(page.locator("#welcome")).toBeHidden();
 };
 const openIcon = async (page: Page, name: string, isMobile: boolean) => {
   const icon = page
@@ -21,13 +23,39 @@ const openIcon = async (page: Page, name: string, isMobile: boolean) => {
   await (isMobile ? icon.tap() : icon.dblclick());
 };
 
-test("boot plays once per tab and can be skipped", async ({ page }) => {
+test("boot, then choosing IT recruiter opens the resume; reload skips both", async ({ page }) => {
   await page.goto("/");
   await expect(page.locator("#boot")).toBeVisible();
   await page.getByRole("button", { name: "Skip" }).click();
-  await expect(page.getByRole("button", { name: "My Resume" })).toBeVisible();
+  await expect(page.getByText("To begin, click your user name")).toBeVisible();
+  await page.getByRole("button", { name: /IT recruiter/ }).click();
+  await expect(page.getByRole("dialog", { name: /My Resume/ })).toBeVisible();
+  await expect(page.locator("#balloon")).toContainText("Welcome, recruiter!", { timeout: 5000 });
   await page.reload();
   await expect(page.locator("#boot")).toBeHidden();
+  await expect(page.locator("#welcome")).toBeHidden();
+  await expect(page.locator(".desktop > .icons").getByRole("button", { name: "My Resume" })).toBeVisible();
+});
+
+test("nonprofit opens NGOs; log off closes windows and shows the users again", async ({ page }) => {
+  await page.goto("/");
+  await page.getByRole("button", { name: "Skip" }).click();
+  await page.getByRole("button", { name: /Nonprofit cooperation/ }).click();
+  await expect(page.getByRole("dialog", { name: "NGOs" })).toBeVisible();
+  await page.getByRole("button", { name: "start" }).click();
+  await page.getByRole("button", { name: /Log off/ }).click();
+  await expect(page.locator("#welcome")).toBeVisible();
+  await expect(page.locator(".window:not([hidden])")).toHaveCount(0);
+  await page.getByRole("button", { name: /Other, guest/ }).click();
+  await expect(page.locator("#welcome")).toBeHidden();
+  await expect(page.locator(".window:not([hidden])")).toHaveCount(0);
+});
+
+test("reduced motion skips the boot animation but still asks who you are", async ({ page }) => {
+  await page.emulateMedia({ reducedMotion: "reduce" });
+  await page.goto("/");
+  await expect(page.locator("#boot")).toBeHidden();
+  await expect(page.getByRole("button", { name: /IT recruiter/ })).toBeFocused();
 });
 
 test("deep link opens the resume without the boot screen", async ({ page }) => {
@@ -157,6 +185,9 @@ test("screenshots for review", async ({ page, isMobile }, info) => {
   await page.goto("/");
   await page.screenshot({ path: `${dir}-1-boot.png` });
   await page.getByRole("button", { name: "Skip" }).click();
+  await settled();
+  await page.screenshot({ path: `${dir}-1b-welcome.png` });
+  await page.getByRole("button", { name: /Other, guest/ }).click();
   await openIcon(page, "My Resume", isMobile);
   await settled();
   await page.screenshot({ path: `${dir}-2-resume.png` });

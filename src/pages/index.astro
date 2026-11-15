@@ -13,6 +13,11 @@ const windows = await Promise.all(
   items.filter((i) => !i.data.opens).map(async (i) => ({ ...i, Content: (await render(i)).Content })),
 );
 const desktop = inPlace("desktop");
+const users = [
+  { role: "recruiter", name: "IT recruiter", hint: "Resume and CV download", icon: "briefcase" },
+  { role: "nonprofit", name: "Nonprofit cooperation", hint: "Invisible School and Rotary", icon: "hands" },
+  { role: "guest", name: "Other, guest", hint: "Just looking around", icon: "guest" },
+];
 const description =
   "Kristóf Kovács: Developer Experience Engineer, founder of the Invisible School, Rotarian. A personal site that boots like it's 2003.";
 ---
@@ -29,10 +34,13 @@ const description =
     <meta name="theme-color" content="#245edb" />
     <link rel="icon" href="favicon.svg" type="image/svg+xml" />
     <script is:inline>
-      // Decide before first paint so the desktop never flashes before the boot screen.
+      // Decide before first paint so the desktop never flashes before the boot and welcome screens.
       try {
-        if (!sessionStorage.getItem("kk-booted") && !location.hash && !matchMedia("(prefers-reduced-motion: reduce)").matches)
-          document.documentElement.dataset.boot = "1";
+        if (!sessionStorage.getItem("kk-booted") && !location.hash) {
+          const d = document.documentElement.dataset;
+          d.welcome = "1";
+          if (!matchMedia("(prefers-reduced-motion: reduce)").matches) d.boot = "1";
+        }
       } catch {}
     </script>
   </head>
@@ -47,6 +55,29 @@ const description =
       <div class="boot-bar" role="progressbar" aria-label="Loading"><i></i><i></i><i></i></div>
       <p class="boot-copy">© 2026 Kristóf Kovács</p>
       <button type="button" id="boot-skip" class="boot-skip">Skip ▸</button>
+    </div>
+
+    <div id="welcome" class="welcome">
+      <div class="welcome-main">
+        <div class="welcome-left">
+          <p class="welcome-brand">KristofK</p>
+          <p>To begin, click your user name</p>
+        </div>
+        <ul class="welcome-users" aria-label="Choose a user">
+          {users.map((u) => (
+            <li>
+              <button type="button" data-role={u.role}>
+                <span class="welcome-pic"><Icon name={u.icon} /></span>
+                <span><b>{u.name}</b><small>{u.hint}</small></span>
+              </button>
+            </li>
+          ))}
+        </ul>
+      </div>
+      <div class="welcome-bottom">
+        <button type="button" data-turn-off>⏻ Turn off KristofK</button>
+        <span>Your choice only decides which window opens first.</span>
+      </div>
     </div>
 
     <main id="desktop" class="desktop">
@@ -101,7 +132,7 @@ const description =
         <li class="sep"><a href="Kristof-Kovacs-CV.pdf" download><Icon name="disk" size={24} />Download CV (PDF)</a></li>
         <li><a href="https://www.linkedin.com/in/kkristof/" target="_blank" rel="noopener"><Icon name="contacts" size={24} />LinkedIn</a></li>
       </ul>
-      <footer><button type="button" id="shutdown-btn">⏻ Shut down…</button></footer>
+      <footer><button type="button" id="logoff-btn">🔑 Log off</button><button type="button" id="shutdown-btn">⏻ Shut down…</button></footer>
     </div>
 
     <div id="balloon" class="balloon" popover="manual" role="status">

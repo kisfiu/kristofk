@@ -198,7 +198,8 @@ const days = Math.max(0, Math.floor((Date.now() - Date.UTC(2026, 10, 15)) / 864e
 $("#counter")!.textContent = String(1337 + days * 3 + visits).padStart(6, "0");
 
 // ---------- balloon notifications ----------
-const balloons = [
+type Role = "recruiter" | "nonprofit" | "guest";
+const generic = [
   { title: "New resume available", text: "Click here to open My Resume.", open: "resume" },
   {
     title: "Mentors wanted",
@@ -207,11 +208,30 @@ const balloons = [
   },
   { title: "Tip of the day", text: "Your pipeline is red. Can you make it green?", open: "pipeline-green" },
 ];
+const greeting: Record<Role, (typeof generic)[number]> = {
+  recruiter: {
+    title: "Welcome, recruiter!",
+    text: "My resume is open. The PDF download is in its top-right corner.",
+    open: "resume",
+  },
+  nonprofit: {
+    title: "Welcome, partner!",
+    text: "The Invisible School is looking for mentors. Click to read more.",
+    open: "invisible-school",
+  },
+  guest: { title: "Welcome, guest!", text: "Your pipeline is red. Can you make it green?", open: "pipeline-green" },
+};
+const role = () => store.get(sessionStorage, "kk-role") as Role | null;
+const balloonsFor = (r: Role | null) => {
+  const first = r ? greeting[r] : undefined;
+  return first ? [first, ...generic.filter((g) => g.open !== first.open)] : generic;
+};
 const balloon = $("#balloon")!;
 let balloonTimer = 0;
 function showBalloon(i: number) {
-  const b = balloons[i];
-  if (!b || !balloon.showPopover) return;
+  const b = balloonsFor(role())[i];
+  // never pop up over the boot or welcome screen
+  if (!b || !balloon.showPopover || root.dataset.boot || root.dataset.welcome) return;
   store.set(sessionStorage, "kk-balloon", String(i + 1));
   balloon.querySelector("[data-title]")!.textContent = b.title;
   const text = balloon.querySelector<HTMLElement>("[data-text]")!;
@@ -229,7 +249,8 @@ balloon
   .querySelector(".balloon-x")!
   .addEventListener("click", () => hideBalloon(Number(store.get(sessionStorage, "kk-balloon")) - 1));
 balloon.querySelector("[data-text]")!.addEventListener("click", () => balloon.hidePopover());
-const startBalloons = () => setTimeout(() => showBalloon(Number(store.get(sessionStorage, "kk-balloon") ?? 0)), 5_000);
+const startBalloons = (delay = 5_000) =>
+  setTimeout(() => showBalloon(Number(store.get(sessionStorage, "kk-balloon") ?? 0)), delay);
 
 // ---------- shut down / restart ----------
 const shutdown = $("#shutdown")!;
@@ -248,18 +269,54 @@ shutdown.querySelector("button")!.addEventListener("click", () => {
   location.replace(location.pathname);
 });
 
-// ---------- boot ----------
+// ---------- boot → welcome (choose a user) → desktop ----------
+const firstWindow: Record<Role, string | undefined> = { recruiter: "resume", nonprofit: "ngos", guest: undefined };
+const firstUser = () => document.querySelector<HTMLButtonElement>("[data-role]")?.focus();
+
 function finishBoot() {
   if (!root.dataset.boot) return;
-  store.set(sessionStorage, "kk-booted", "1");
   vt(() => {
     delete root.dataset.boot;
   });
-  startBalloons();
+  firstUser();
 }
+
+function logOn(r: Role) {
+  store.set(sessionStorage, "kk-booted", "1");
+  store.set(sessionStorage, "kk-role", r);
+  store.set(sessionStorage, "kk-balloon", "0");
+  vt(() => {
+    delete root.dataset.welcome;
+    const id = firstWindow[r];
+    if (id) open(id);
+  });
+  startBalloons(2_000);
+}
+
+function logOff() {
+  $("#start-menu")?.hidePopover();
+  if (balloon.matches(":popover-open")) balloon.hidePopover();
+  for (const w of visible()) close(w);
+  vt(() => {
+    root.dataset.welcome = "1";
+  });
+  firstUser();
+}
+
+for (const b of document.querySelectorAll<HTMLElement>("[data-role]")) {
+  b.addEventListener("click", () => logOn(b.dataset.role as Role));
+}
+$("#logoff-btn")!.addEventListener("click", logOff);
+document.querySelector("[data-turn-off]")!.addEventListener("click", () => {
+  vt(() => {
+    shutdown.hidden = false;
+  });
+});
+
 if (root.dataset.boot) {
   setTimeout(finishBoot, 3_200);
   $("#boot-skip")!.addEventListener("click", finishBoot);
-} else startBalloons();
+} else if (root.dataset.welcome) firstUser();
+else startBalloons();
 
 if (location.hash.length > 1) open(decodeURIComponent(location.hash.slice(1)));
