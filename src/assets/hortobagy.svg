@@ -46,6 +46,7 @@
 
     <!-- Hungarian grey cattle, facing left, lyre-shaped horns (local size ~135x92) -->
     <g id="cow">
+      <rect x="-2" y="-2" width="138" height="96" fill="transparent" /><!-- whole-body hit area for clicks -->
       <g fill="#8f8a80">
         <rect x="24" y="56" width="9" height="36" rx="3" />
         <rect x="40" y="58" width="9" height="34" rx="3" />
@@ -66,6 +67,7 @@
 
     <!-- racka sheep, facing left, long spiral horns in a V (local size ~60x48) -->
     <g id="sheep">
+      <rect x="0" y="-2" width="60" height="52" fill="transparent" /><!-- whole-body hit area for clicks -->
       <g stroke="#3a332c" stroke-width="3" stroke-linecap="round">
         <path d="M18 34 v13 M26 35 v12 M42 35 v12 M50 34 v13" />
       </g>
@@ -200,16 +202,16 @@
   <rect x="1530" y="722" width="52" height="40" fill="#8a6038" stroke="#5a3d22" stroke-width="3" />
   <rect x="1440" y="752" width="78" height="12" fill="#7a5532" />
 
-  <!-- animals -->
+  <!-- animals (class "animal": click one on the desktop and it tells a fact about Kristóf) -->
   <g color="#f3efe6">
-    <use href="#sheep" transform="translate(960 742) scale(.8)" />
-    <use href="#sheep" transform="translate(1010 750) scale(.85)" />
-    <use href="#sheep" transform="translate(1062 738) scale(.75)" />
+    <use href="#sheep" class="animal sheep" transform="translate(960 742) scale(.8)" />
+    <use href="#sheep" class="animal sheep" transform="translate(1010 750) scale(.85)" />
+    <use href="#sheep" class="animal sheep" transform="translate(1062 738) scale(.75)" />
   </g>
-  <use href="#sheep" transform="translate(1110 754) scale(.85)" color="#3b332c" />
-  <use href="#cow" transform="translate(1080 812) scale(1.1)" />
-  <use href="#cow" transform="translate(1250 842) scale(1.35)" />
-  <use href="#cow" transform="translate(880 790) scale(.8)" />
+  <use href="#sheep" class="animal sheep black" transform="translate(1110 754) scale(.85)" color="#3b332c" />
+  <use href="#cow" class="animal cow" transform="translate(1080 812) scale(1.1)" />
+  <use href="#cow" class="animal cow" transform="translate(1250 842) scale(1.35)" />
+  <use href="#cow" class="animal cow" transform="translate(880 790) scale(.8)" />
 
   <!-- foreground grass tufts -->
   <g stroke="#7f7238" stroke-width="3" stroke-linecap="round" fill="none">

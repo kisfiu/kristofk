@@ -11,7 +11,6 @@ order: 4
 ======================
 
 * Youngest Rotary club president in Hungary's history (2022/23).
-* Speaks Estonian. Yes, really. B2.
 * Spent an Erasmus year in Santarém, Portugal.
 * BSc thesis: "Finiteness of Picture Languages".
 * Linux servers under his care went brrrr.
