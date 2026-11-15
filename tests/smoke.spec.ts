@@ -124,6 +124,8 @@ test("start menu, e-mail and shut down", async ({ page }) => {
   await page.getByRole("button", { name: "start" }).click();
   await page.getByRole("button", { name: /Shut down/ }).click();
   await expect(page.getByText("It is now safe to turn off your computer.")).toBeVisible();
+  await page.getByRole("button", { name: "Restart" }).click();
+  await expect(page.locator("#boot")).toBeVisible(); // restart plays the boot screen again
 });
 
 test("internet: dial-up, surf away, favorites, home", async ({ page, isMobile }) => {
@@ -243,6 +245,31 @@ test("dragging on the desktop draws a selection rectangle; Enter opens the selec
   await page.keyboard.press("Enter");
   await expect(page.getByRole("dialog", { name: /My Resume/ })).toBeVisible();
   await expect(page.getByRole("dialog", { name: "NGOs" })).toBeVisible();
+});
+
+test("drag-select works inside folder windows and Enter works after a window had focus", async ({ page, isMobile }) => {
+  test.skip(isMobile, "mouse drag");
+  await page.goto("./");
+  await page.getByRole("button", { name: "Skip" }).click();
+  await page.getByRole("button", { name: /IT recruiter/ }).click(); // opens and focuses My Resume
+  await page.waitForFunction(() => document.elementFromPoint(1000, 100)?.matches(".icons"));
+  // desktop: select Hobbies + Other Stuff while the resume window has focus, then Enter opens both
+  await page.mouse.move(100, 300);
+  await page.mouse.down();
+  await page.mouse.move(20, 200, { steps: 6 });
+  await page.mouse.up();
+  await page.keyboard.press("Enter");
+  await expect(page.getByRole("dialog", { name: "Hobbies" })).toBeVisible();
+  await expect(page.getByRole("dialog", { name: "Other Stuff" })).toBeVisible();
+  // folder window: drag across the Hobbies icons
+  const folder = (await page.locator("#win-hobbies .folder-view").boundingBox())!;
+  await page.locator("#win-hobbies .title-bar").click();
+  await page.mouse.move(folder.x + folder.width - 5, folder.y + 5);
+  await page.mouse.down();
+  await page.mouse.move(folder.x + 5, folder.y + 60, { steps: 6 });
+  await expect(page.locator(".marquee")).toBeVisible();
+  await page.mouse.up();
+  expect(await page.locator("#win-hobbies .icon.selected").count()).toBeGreaterThan(1);
 });
 
 test("clicking the empty desktop unselects a clicked icon", async ({ page, isMobile }) => {
