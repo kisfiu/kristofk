@@ -3,6 +3,7 @@ import "../styles/os.css";
 import { getCollection, render } from "astro:content";
 import Icon from "../components/Icon.astro";
 import Icons from "../components/Icons.astro";
+import Internet from "../components/Internet.astro";
 import Pipeline from "../components/Pipeline.astro";
 import Window from "../components/Window.astro";
 
@@ -65,10 +66,12 @@ const description =
             </ul>
           ) : data.app === "pipeline" ? (
             <Pipeline />
+          ) : data.app === "internet" ? (
+            <Internet links={data.links} />
           ) : (
             <article class="doc"><Content /></article>
           )}
-          {data.links.length > 0 && (
+          {data.links.length > 0 && !data.app && (
             <nav class="links" aria-label="Links">
               {data.links.map((l) => <a href={l.href} target="_blank" rel="noopener">{l.label} ↗</a>)}
             </nav>

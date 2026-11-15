@@ -5,13 +5,13 @@ label: Internet
 icon: globe
 parent: desktop
 order: 5
+app: internet
+width: 600
+links:
+
+- { label: "LinkedIn", href: "https://www.linkedin.com/in/kkristof/" }
+- { label: "GitHub", href: "https://github.com/kisfiu" }
+- { label: "Láthatatlan Iskola (Invisible School)", href: "https://lathatatlaniskola.hu/" }
+- { label: "Rotary Club Budapest City", href: "https://rcbudapestcity.org/" }
+
 ---
-
-<div class="browser-bar"><span>Address</span><input aria-label="Address" readonly value="http://www.kristof.hu/about-me.gif" /><button type="button" disabled>Go</button></div>
-
-## The page cannot be displayed
-
-A GIF about me is being uploaded over a 56k modem. Please try again later.
-
-- Check that the modem is plugged in
-- Ask someone to get off the phone line

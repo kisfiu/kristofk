@@ -94,6 +94,36 @@ test("start menu, e-mail and shut down", async ({ page }) => {
   await expect(page.getByText("It is now safe to turn off your computer.")).toBeVisible();
 });
 
+test("internet: dial-up, surf away, favorites, home", async ({ page, isMobile }) => {
+  await skipBoot(page);
+  await openIcon(page, "Internet", isMobile);
+  const win = page.getByRole("dialog", { name: /Internet/ });
+  await expect(win.getByText("Connected at 56,000 bps")).toBeVisible({ timeout: 6000 });
+  const surfer = win.getByRole("button", { name: /Surf with me/ });
+  await expect(surfer).toBeVisible();
+  await expect.poll(() => surfer.locator("img").evaluate((i: HTMLImageElement) => i.naturalWidth)).toBe(192);
+  await surfer.click();
+  await expect(win.locator(".ie-away")).toBeVisible();
+  await expect(win.getByRole("link", { name: /LinkedIn/ })).toBeVisible({ timeout: 4000 });
+  await expect(win.locator("[data-ie-address]")).toHaveValue("kk://favorites");
+  await win.getByRole("button", { name: /side projects/ }).click();
+  await expect(page.locator(".window.active .title-bar-text")).toHaveText("Side Projects");
+  await page.locator(".window.active").getByRole("button", { name: "Close" }).click();
+  await win.getByRole("button", { name: /Home/ }).click();
+  await expect(win.locator("[data-ie-log]")).toBeVisible();
+});
+
+test("internet respects reduced motion", async ({ page, isMobile }) => {
+  await page.emulateMedia({ reducedMotion: "reduce" });
+  await page.goto("/#internet");
+  const win = page.getByRole("dialog", { name: /Internet/ });
+  const surfer = win.getByRole("button", { name: /Surf with me/ });
+  await expect(surfer).toBeVisible();
+  await expect.poll(() => surfer.locator("img").evaluate((i: HTMLImageElement) => i.currentSrc)).toContain("still.png");
+  await (isMobile ? surfer.tap() : surfer.click());
+  await expect(win.getByRole("link", { name: /GitHub/ })).toBeVisible();
+});
+
 test("pipeline game starts its timer on the first click", async ({ page, isMobile }) => {
   await skipBoot(page);
   await openIcon(page, "Pipeline Green", isMobile);

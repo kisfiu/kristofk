@@ -1,0 +1,41 @@
+---
+interface Props {
+  links: { label: string; href: string }[];
+}
+const { links } = Astro.props;
+---
+<div class="ie" data-internet>
+  <div class="ie-bar">
+    <button type="button" data-ie-back disabled>◀ Back</button>
+    <button type="button" data-ie-home>⌂ Home</button>
+    <label>Address <input readonly data-ie-address value="kk://dialup" /></label>
+  </div>
+  <div class="ie-page">
+    <div class="ie-dial" data-ie-screen="dial">
+      <p><b>KK Dial-Up Networking</b></p>
+      <ol data-ie-log aria-live="polite"></ol>
+      <button type="button" data-ie-skip>Skip</button>
+    </div>
+    <button type="button" class="ie-surf" data-ie-screen="surf" hidden aria-label="Surf with me: open my favorite links">
+      <picture>
+        <source media="(prefers-reduced-motion: reduce)" srcset="surf/still.png" />
+        <source srcset="surf/loop.webp" type="image/webp" />
+        <img src="surf/loop.gif" width="576" height="384" alt="Pixel-art Kristóf surfing in front of a big wave, saying: Surfing the internet? Surf with me!" />
+      </picture>
+    </button>
+    <img class="ie-away" data-ie-screen="away" hidden alt="Kristóf surfs away as the wave breaks" width="576" height="384" />
+    <div class="ie-favs" data-ie-screen="favs" hidden>
+      <h2>★ Favorites</h2>
+      <ul>
+        {links.map((l) => <li><a href={l.href} target="_blank" rel="noopener">🌐 {l.label}</a></li>)}
+        <li><button type="button" class="link-button" data-open="side-projects">💾 My side projects</button></li>
+      </ul>
+      <p class="muted">Best viewed in KK Explorer at 800×600.</p>
+    </div>
+  </div>
+  <div class="status-bar"><p class="status-bar-field" data-ie-status>Dialing…</p></div>
+</div>
+<script>
+  import { initInternet } from "../scripts/internet-ui";
+  for (const el of document.querySelectorAll<HTMLElement>("[data-internet]")) initInternet(el);
+</script>
