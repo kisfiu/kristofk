@@ -75,7 +75,7 @@ export function initInternet(el: HTMLElement) {
   // Start the intro when the window opens; if it was closed mid-animation, resume at the wave.
   const onToggle = () => {
     if (!win || win.hidden) {
-      if (current === "dial" || current === "away") show("surf", address.value, status.textContent ?? "");
+      if (current === "dial" || current === "away") surf();
       return;
     }
     if (current === "new") dial();

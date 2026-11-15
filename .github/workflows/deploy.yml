@@ -16,6 +16,9 @@ concurrency:
 jobs:
   build:
     runs-on: ubuntu-latest
+    env:
+      # Pages path: "/" for <user>.github.io, "/<repo>" for any other repo name. Only the deploy build and its tests use it.
+      PAGES_BASE: ${{ endsWith(github.event.repository.name, '.github.io') && '/' || format('/{0}', github.event.repository.name) }}
     steps:
       - uses: actions/checkout@v5
       - uses: actions/setup-node@v5
@@ -26,9 +29,9 @@ jobs:
       - run: npm run lint
       - run: npm run check
       - run: npm run test:unit
-      - run: npm run build
       - run: npx playwright install --with-deps chromium
-      - run: npm run test:e2e
+      # Lighthouse serves dist/ from the root, so it gets its own root build.
+      - run: npm run build
       - run: npm run lighthouse 2>&1 | tee lighthouse.log; exit ${PIPESTATUS[0]}
         shell: bash
       - name: Report Lighthouse results as annotations
@@ -46,10 +49,14 @@ jobs:
             const failed = fs.existsSync(`${dir}/assertion-results.json`) ? JSON.parse(fs.readFileSync(`${dir}/assertion-results.json`)) : [];
             for (const a of failed) console.log(`::error title=Lighthouse ${a.auditProperty || a.auditId}::${a.name} expected ${a.operator} ${a.expected}, got ${a.actual}`);
           '
+      # The browser tests run against exactly the build that gets published.
       - name: Build for the repo's Pages path
         run: npm run build
         env:
-          BASE_PATH: ${{ endsWith(github.event.repository.name, '.github.io') && '/' || format('/{0}', github.event.repository.name) }}
+          BASE_PATH: ${{ env.PAGES_BASE }}
+      - run: npm run test:e2e
+        env:
+          BASE_PATH: ${{ env.PAGES_BASE }}
       - uses: actions/upload-pages-artifact@v4
         with:
           path: dist

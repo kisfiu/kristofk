@@ -20,6 +20,7 @@ export function initPipeline(el: HTMLElement) {
   let level: Level;
   let left = 0;
   let timer = 0;
+  let nextLevel = 0;
   let over = false;
 
   const stop = () => {
@@ -45,6 +46,7 @@ export function initPipeline(el: HTMLElement) {
 
   function load(i: number) {
     stop();
+    clearTimeout(nextLevel); // a New game during the 2 s pause must not be overtaken by the old level change
     index = i;
     over = false;
     level = generate(LEVELS[i].size).level;
@@ -80,7 +82,7 @@ export function initPipeline(el: HTMLElement) {
     draw();
     if (index + 1 < LEVELS.length) {
       msg.textContent = "✔ Pipeline passed! Next stage in 2 seconds…";
-      setTimeout(() => load(index + 1), 2000);
+      nextLevel = window.setTimeout(() => load(index + 1), 2000);
     } else msg.textContent = "✔ All pipelines green. Deployed to production. You're hired?";
   });
 
