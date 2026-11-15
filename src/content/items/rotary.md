@@ -5,7 +5,7 @@ label: Rotary Club
 icon: club
 parent: ngos
 order: 2
-width: 520
+width: 560
 links:
 
 - { label: "Website", href: "https://rcbudapestcity.org/" }

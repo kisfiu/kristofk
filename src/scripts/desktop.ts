@@ -69,6 +69,8 @@ function place(w: HTMLElement) {
 
 function show(w: HTMLElement) {
   w.hidden = false;
+  // embedded documents (the CV PDF) load on first open, not with the page
+  for (const o of w.querySelectorAll<HTMLObjectElement>("object[data-src]")) o.data ||= o.dataset.src!;
   if (!w.dataset.placed) place(w);
   focusWin(w);
   w.focus({ preventScroll: true });
@@ -369,7 +371,7 @@ const generic = [
 const greeting: Record<Role, (typeof generic)[number]> = {
   recruiter: {
     title: "Welcome, recruiter!",
-    text: "My resume is open. The PDF download is in its top-right corner.",
+    text: "My resume is open. Its Open CV button shows the PDF version.",
     open: "resume",
   },
   nonprofit: {

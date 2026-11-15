@@ -372,7 +372,7 @@
     grid-template-columns: repeat(auto-fill, 88px);
     grid-template-rows: none;
     background: #fff;
-    min-height: 140px;
+    min-height: max(140px, 100%); /* white area fills a resized window */
     align-content: start;
     & .icon {
       color: #000;
@@ -419,6 +419,11 @@
     flex-direction: column;
     width: min(var(--w, 460px), calc(100vw - 16px));
     max-height: calc(100dvh - var(--taskbar) - 16px);
+    /* resize grip in the bottom-right corner, like XP; the browser stores the new size on the element */
+    resize: both;
+    overflow: hidden;
+    min-width: 220px;
+    min-height: 120px;
     /* entry via @starting-style, exit by transitioning display (allow-discrete) once [hidden] is set */
     transition-property: opacity, scale, display;
     transition-duration: 0.15s;
@@ -470,19 +475,22 @@
       min-height: 0;
       container-type: inline-size;
     }
+    /* !important: maximized must beat a size the user dragged (stored inline on the element) */
     &.max {
       inset: 0 0 auto 0 !important;
-      width: 100%;
-      height: calc(100dvh - var(--taskbar));
+      width: 100% !important;
+      height: calc(100dvh - var(--taskbar)) !important;
       max-height: none;
+      resize: none;
     }
   }
   @media (max-width: 600px) {
     .window {
       inset: 0 0 auto 0 !important;
-      width: 100%;
-      height: calc(100dvh - var(--taskbar));
+      width: 100% !important;
+      height: calc(100dvh - var(--taskbar)) !important;
       max-height: none;
+      resize: none;
     }
     .window [data-act="max"] {
       display: none;
@@ -567,6 +575,53 @@
     color: #000;
     text-decoration: none;
     background: linear-gradient(#fff, #ece9d8 86%, #d8d0c4);
+    &.icon-only {
+      padding: 3px 6px;
+    }
+  }
+  .doc .pdf {
+    display: flex;
+    gap: 6px;
+    align-items: center;
+  }
+
+  /* ---------- CV viewer: the browser's own PDF viewer in an XP window ---------- */
+  /* a fixed height for the PDF to fill; on phones every window is already full screen */
+  @media (min-width: 601px) {
+    #win-cv:not(.max) {
+      height: min(85dvh, 1100px);
+    }
+  }
+  .pdf-viewer {
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+    height: 100%;
+  }
+  .pdf-bar {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 6px 14px;
+    & span {
+      flex: 1;
+      font-weight: bold;
+    }
+  }
+  .pdf-frame {
+    width: 100%;
+    flex: 1;
+    min-height: 0;
+    background: #fff; /* shows behind the "can't show the PDF" message where there is no viewer */
+    border: 1px solid #7f9db9;
+  }
+  .pdf-fallback {
+    margin: 0;
+    padding: 24px 16px;
+    background: #fff;
+    font-size: 14px;
+    line-height: 1.6;
+    text-align: center;
   }
 
   /* link bar stays pinned at the bottom of the window while the text above it scrolls */
