@@ -63,6 +63,10 @@ test("deep link opens the resume without the boot screen", async ({ page }) => {
   await expect(page.locator("#boot")).toBeHidden();
   await expect(page.getByRole("dialog", { name: /My Resume/ })).toBeVisible();
   await expect(page.getByRole("link", { name: /Download CV/ })).toHaveAttribute("href", "Kristof-Kovacs-CV.pdf");
+  // LinkedIn is pinned at the bottom of the long resume, visible without scrolling
+  await expect(
+    page.getByRole("dialog", { name: /My Resume/ }).getByRole("link", { name: /LinkedIn/ }),
+  ).toBeInViewport();
 });
 
 test("every desktop icon and folder item opens its window", async ({ page, isMobile }) => {
@@ -204,6 +208,79 @@ test("Internet closed during dial-up reopens at the wave with the wave's address
   await openIcon(page, "Internet", isMobile);
   await expect(win.getByRole("button", { name: /Surf with me/ })).toBeVisible();
   await expect(win.locator("[data-ie-address]")).toHaveValue("kk://surf-with-me");
+});
+
+test("dragging on the desktop draws a selection rectangle; Enter opens the selected icons", async ({
+  page,
+  isMobile,
+}) => {
+  test.skip(isMobile, "mouse drag");
+  await skipBoot(page);
+  // during the ~250 ms login View Transition the browser hit-tests the page root; wait until the desktop takes input
+  await page.waitForFunction(() => document.elementFromPoint(400, 20)?.matches(".icons"));
+  const selected = page.locator(".desktop > .icons .icon.selected");
+  await page.mouse.move(400, 20);
+  await page.mouse.down();
+  await page.mouse.move(20, 170, { steps: 6 });
+  await expect(page.locator(".marquee")).toBeVisible();
+  await page.mouse.up();
+  await expect(page.locator(".marquee")).toBeHidden();
+  await expect(selected).toHaveCount(2);
+  await page.mouse.click(700, 400); // empty desktop clears the selection
+  await expect(selected).toHaveCount(0);
+  // a rectangle beside the icons (here just right of the pictures and labels) selects nothing
+  await page.mouse.move(400, 20);
+  await page.mouse.down();
+  await page.mouse.move(93, 170, { steps: 6 });
+  await expect(selected).toHaveCount(0);
+  await page.mouse.up();
+  await page.mouse.move(400, 20);
+  await page.mouse.down();
+  await page.mouse.move(20, 170, { steps: 6 });
+  await page.mouse.up();
+  // dragging must not leave a browser text selection behind (it painted labels blue and broke the next drag)
+  expect(await page.evaluate(() => String(getSelection()))).toBe("");
+  await page.keyboard.press("Enter");
+  await expect(page.getByRole("dialog", { name: /My Resume/ })).toBeVisible();
+  await expect(page.getByRole("dialog", { name: "NGOs" })).toBeVisible();
+});
+
+test("clicking the empty desktop unselects a clicked icon", async ({ page, isMobile }) => {
+  test.skip(isMobile, "single click on phones opens the icon");
+  await skipBoot(page);
+  const ngos = page.locator(".desktop > .icons").getByRole("button", { name: "NGOs" });
+  await ngos.click();
+  await expect(ngos).toHaveClass(/selected/);
+  await page.mouse.click(700, 400);
+  await expect(ngos).not.toHaveClass(/selected/);
+  await expect(ngos).not.toBeFocused();
+});
+
+test("the taskbar clock opens a calendar with today marked", async ({ page }) => {
+  await skipBoot(page);
+  const cal = page.getByRole("dialog", { name: "Date and Time" });
+  await page.locator("#clock").click();
+  await expect(cal).toBeVisible();
+  const now = new Date();
+  const title = cal.locator("[data-cal-title]");
+  await expect(title).toHaveText(new RegExp(String(now.getFullYear())));
+  await expect(cal.locator('td[aria-current="date"]')).toHaveText(String(now.getDate()));
+  const before = await title.textContent();
+  await cal.getByRole("button", { name: "Next month" }).click();
+  await expect(title).not.toHaveText(before ?? "");
+  await expect(cal.locator('td[aria-current="date"]')).toHaveCount(0);
+  await page.keyboard.press("Escape");
+  await expect(cal).toBeHidden();
+});
+
+test("NGOs is the second desktop icon and the Recycle Bin sits bottom right", async ({ page }) => {
+  await skipBoot(page);
+  const icons = page.locator(".desktop > .icons .icon span");
+  await expect(icons.nth(1)).toHaveText("NGOs");
+  const bin = (await page.locator(".desktop > .icons").getByRole("button", { name: "Recycle Bin" }).boundingBox())!;
+  const size = page.viewportSize()!;
+  expect(bin.x + bin.width).toBeGreaterThan(size.width - 100);
+  expect(bin.y + bin.height).toBeGreaterThan(size.height - 140);
 });
 
 test("pipeline game starts its timer on the first click", async ({ page, isMobile }) => {

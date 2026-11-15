@@ -171,8 +171,8 @@ document.addEventListener("pointerdown", (e) => {
   const bar = t.closest<HTMLElement>(".title-bar");
   const control = t.closest("button, input, a");
   if (!bar || e.button !== 0 || (control && !control.matches("[data-move]"))) return;
-  const w = bar.closest<HTMLElement>(".window")!;
-  if (!movable(w)) return;
+  const w = bar.closest<HTMLElement>(".window");
+  if (!w || !movable(w)) return;
   const dx = e.clientX - w.offsetLeft;
   const dy = e.clientY - w.offsetTop;
   bar.setPointerCapture(e.pointerId);
@@ -218,13 +218,136 @@ const syncHandles = () => {
 narrow.addEventListener("change", syncHandles);
 syncHandles();
 
+// ---------- rubber-band selection, like the XP desktop (also inside folder windows) ----------
+const band = Object.assign(document.createElement("div"), { className: "marquee", hidden: true });
+$(".desktop")!.append(band); // inside the desktop layer, so on the desktop it stays behind open windows
+const desktopIcons = $(".desktop > .icons")!;
+const iconsIn = (area: Element) => [...area.querySelectorAll<HTMLElement>(":scope > li > .icon")];
+const clearSelection = (area?: Element) => {
+  for (const i of (area ?? document).querySelectorAll(".icon.selected")) i.classList.remove("selected");
+};
+
+document.addEventListener("pointerdown", (e) => {
+  const t = e.target as Element;
+  if (e.button !== 0) return;
+  const icon = t.closest<HTMLElement>(".icon");
+  if (icon) {
+    // plain click selects just this icon; Ctrl/⌘+click adds or removes it
+    if (e.ctrlKey || e.metaKey) icon.classList.toggle("selected");
+    else {
+      clearSelection();
+      icon.classList.add("selected");
+    }
+    return;
+  }
+  if (t.closest("button, a, input, .title-bar")) return;
+  const area = t.closest(".icons") ?? (t.closest(".window") ? null : t.closest(".desktop") && desktopIcons);
+  if (!area) return;
+  e.preventDefault(); // no text selection or native drag from this press
+  // ...which also keeps focus where it was, so drop it from a clicked icon: clicking the desktop unselects everything
+  if (document.activeElement?.closest(".icon")) (document.activeElement as HTMLElement).blur();
+  clearSelection();
+  const icons = iconsIn(area);
+  const x0 = e.clientX;
+  const y0 = e.clientY;
+  band.style.zIndex = String(area.closest(".window") ? z + 1 : 5);
+  (area as HTMLElement).setPointerCapture(e.pointerId);
+  const move = (m: PointerEvent) => {
+    const left = Math.min(x0, m.clientX);
+    const top = Math.min(y0, m.clientY);
+    const width = Math.abs(m.clientX - x0);
+    const height = Math.abs(m.clientY - y0);
+    if (band.hidden && width + height < 4) return; // a click, not a drag
+    Object.assign(band.style, { left: `${left}px`, top: `${top}px`, width: `${width}px`, height: `${height}px` });
+    band.hidden = false;
+    // like XP: only the picture or the label text count, not the empty cell around them
+    const touches = (el: Element | null) => {
+      const r = el?.getBoundingClientRect();
+      return !!r && r.left < left + width && r.right > left && r.top < top + height && r.bottom > top;
+    };
+    for (const i of icons)
+      i.classList.toggle("selected", touches(i.querySelector(".ico")) || touches(i.querySelector("span")));
+  };
+  area.addEventListener("pointermove", move as EventListener);
+  area.addEventListener(
+    "lostpointercapture",
+    () => {
+      band.hidden = true;
+      area.removeEventListener("pointermove", move as EventListener);
+    },
+    { once: true },
+  );
+});
+
+// Enter opens every selected desktop icon, as on XP (only when no window or control has focus)
+document.addEventListener("keydown", (e) => {
+  const focus = document.activeElement;
+  if (e.key !== "Enter" || !(focus === document.body || focus?.closest(".desktop > .icons"))) return;
+  const chosen = iconsIn(desktopIcons).filter((i) => i.classList.contains("selected"));
+  if (chosen.length < 2) return; // a single focused icon already opens through its own click
+  e.preventDefault();
+  for (const i of chosen) open(i.dataset.open!);
+});
+
 // ---------- taskbar clock ----------
 const clock = $("#clock")!;
+const cal = $("#calendar")!;
+let month = new Date(); // the month the calendar shows
+
+function drawMonth() {
+  const y = month.getFullYear();
+  const m = month.getMonth();
+  cal.querySelector("[data-cal-title]")!.textContent = new Date(y, m, 1).toLocaleDateString([], {
+    month: "long",
+    year: "numeric",
+  });
+  const today = new Date();
+  const lead = (new Date(y, m, 1).getDay() + 6) % 7; // weeks start on Monday
+  const cells: (number | null)[] = [
+    ...Array(lead).fill(null),
+    ...Array.from({ length: new Date(y, m + 1, 0).getDate() }, (_, i) => i + 1),
+  ];
+  while (cells.length % 7) cells.push(null);
+  let html = "";
+  for (let r = 0; r < cells.length; r += 7) {
+    html += `<tr>${cells
+      .slice(r, r + 7)
+      .map((d) => {
+        const isToday = d === today.getDate() && m === today.getMonth() && y === today.getFullYear();
+        return `<td${isToday ? ' aria-current="date"' : ""}>${d ?? ""}</td>`;
+      })
+      .join("")}</tr>`;
+  }
+  cal.querySelector("[data-cal-days]")!.innerHTML = html;
+}
+
 const tick = () => {
-  clock.textContent = new Date().toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" });
+  const now = new Date();
+  clock.textContent = now.toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" });
+  clock.title = now.toLocaleDateString([], { weekday: "long", year: "numeric", month: "long", day: "numeric" });
+  if (!cal.matches(":popover-open")) return;
+  const [h, mi, se] = [now.getHours(), now.getMinutes(), now.getSeconds()];
+  const turn = (hand: string, deg: number) =>
+    cal.querySelector(`[data-hand="${hand}"]`)!.setAttribute("transform", `rotate(${deg} 50 50)`);
+  turn("h", (h % 12) * 30 + mi / 2);
+  turn("m", mi * 6 + se / 10);
+  turn("s", se * 6);
+  cal.querySelector("[data-cal-time]")!.textContent = `${now.toLocaleTimeString()} · ${clock.title}`;
 };
+for (const b of cal.querySelectorAll<HTMLElement>("[data-cal]")) {
+  b.addEventListener("click", () => {
+    month = new Date(month.getFullYear(), month.getMonth() + Number(b.dataset.cal), 1);
+    drawMonth();
+  });
+}
+cal.addEventListener("toggle", (e) => {
+  if ((e as ToggleEvent).newState !== "open") return;
+  month = new Date();
+  drawMonth();
+  tick();
+});
 tick();
-setInterval(tick, 15_000);
+setInterval(tick, 1_000);
 
 // ---------- fake visitor counter: grows a little every day, plus this browser's own visits ----------
 const visits = Number(store.get(localStorage, "kk-visits") ?? 0) + 1;
