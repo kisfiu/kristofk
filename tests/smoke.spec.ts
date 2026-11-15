@@ -5,8 +5,18 @@ const WEATHER = "**/api.open-meteo.com/**";
 const weather = (weather_code: number, is_day: 0 | 1, temperature_2m: number) => ({
   json: { current: { weather_code, is_day, temperature_2m } },
 });
+/** Wait for open/close animations; endless ones (Racka bobbing, rain falling) never finish, so skip them. */
+const settled = (page: Page) =>
+  page.waitForFunction(() =>
+    document.getAnimations().every((a) => a.playState !== "running" || a.effect?.getTiming().iterations === Infinity),
+  );
+
 test.beforeEach(async ({ page }) => {
   errors.length = 0;
+  // Racka the helper pops up a few seconds after logging on; only the Racka test (URL with ?racka) wants him
+  await page.addInitScript(() => {
+    if (!location.search.includes("racka")) sessionStorage.setItem("kk-helper", "off");
+  });
   page.on("pageerror", (e) => errors.push(e.message));
   page.on("console", (m) => m.type() === "error" && errors.push(m.text()));
   // never depend on the real weather service in tests: a clear day unless a test says otherwise
@@ -321,7 +331,7 @@ test("the taskbar clock opens a calendar with today marked", async ({ page }) =>
   await expect(title).toHaveText(new RegExp(String(now.getFullYear())));
   await expect(cal.locator('td[aria-current="date"]')).toHaveText(String(now.getDate()));
   // same size for every month: always six week rows; flip a year forward to hit 4-, 5- and 6-row months
-  await page.waitForFunction(() => document.getAnimations().length === 0); // let the open animation finish
+  await settled(page); // let the open animation finish
   const box = await cal.boundingBox();
   for (let i = 0; i < 12; i++) {
     await expect(cal.locator("[data-cal-days] tr")).toHaveCount(6);
@@ -344,7 +354,7 @@ test("windows resize from the corner; maximize fills the whole desktop, also aft
 }) => {
   test.skip(isMobile, "phones show every window full screen");
   await page.goto("./#resume");
-  await page.waitForFunction(() => document.getAnimations().length === 0);
+  await settled(page);
   const win = page.locator("#win-resume");
   const before = (await win.boundingBox())!;
   await page.mouse.move(before.x + before.width - 3, before.y + before.height - 3);
@@ -420,7 +430,7 @@ test("if the weather service is down, the desktop simply stays sunny", async ({ 
 test("clicking the wallpaper animals tells facts about Kristóf", async ({ page, isMobile }) => {
   await page.addInitScript(() => sessionStorage.setItem("kk-booted", "1"));
   await page.goto("./");
-  await page.waitForFunction(() => document.getAnimations().length === 0);
+  await settled(page);
   const size = page.viewportSize()!;
   // a point on the animal that no desktop icon covers (on phones the Recycle Bin overlaps the black sheep)
   const centreOf = async (selector: string) => {
@@ -462,13 +472,57 @@ test("clicking the wallpaper animals tells facts about Kristóf", async ({ page,
   if (!isMobile) {
     // a selection drag that ends on an animal is not a click on it
     await page.reload();
-    await page.waitForFunction(() => document.getAnimations().length === 0);
+    await settled(page);
     await page.mouse.move(cow.x + 150, cow.y - 120);
     await page.mouse.down();
     await page.mouse.move(cow.x, cow.y, { steps: 5 });
     await page.mouse.up();
     await expect(talk).toBeHidden();
   }
+});
+
+test("Racka slides in, introduces itself, gives a tour and can be sent away", async ({ page }) => {
+  await page.goto("./?racka=1"); // the only test that keeps Racka on
+  await page.getByRole("button", { name: "Skip" }).click();
+  await page.getByRole("button", { name: /IT recruiter/ }).click();
+  const head = page.getByRole("button", { name: "Racka, your guide: click to talk" });
+  const racka = page.getByRole("dialog", { name: "Racka the guide" });
+  await expect(head).toBeVisible();
+  await expect(racka).toContainText("Hey, I'm Racka, Kristóf's helper and the guide to this website.");
+
+  // the tour highlights each part of the screen it talks about
+  await racka.getByRole("button", { name: "Show me around" }).click();
+  await expect(racka).toContainText("(1/5)");
+  await expect(page.locator(".desktop > .icons")).toHaveClass(/tour-spot/);
+  for (const target of [".start", "#weather", "#clock"]) {
+    await racka.getByRole("button", { name: "Next ›" }).click();
+    await expect(page.locator(target)).toHaveClass(/tour-spot/);
+  }
+  await racka.getByRole("button", { name: "Next ›" }).click();
+  await expect(racka).toContainText("(5/5)");
+  await expect(page.locator(".tour-spot")).toHaveCount(0);
+  await racka.getByRole("button", { name: "Done" }).click();
+  await expect(racka).toBeHidden();
+
+  // menu: who is Kristóf, and the recruiter shortcut
+  await head.click();
+  await racka.getByRole("button", { name: "Who is Kristóf?" }).click();
+  await expect(racka).toContainText("Developer Experience Engineer");
+  await racka.getByRole("button", { name: "Back" }).click();
+  await expect(racka.getByRole("button", { name: "Open his resume" })).toBeVisible();
+  await page.keyboard.press("Escape"); // closes Racka's bubble, not the resume window under it
+  await expect(racka).toBeHidden();
+  await expect(page.getByRole("dialog", { name: /My Resume/ })).toBeVisible();
+
+  await head.click();
+  await racka.getByRole("button", { name: "Bye, Racka" }).click();
+  await expect(head).toBeHidden();
+  await page.reload(); // stays away for the rest of the visit
+  await expect(head).toBeHidden();
+  // ...until the little Racka head in the tray calls him back
+  await page.getByRole("button", { name: /call him or open his menu/ }).click();
+  await expect(head).toBeVisible();
+  await expect(racka).toContainText("Welcome back!");
 });
 
 test("NGOs is the second desktop icon and the Recycle Bin sits bottom right", async ({ page }) => {
@@ -492,7 +546,7 @@ test("pipeline game starts its timer on the first click", async ({ page, isMobil
 
 test("no sideways scroll and windows fit the screen", async ({ page, isMobile }) => {
   await page.goto("./#resume");
-  await page.waitForFunction(() => document.getAnimations().length === 0);
+  await settled(page);
   const { scroll, client } = await page.evaluate(() => ({
     scroll: document.documentElement.scrollWidth,
     client: document.documentElement.clientWidth,

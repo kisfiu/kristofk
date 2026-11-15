@@ -54,8 +54,9 @@
     }
   }
   html[data-daylight="night"] .wallpaper {
-    & .sun {
-      display: none;
+    & .sun,
+    & .storks {
+      display: none; /* storks don't fly at night */
     }
     & .moon {
       display: inline;
@@ -253,6 +254,21 @@
       background-color: rgb(255 255 255 / 0.35);
     }
   }
+  .tray-racka {
+    all: unset;
+    display: grid;
+    place-items: center;
+    margin-right: 6px;
+    padding: 2px 4px;
+    border-radius: 3px;
+    cursor: pointer;
+    &:hover {
+      background: #ffffff22;
+    }
+    &:focus-visible {
+      outline: 1px dotted #fff;
+    }
+  }
   .tray-weather {
     all: unset;
     margin-right: 10px;
@@ -312,6 +328,121 @@
       border: 10px solid transparent;
       border-top-color: #000;
       border-bottom: 0;
+    }
+  }
+
+  /* ---------- Racka, Kristóf's helper and guide: a racka head (scripts/helper.ts) ---------- */
+  .helper {
+    position: fixed;
+    right: 8px;
+    bottom: calc(var(--taskbar) + 100px); /* just above the Recycle Bin */
+    z-index: 4000; /* floats above windows, below the taskbar and popups */
+    display: flex;
+    flex-direction: column;
+    align-items: flex-end;
+    /* slides in from the bottom right when shown, and back out on "Bye" */
+    transition-property: translate, opacity, display;
+    transition-duration: 0.5s;
+    transition-timing-function: cubic-bezier(0.2, 1.3, 0.4, 1);
+    transition-behavior: allow-discrete;
+    @starting-style {
+      translate: 140% 60%;
+      opacity: 0;
+    }
+    &[hidden] {
+      translate: 140% 60%;
+      opacity: 0;
+    }
+  }
+  .helper-head {
+    all: unset;
+    cursor: pointer;
+    filter: drop-shadow(2px 3px 2px #0006);
+    /* the drawing bobs, not the button, so the button itself holds still for clicks */
+    & svg {
+      animation: helper-bob 3.2s ease-in-out infinite;
+    }
+    &:focus-visible {
+      outline: 2px dotted #fff;
+    }
+  }
+  /* the guided tour points at the part of the screen it talks about */
+  .tour-spot {
+    outline: 3px dashed #ffd34d !important;
+    outline-offset: 3px;
+    animation: tour-pulse 1s ease-in-out infinite;
+  }
+  @keyframes tour-pulse {
+    50% {
+      outline-color: #ff8a1a;
+    }
+  }
+  .helper-eyes {
+    transform-box: fill-box;
+    transform-origin: center;
+    animation: helper-blink 5s infinite;
+  }
+  @keyframes helper-bob {
+    50% {
+      translate: 0 -4px;
+    }
+  }
+  @keyframes helper-blink {
+    0%,
+    95%,
+    100% {
+      scale: 1 1;
+    }
+    97% {
+      scale: 1 0.1;
+    }
+  }
+  .helper-bubble {
+    position: relative;
+    max-width: min(270px, calc(100vw - 32px));
+    margin: 0 18px 12px 0;
+    padding: 10px 28px 10px 12px;
+    background: #ffffe1;
+    color: #000;
+    border: 1px solid #000;
+    border-radius: 10px;
+    box-shadow: 2px 2px 6px #0005;
+    font: 13px / 1.45 var(--font);
+    & p {
+      margin: 0 0 8px;
+    }
+    &::after {
+      content: "";
+      position: absolute;
+      right: 26px;
+      bottom: -11px;
+      border: 11px solid transparent;
+      border-top-color: #000;
+      border-bottom: 0;
+    }
+  }
+  .helper-actions {
+    display: grid;
+    gap: 4px;
+    & button {
+      text-align: left;
+    }
+  }
+  .helper-x {
+    all: unset;
+    position: absolute;
+    top: 3px;
+    right: 8px;
+    font-size: 16px;
+    cursor: pointer;
+    &:focus-visible {
+      outline: 1px dotted #000;
+    }
+  }
+  @media (max-width: 600px) {
+    .helper-head svg {
+      width: 64px;
+      height: 60px;
     }
   }
 

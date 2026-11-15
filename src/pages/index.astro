@@ -2,6 +2,7 @@
 import "../styles/os.css";
 import { getCollection, render } from "astro:content";
 import wallpaper from "../assets/hortobagy.svg?raw";
+import Helper from "../components/Helper.astro";
 import Icon from "../components/Icon.astro";
 import Icons from "../components/Icons.astro";
 import Internet from "../components/Internet.astro";
@@ -141,10 +142,13 @@ const description =
       </Window>
     </main>
 
+    <Helper />
+
     <footer class="taskbar">
       <button type="button" class="start" popovertarget="start-menu"><Icon name="kk" size={28} /> start</button>
       <div id="tasks" class="tasks" role="toolbar" aria-label="Open windows"></div>
       <div class="tray">
+        <button type="button" id="racka-call" class="tray-racka" aria-label="Racka, your guide: call him or open his menu"><Icon name="racka" size={26} /></button>
         <button type="button" id="weather" class="tray-weather" data-open="weather" hidden></button>
         <button type="button" id="clock" class="clock" popovertarget="calendar">--:--</button>
       </div>
