@@ -9,7 +9,7 @@ test.beforeEach(({ page }) => {
 test.afterEach(() => expect(errors).toEqual([]));
 
 const skipBoot = async (page: Page) => {
-  await page.goto("/");
+  await page.goto("./");
   await page.getByRole("button", { name: "Skip" }).click();
   await expect(page.locator("#boot")).toBeHidden();
   await page.getByRole("button", { name: /Other, guest/ }).click();
@@ -24,7 +24,7 @@ const openIcon = async (page: Page, name: string, isMobile: boolean) => {
 };
 
 test("boot, then choosing IT recruiter opens the resume; reload skips both", async ({ page }) => {
-  await page.goto("/");
+  await page.goto("./");
   await expect(page.locator("#boot")).toBeVisible();
   await page.getByRole("button", { name: "Skip" }).click();
   await expect(page.getByText("To begin, click your user name")).toBeVisible();
@@ -38,7 +38,7 @@ test("boot, then choosing IT recruiter opens the resume; reload skips both", asy
 });
 
 test("nonprofit opens NGOs; log off closes windows and shows the users again", async ({ page }) => {
-  await page.goto("/");
+  await page.goto("./");
   await page.getByRole("button", { name: "Skip" }).click();
   await page.getByRole("button", { name: /Nonprofit cooperation/ }).click();
   await expect(page.getByRole("dialog", { name: "NGOs" })).toBeVisible();
@@ -53,13 +53,13 @@ test("nonprofit opens NGOs; log off closes windows and shows the users again", a
 
 test("reduced motion skips the boot animation but still asks who you are", async ({ page }) => {
   await page.emulateMedia({ reducedMotion: "reduce" });
-  await page.goto("/");
+  await page.goto("./");
   await expect(page.locator("#boot")).toBeHidden();
   await expect(page.getByRole("button", { name: /IT recruiter/ })).toBeFocused();
 });
 
 test("deep link opens the resume without the boot screen", async ({ page }) => {
-  await page.goto("/#resume");
+  await page.goto("./#resume");
   await expect(page.locator("#boot")).toBeHidden();
   await expect(page.getByRole("dialog", { name: /My Resume/ })).toBeVisible();
   await expect(page.getByRole("link", { name: /Download CV/ })).toHaveAttribute("href", "Kristof-Kovacs-CV.pdf");
@@ -116,7 +116,7 @@ test("start menu, e-mail and shut down", async ({ page }) => {
   await page.locator("#start-menu").getByRole("button", { name: "Other Stuff" }).click();
   await expect(page.locator("#start-menu")).toBeHidden();
   await page.locator(".window.active").getByRole("button", { name: "Address Book" }).dblclick();
-  await expect(page.locator("a[data-email]")).toHaveAttribute("href", /^mailto:.+@gmail\.com$/);
+  await expect(page.getByRole("link", { name: /@gmail\.com/ })).toHaveAttribute("href", /^mailto:.+@gmail\.com$/);
   await page.getByRole("button", { name: "start" }).click();
   await page.getByRole("button", { name: /Shut down/ }).click();
   await expect(page.getByText("It is now safe to turn off your computer.")).toBeVisible();
@@ -143,7 +143,7 @@ test("internet: dial-up, surf away, favorites, home", async ({ page, isMobile })
 
 test("internet respects reduced motion", async ({ page, isMobile }) => {
   await page.emulateMedia({ reducedMotion: "reduce" });
-  await page.goto("/#internet");
+  await page.goto("./#internet");
   const win = page.getByRole("dialog", { name: /Internet/ });
   const surfer = win.getByRole("button", { name: /Surf with me/ });
   await expect(surfer).toBeVisible();
@@ -153,7 +153,7 @@ test("internet respects reduced motion", async ({ page, isMobile }) => {
 });
 
 test("windows move with the arrow keys from their title-bar icon (desktop only)", async ({ page, isMobile }) => {
-  await page.goto("/#resume");
+  await page.goto("./#resume");
   const win = page.getByRole("dialog", { name: /My Resume/ });
   const handle = win.getByRole("button", { name: /Move My Resume/ });
   if (isMobile) {
@@ -177,7 +177,7 @@ test("balloons sit in a Notifications region, are announced and close with ×", 
       value: (message: string) => notes.push(message),
     });
   });
-  await page.goto("/");
+  await page.goto("./");
   await page.getByRole("button", { name: "Skip" }).click();
   await page.getByRole("button", { name: /IT recruiter/ }).click();
   const region = page.getByRole("region", { name: "Notifications" });
@@ -187,6 +187,23 @@ test("balloons sit in a Notifications region, are announced and close with ×", 
   );
   await region.getByRole("button", { name: "Close notification" }).click();
   await expect(page.locator("#balloon")).toBeHidden();
+});
+
+test("Esc closes the top window even while a balloon is showing", async ({ page }) => {
+  await page.goto("./#resume");
+  await page.evaluate(() => document.getElementById("balloon")?.showPopover());
+  await page.keyboard.press("Escape");
+  await expect(page.getByRole("dialog", { name: /My Resume/ })).toBeHidden();
+});
+
+test("Internet closed during dial-up reopens at the wave with the wave's address", async ({ page, isMobile }) => {
+  await page.goto("./#internet");
+  const win = page.getByRole("dialog", { name: /Internet/ });
+  await expect(win.locator("[data-ie-log] li").first()).toBeVisible();
+  await win.getByRole("button", { name: "Close" }).click();
+  await openIcon(page, "Internet", isMobile);
+  await expect(win.getByRole("button", { name: /Surf with me/ })).toBeVisible();
+  await expect(win.locator("[data-ie-address]")).toHaveValue("kk://surf-with-me");
 });
 
 test("pipeline game starts its timer on the first click", async ({ page, isMobile }) => {
@@ -199,7 +216,7 @@ test("pipeline game starts its timer on the first click", async ({ page, isMobil
 });
 
 test("no sideways scroll and windows fit the screen", async ({ page, isMobile }) => {
-  await page.goto("/#resume");
+  await page.goto("./#resume");
   await page.waitForFunction(() => document.getAnimations().length === 0);
   const { scroll, client } = await page.evaluate(() => ({
     scroll: document.documentElement.scrollWidth,
@@ -219,7 +236,7 @@ test("screenshots for review", async ({ page, isMobile }, info) => {
     page.waitForFunction(() =>
       document.getAnimations().every((a) => a.playState !== "running" || a.effect?.getTiming().iterations === Infinity),
     );
-  await page.goto("/");
+  await page.goto("./");
   await page.screenshot({ path: `${dir}-1-boot.png` });
   await page.getByRole("button", { name: "Skip" }).click();
   await settled();

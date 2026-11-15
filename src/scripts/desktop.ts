@@ -152,7 +152,8 @@ document.addEventListener("pointerdown", (e) => {
 });
 
 document.addEventListener("keydown", (e) => {
-  if (e.key !== "Escape" || document.querySelector(":popover-open")) return;
+  // an open Start menu takes Esc itself; balloons (manual popovers) don't, so they must not block it
+  if (e.key !== "Escape" || document.querySelector(":popover-open:not([popover=manual])")) return;
   const w = topWin();
   if (w) close(w);
 });
@@ -224,13 +225,6 @@ const tick = () => {
 };
 tick();
 setInterval(tick, 15_000);
-
-// ---------- e-mail, assembled here so scrapers reading the HTML don't get it ----------
-for (const a of document.querySelectorAll<HTMLAnchorElement>("[data-email]")) {
-  const [user, domain] = a.dataset.email!.split("|");
-  a.href = `mailto:${user}@${domain}`;
-  a.textContent = `${user}@${domain}`;
-}
 
 // ---------- fake visitor counter: grows a little every day, plus this browser's own visits ----------
 const visits = Number(store.get(localStorage, "kk-visits") ?? 0) + 1;

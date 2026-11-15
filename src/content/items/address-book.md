@@ -14,5 +14,5 @@ links:
 <dl class="contact">
   <dt>Name</dt><dd>Kristóf Kovács</dd>
   <dt>City</dt><dd>Budapest, Hungary</dd>
-  <dt>E-mail</dt><dd><a data-email="kristofkovacs25|gmail.com" href="#">[enable JavaScript to see e-mail]</a></dd>
+  <dt>E-mail</dt><dd><a href="mailto:kristofkovacs25@gmail.com">kristofkovacs25@gmail.com</a></dd>
 </dl>
