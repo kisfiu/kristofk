@@ -523,6 +523,11 @@ test("Racka slides in, introduces itself, gives a tour and can be sent away", as
   await page.getByRole("button", { name: /call him or open his menu/ }).click();
   await expect(head).toBeVisible();
   await expect(racka).toContainText("Welcome back!");
+  // the R key does the same: closes the bubble, then opens Racka's menu again
+  await page.keyboard.press("r");
+  await expect(racka).toBeHidden();
+  await page.keyboard.press("r");
+  await expect(racka).toContainText("What would you like to do?");
 });
 
 test("desktop icons drag onto the grid, never onto each other, alone or as a group, remembered", async ({
@@ -570,8 +575,8 @@ test("desktop icons drag onto the grid, never onto each other, alone or as a gro
   await page.reload(); // remembered in this browser
   await settled(page);
   expect(await box("NGOs")).toEqual(dropped);
-  await page.getByRole("button", { name: "start" }).click();
-  await page.getByRole("button", { name: "Arrange icons" }).click();
+  await page.mouse.click(700, 160, { button: "right" }); // right-click the empty desktop
+  await page.getByRole("menuitem", { name: "Arrange icons" }).click();
   expect((await box("NGOs")).x).toBe(8);
 });
 

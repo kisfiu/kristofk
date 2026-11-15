@@ -148,7 +148,7 @@ const description =
       <button type="button" class="start" popovertarget="start-menu"><Icon name="kk" size={28} /> start</button>
       <div id="tasks" class="tasks" role="toolbar" aria-label="Open windows"></div>
       <div class="tray">
-        <button type="button" id="racka-call" class="tray-racka" aria-label="Racka, your guide: call him or open his menu"><Icon name="racka" size={26} /></button>
+        <button type="button" id="racka-call" class="tray-racka" aria-label="Racka, your guide: call him or open his menu" aria-keyshortcuts="R" title="Racka (press R)"><Icon name="racka" size={26} /></button>
         <button type="button" id="weather" class="tray-weather" data-open="weather" hidden></button>
         <button type="button" id="clock" class="clock" popovertarget="calendar">--:--</button>
       </div>
@@ -162,7 +162,6 @@ const description =
         ))}
         <li class="sep"><button type="button" data-open="cv"><Icon name="resume" size={24} />My CV (PDF)</button></li>
         <li><a href="https://www.linkedin.com/in/kkristof/" target="_blank" rel="noopener"><Icon name="contacts" size={24} />LinkedIn</a></li>
-        <li class="sep"><button type="button" id="arrange-btn"><Icon name="folder" size={24} />Arrange icons</button></li>
       </ul>
       <footer><button type="button" id="logoff-btn">🔑 Log off</button><button type="button" id="shutdown-btn">⏻ Shut down…</button></footer>
     </div>
@@ -206,6 +205,11 @@ const description =
       </div>
       <p class="visually-hidden">Screen reader announcements</p>
       <div id="announcer" class="visually-hidden" aria-live="polite"></div>
+    </div>
+
+    <!-- right-click on the empty desktop, like XP -->
+    <div id="desktop-menu" class="context-menu" popover role="menu">
+      <button type="button" role="menuitem" id="arrange-btn">Arrange icons</button>
     </div>
 
     <div id="shutdown" class="shutdown" hidden><p>It is now safe to turn off your computer.</p><button type="button">Restart</button></div>

@@ -360,8 +360,19 @@ function restoreIcons() {
   }
   snapAll(); // a smaller screen than last time may have pushed icons together
 }
+// right-click on the empty desktop opens a small menu with Arrange icons, as on XP
+const desktopMenu = $("#desktop-menu")!;
+document.addEventListener("contextmenu", (e) => {
+  const t = e.target as Element;
+  if (narrow.matches || !(t.matches(".desktop, .desktop > .icons") || t === document.body)) return;
+  e.preventDefault();
+  desktopMenu.style.left = `${Math.min(e.clientX, innerWidth - 160)}px`;
+  desktopMenu.style.top = `${Math.min(e.clientY, innerHeight - 80)}px`;
+  desktopMenu.showPopover();
+  desktopMenu.querySelector("button")?.focus();
+});
 $("#arrange-btn")!.addEventListener("click", () => {
-  $("#start-menu")?.hidePopover();
+  desktopMenu.hidePopover();
   columnIcons();
   try {
     localStorage.removeItem(ICONS_KEY);

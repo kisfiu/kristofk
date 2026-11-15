@@ -12,10 +12,11 @@ const shortcut: Record<Role, [label: string, window: string]> = {
 };
 const tips = [
   "The wallpaper follows the real weather at Hortobágy, right now. Come back at night!",
-  "Drag icons to move them around, or drag on empty space to select several. Arrow keys work too, and Start → Arrange icons tidies up.",
+  "Drag icons to move them around, or drag on empty space to select several. Arrow keys work too, and right-click the desktop to tidy them up.",
   "Windows can be resized from their bottom-right corner, and moved by their title bar.",
   "The Nine-hole Bridge on the wallpaper has only eight holes. Don't tell anyone.",
   "The Internet icon has a surprise. Surf's up!",
+  "Press R any time to call me back, even after you said bye.",
 ];
 const tour: { text: string; spot?: string }[] = [
   {
@@ -124,13 +125,22 @@ function bye() {
 
 part("head").addEventListener("click", () => (bubble.hidden ? menu() : hush()));
 // the little Racka head in the tray calls him back after "Bye", or opens his menu
-document.getElementById("racka-call")!.addEventListener("click", () => {
+// (and so does pressing R anywhere on the desktop)
+function callRacka() {
+  if (root.dataset.boot || root.dataset.welcome) return; // not on the boot or user screens
   if (helper.hidden) {
     store.set(sessionStorage, "kk-helper", "greeted");
     helper.hidden = false; // slides back in
     setTimeout(() => menu("Welcome back! What would you like to do?"), 400);
   } else if (bubble.hidden) menu();
   else hush();
+}
+document.getElementById("racka-call")!.addEventListener("click", callRacka);
+addEventListener("keydown", (e) => {
+  const typing = (e.target as Element).closest?.("input, textarea, select, [contenteditable]");
+  if (e.key.toLowerCase() !== "r" || e.ctrlKey || e.metaKey || e.altKey || e.repeat || typing) return;
+  e.preventDefault();
+  callRacka();
 });
 part("dismiss").addEventListener("click", bye);
 // Esc closes the bubble first, before the desktop uses Esc to close a window
