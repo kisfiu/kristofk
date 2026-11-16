@@ -137,6 +137,7 @@
 
     <!-- a white stork in flight (local ~70x24) -->
     <g id="stork">
+      <rect x="-6" y="-8" width="82" height="36" fill="transparent" /><!-- bigger hit area: the bird is thin -->
       <path d="M0 12 C14 4 26 4 34 10 C42 4 56 4 70 12 C56 10 44 12 36 14 C28 12 14 10 0 12 Z" fill="#fff" />
       <path d="M0 12 C6 9 10 8 14 8 L12 12 Z M70 12 C64 9 60 8 56 8 L58 12 Z" fill="#1f1f1f" />
       <ellipse cx="35" cy="13" rx="9" ry="3.5" fill="#fff" />
@@ -170,8 +171,8 @@
 
   <!-- two white storks crossing the sky -->
   <g class="storks">
-    <use href="#stork" transform="translate(860 230) scale(1.1)" />
-    <use href="#stork" transform="translate(940 262) scale(.85)" />
+    <use href="#stork" class="animal stork" transform="translate(860 230) scale(1.1)" />
+    <use href="#stork" class="animal stork" transform="translate(940 262) scale(.85)" />
   </g>
 
   <!-- far horizon: the Parliament, small and hazy, and a few distant tree clumps -->
