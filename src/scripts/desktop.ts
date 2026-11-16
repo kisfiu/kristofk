@@ -476,8 +476,8 @@ document.addEventListener("keydown", (e) => {
   for (const i of chosen) open(i.dataset.open!);
 });
 
-// ---------- the wallpaper's animals talk: click a cow or a sheep for a fact about Kristóf ----------
-const sayings: Record<"cow" | "sheep" | "black", string[]> = {
+// ---------- the wallpaper's animals talk: click a cow, a sheep or a stork for a fact about Kristóf ----------
+const sayings: Record<"cow" | "sheep" | "black" | "stork", string[]> = {
   cow: [
     "Mooo! Kristóf moved 18 teams and about 50 services from Jenkins to GitLab CI.",
     "Mooo! With his setup scripts, a new developer laptop is ready to work in about 30 minutes.",
@@ -497,8 +497,14 @@ const sayings: Record<"cow" | "sheep" | "black", string[]> = {
     "Baa! The black sheep's secret: he renovates his own flat, from the bricks up.",
     "Baa! Every flock needs a black sheep, and every team needs someone who asks how the developers feel.",
   ],
+  stork: [
+    "Klepp-klepp! We fly to Africa every autumn. Kristóf keeps up: 37 countries visited so far.",
+    "Klepp-klepp! He flew south once too: an Erasmus semester in Santarém, Portugal.",
+    "Klepp-klepp! Storks deliver babies. Kristóf delivers pipelines, setup scripts and docs to developers.",
+    "Klepp-klepp! We come back to the same nest every spring. He keeps coming back to the Invisible School since 2016.",
+  ],
 };
-const said = { cow: 0, sheep: 0, black: 0 };
+const said = { cow: 0, sheep: 0, black: 0, stork: 0 };
 const talk = Object.assign(document.createElement("p"), { className: "animal-talk", hidden: true });
 $(".desktop")!.append(talk);
 let talkTimer = 0;
@@ -516,7 +522,7 @@ document.addEventListener("click", (e) => {
   // the wallpaper sits under the desktop, so look through it for an animal at the click point
   const animal = document.elementsFromPoint(e.clientX, e.clientY).find((el) => el.matches(".animal"));
   if (!animal) return;
-  const kind = animal.classList.contains("black") ? "black" : animal.classList.contains("cow") ? "cow" : "sheep";
+  const kind = (["black", "cow", "stork"] as const).find((k) => animal.classList.contains(k)) ?? "sheep";
   const lines = sayings[kind];
   talk.textContent = lines[said[kind]++ % lines.length];
   talk.hidden = false;

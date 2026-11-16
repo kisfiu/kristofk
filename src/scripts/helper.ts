@@ -28,7 +28,7 @@ const tour: { text: string; spot?: string }[] = [
     spot: "#weather",
   },
   { text: "Click the clock for a calendar.", spot: "#clock" },
-  { text: "Last secret: the cows and sheep on the wallpaper know a thing or two about Kristóf. Click one!" },
+  { text: "Last secret: the cows, sheep and storks on the wallpaper know a thing or two about Kristóf. Click one!" },
 ];
 
 const root = document.documentElement;

@@ -474,6 +474,8 @@ test("clicking the wallpaper animals tells facts about Kristóf", async ({ page,
     await click(await centreOf(".wallpaper .sheep.black"));
     await expect(talk).toContainText("black sheep");
   }
+  await click(await centreOf(".wallpaper .stork"));
+  await expect(talk).toContainText("Klepp-klepp!");
   if (!isMobile) {
     // a selection drag that ends on an animal is not a click on it
     await page.reload();
