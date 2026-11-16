@@ -595,7 +595,7 @@ const days = Math.max(0, Math.floor((Date.now() - Date.UTC(2026, 10, 15)) / 864e
 $("#counter")!.textContent = String(1337 + days * 3 + visits).padStart(6, "0");
 
 // ---------- balloon notifications ----------
-type Role = "recruiter" | "nonprofit" | "guest";
+export type Role = "recruiter" | "nonprofit" | "guest";
 const generic = [
   { title: "New resume available", text: "Click here to open My Resume.", open: "resume" },
   {
@@ -618,7 +618,7 @@ const greeting: Record<Role, (typeof generic)[number]> = {
   },
   guest: { title: "Welcome, guest!", text: "Your pipeline is red. Can you make it green?", open: "pipeline-green" },
 };
-const role = () => store.get(sessionStorage, "kk-role") as Role | null;
+export const role = () => store.get(sessionStorage, "kk-role") as Role | null;
 const balloonsFor = (r: Role | null) => {
   const first = r ? greeting[r] : undefined;
   return first ? [first, ...generic.filter((g) => g.open !== first.open)] : generic;
@@ -730,4 +730,5 @@ if (root.dataset.boot) {
 } else if (root.dataset.welcome) firstUser();
 else startBalloons();
 
-if (location.hash.length > 1) open(decodeURIComponent(location.hash.slice(1)));
+// ids are plain slugs, so no decoding: decodeURIComponent throws on links like "#%" and stops every script
+if (location.hash.length > 1) open(location.hash.slice(1));

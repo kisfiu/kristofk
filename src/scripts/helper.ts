@@ -1,8 +1,7 @@
-import { open, store } from "./desktop";
+import { open, type Role, role, store } from "./desktop";
 
 // Racka, Kristóf's helper and guide to the site: slides in from the bottom right, introduces itself,
 // and offers a guided tour, a short intro to Kristóf, a shortcut for the visitor's role and tips.
-type Role = "recruiter" | "nonprofit" | "guest";
 type Choice = [label: string, run: () => void];
 
 const shortcut: Record<Role, [label: string, window: string]> = {
@@ -36,7 +35,6 @@ const root = document.documentElement;
 const helper = document.getElementById("helper")!;
 const bubble = document.getElementById("helper-bubble")!;
 const part = (name: string) => helper.querySelector<HTMLElement>(`[data-helper="${name}"]`)!;
-const role = () => store.get(sessionStorage, "kk-role") as Role | null;
 
 function say(text: string, choices: Choice[]) {
   part("text").textContent = text;

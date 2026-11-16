@@ -10,6 +10,7 @@ const tray = document.getElementById("weather")!;
 const shown = (sel: string) => document.querySelector<HTMLElement>(`[data-wx-${sel}]`);
 
 function failed() {
+  if (root.dataset.weather) return; // a later refresh failed: keep showing the last good reading
   shown("icon")!.textContent = "☀️";
   shown("text")!.textContent = "Couldn't reach the weather service, so the desktop shows its sunny default.";
 }

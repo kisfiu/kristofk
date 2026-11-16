@@ -74,6 +74,11 @@ test("reduced motion skips the boot animation but still asks who you are", async
   await expect(page.getByRole("button", { name: /IT recruiter/ })).toBeFocused();
 });
 
+test("a broken link hash still loads the whole desktop", async ({ page }) => {
+  await page.goto("./#%");
+  await expect(page.locator("#weather")).toBeVisible(); // the weather script ran (afterEach: no "URI malformed")
+});
+
 test("deep link opens the resume without the boot screen", async ({ page }) => {
   await page.goto("./#resume");
   await expect(page.locator("#boot")).toBeHidden();
