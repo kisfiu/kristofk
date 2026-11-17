@@ -285,8 +285,9 @@ document.addEventListener("pointerdown", (e) => {
   );
 });
 
-// ---------- move desktop icons by dragging (not on phones), positions remembered in this browser ----------
-const ICONS_KEY = "kk-icons";
+// ---------- move desktop icons by dragging (on phones after a long press), positions remembered in this browser ----------
+// phones keep their own layout: a desktop arrangement doesn't fit a phone's grid
+const iconsKey = () => (narrow.matches ? "kk-icons-phone" : "kk-icons");
 const desktopItems = () => [...desktopIcons.querySelectorAll<HTMLElement>(":scope > li")];
 const keyOf = (li: HTMLElement) => li.querySelector<HTMLElement>(".icon")!.dataset.open!;
 
@@ -337,7 +338,7 @@ function freeIcons() {
 function saveIcons() {
   store.set(
     localStorage,
-    ICONS_KEY,
+    iconsKey(),
     JSON.stringify(Object.fromEntries(desktopItems().map((li) => [keyOf(li), [li.offsetLeft, li.offsetTop]]))),
   );
 }
@@ -348,11 +349,11 @@ function columnIcons() {
 function restoreIcons() {
   let saved: Record<string, [number, number]> | null = null;
   try {
-    saved = JSON.parse(store.get(localStorage, ICONS_KEY) ?? "null");
+    saved = JSON.parse(store.get(localStorage, iconsKey()) ?? "null");
   } catch {
     /* ignore a damaged value */
   }
-  if (!saved || narrow.matches) return columnIcons();
+  if (!saved) return columnIcons();
   freeIcons();
   for (const li of desktopItems()) {
     const spot = saved[keyOf(li)];
@@ -364,7 +365,9 @@ function restoreIcons() {
 const desktopMenu = $("#desktop-menu")!;
 document.addEventListener("contextmenu", (e) => {
   const t = e.target as Element;
-  if (narrow.matches || !(t.matches(".desktop, .desktop > .icons") || t === document.body)) return;
+  // a long press on a phone icon picks it up (below), so no browser menu there
+  if (narrow.matches && t.closest(".desktop > .icons .icon")) return e.preventDefault();
+  if (!(t.matches(".desktop, .desktop > .icons") || t === document.body)) return;
   e.preventDefault();
   desktopMenu.style.left = `${Math.min(e.clientX, innerWidth - 160)}px`;
   desktopMenu.style.top = `${Math.min(e.clientY, innerHeight - 80)}px`;
@@ -375,7 +378,7 @@ $("#arrange-btn")!.addEventListener("click", () => {
   desktopMenu.hidePopover();
   columnIcons();
   try {
-    localStorage.removeItem(ICONS_KEY);
+    localStorage.removeItem(iconsKey());
   } catch {
     /* private mode */
   }
@@ -383,27 +386,51 @@ $("#arrange-btn")!.addEventListener("click", () => {
 
 document.addEventListener("pointerdown", (e) => {
   const icon = (e.target as Element).closest<HTMLElement>(".desktop > .icons .icon");
-  if (!icon || e.button !== 0 || narrow.matches || e.ctrlKey || e.metaKey) return;
+  if (!icon || e.button !== 0 || e.ctrlKey || e.metaKey) return;
   const x0 = e.clientX;
   const y0 = e.clientY;
   let group: { li: HTMLElement; x: number; y: number }[] | null = null;
+  const pickUp = () => {
+    freeIcons();
+    const lis = desktopItems().filter((li) => li.querySelector(".icon.selected"));
+    group = lis.map((li) => ({ li, x: li.offsetLeft, y: li.offsetTop }));
+    for (const g of group) g.li.classList.add("moving");
+  };
+  // on phones a tap opens the icon, so a drag starts only after holding it still for a moment
+  let held = !narrow.matches;
+  const hold = held
+    ? 0
+    : setTimeout(() => {
+        held = true;
+        pickUp();
+        navigator.vibrate?.(20);
+      }, 400);
   const move = (m: PointerEvent) => {
-    if (!group) {
-      if (Math.abs(m.clientX - x0) + Math.abs(m.clientY - y0) < 6) return; // still a click
-      freeIcons();
-      const lis = desktopItems().filter((li) => li.querySelector(".icon.selected"));
-      group = lis.map((li) => ({ li, x: li.offsetLeft, y: li.offsetTop }));
-      for (const g of group) g.li.classList.add("moving");
+    const far = Math.abs(m.clientX - x0) + Math.abs(m.clientY - y0);
+    if (!held) {
+      if (far > 10) {
+        // moved before the hold ended: a swipe, neither a drag nor a tap
+        clearTimeout(hold);
+        swallowClick = Infinity;
+      }
+      return;
     }
-    for (const g of group) placeIcon(g.li, g.x + m.clientX - x0, g.y + m.clientY - y0);
+    if (!group) {
+      if (far < 6) return; // still a click
+      pickUp();
+    }
+    for (const g of group!) placeIcon(g.li, g.x + m.clientX - x0, g.y + m.clientY - y0);
   };
   icon.setPointerCapture(e.pointerId);
   icon.addEventListener("pointermove", move);
   icon.addEventListener(
     "lostpointercapture",
     () => {
+      clearTimeout(hold);
       icon.removeEventListener("pointermove", move);
+      if (swallowClick === Infinity) swallowClick = performance.now() + 500;
       if (group) {
+        swallowClick = performance.now() + 500; // the tap that ends a drag must not open the icon
         // drop into the grid: the cells of the icons that stayed are taken, so a drop onto one lands next to it
         const moved = new Set(group.map((g) => g.li));
         const taken = new Set(
@@ -425,6 +452,15 @@ document.addEventListener("pointerdown", (e) => {
     { once: true },
   );
 });
+let swallowClick = 0;
+addEventListener(
+  "click",
+  (e) => {
+    if (performance.now() < swallowClick) e.stopPropagation();
+    swallowClick = 0;
+  },
+  true,
+);
 addEventListener("resize", () => {
   if (desktopIcons.classList.contains("free")) snapAll();
 });
