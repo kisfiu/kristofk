@@ -1,9 +1,10 @@
-export type Sky = "clear" | "cloudy" | "fog" | "rain" | "snow" | "storm";
+export type Sky = "clear" | "partly" | "cloudy" | "fog" | "rain" | "snow" | "storm";
 
 /** WMO weather code (as returned by Open-Meteo) → how the desktop should look. */
 export function skyFor(code: number): Sky {
   if (code <= 1) return "clear";
-  if (code <= 3) return "cloudy";
+  if (code === 2) return "partly";
+  if (code === 3) return "cloudy";
   if (code === 45 || code === 48) return "fog";
   if ((code >= 71 && code <= 77) || code === 85 || code === 86) return "snow";
   if (code >= 95) return "storm";
@@ -13,6 +14,7 @@ export function skyFor(code: number): Sky {
 
 export const LABEL: Record<Sky, string> = {
   clear: "clear",
+  partly: "partly cloudy",
   cloudy: "cloudy",
   fog: "fog",
   rain: "rain",
@@ -22,7 +24,8 @@ export const LABEL: Record<Sky, string> = {
 
 export const ICON: Record<Sky, [day: string, night: string]> = {
   clear: ["☀️", "🌙"],
-  cloudy: ["⛅", "☁️"],
+  partly: ["⛅", "☁️"],
+  cloudy: ["☁️", "☁️"],
   fog: ["🌫️", "🌫️"],
   rain: ["🌧️", "🌧️"],
   snow: ["❄️", "❄️"],

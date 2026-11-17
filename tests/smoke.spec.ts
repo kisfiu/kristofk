@@ -424,6 +424,31 @@ test("the desktop follows the live Hortobágy weather", async ({ page }) => {
   await expect(html).toHaveAttribute("data-weather", "snow");
   await expect(tray).toHaveText("❄️ -2°C");
   await expect.poll(photo).toContain("snow");
+
+  await page.unroute(WEATHER);
+  await page.route(WEATHER, (r) => r.fulfill(weather(2, 1, 14))); // partly cloudy, day
+  await page.reload();
+  await expect(tray).toHaveText("⛅ 14°C");
+  await expect.poll(photo).toContain("partly");
+});
+
+test("in a thunderstorm a lightning bolt strikes with each flash, somewhere new each time", async ({ page }) => {
+  await page.route(WEATHER, (r) => r.fulfill(weather(95, 1, 21)));
+  await page.addInitScript(() => sessionStorage.setItem("kk-booted", "1"));
+  await page.goto("./");
+  const bolt = page.locator(".bolt");
+  await expect(bolt).toHaveCSS("animation-name", "weather-bolt");
+  // jump to the flash (91.5% of the 9 s cycle): the bolt shows while the sky flashes
+  await page.evaluate(() => {
+    for (const a of document.getAnimations())
+      if (/weather-(bolt|lightning)/.test(String((a as CSSAnimation).animationName))) a.currentTime = 8_235;
+  });
+  expect(Number(await bolt.evaluate((b) => getComputedStyle(b).opacity))).toBeGreaterThan(0.5);
+  const before = await bolt.evaluate((b) => (b as SVGElement).style.left);
+  for (let i = 0; i < 5 && (await bolt.evaluate((b) => (b as SVGElement).style.left)) === before; i++) {
+    await bolt.dispatchEvent("animationiteration");
+  }
+  expect(await bolt.evaluate((b) => (b as SVGElement).style.left)).not.toBe(before);
 });
 
 test("if the weather service is down, the desktop simply stays sunny", async ({ page }) => {

@@ -40,3 +40,10 @@ async function update() {
 
 update();
 setInterval(update, 30 * 60_000);
+
+// in a storm, each lightning flash strikes somewhere else (os.css times the flash; this only moves the bolt)
+const bolt = document.querySelector<SVGSVGElement>(".bolt")!;
+bolt.addEventListener("animationiteration", () => {
+  bolt.style.left = `${8 + Math.random() * 80}%`;
+  bolt.style.scale = Math.random() < 0.5 ? "-1 1" : "1";
+});
