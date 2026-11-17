@@ -611,6 +611,9 @@
     grid-auto-columns: 88px;
     gap: 6px;
     justify-content: start;
+    /* dragging the selection rectangle must not also select icon labels as text */
+    -webkit-user-select: none;
+    user-select: none;
   }
   .icon {
     all: unset;
@@ -654,6 +657,7 @@
   /* after an icon is dragged, every desktop icon keeps a free position (scripts/desktop.ts) */
   .desktop > .icons {
     position: relative;
+    touch-action: none; /* empty space takes drags for the selection rectangle instead of panning */
   }
   .desktop > .icons.free > li {
     position: absolute;
@@ -663,15 +667,6 @@
   .desktop > .icons > li.moving {
     z-index: 2;
     opacity: 0.85;
-  }
-  /* the desktop's empty space takes drags for the selection rectangle instead of panning */
-  .desktop > .icons {
-    touch-action: none;
-  }
-  /* dragging the selection rectangle must not also select icon labels as text */
-  .icons {
-    -webkit-user-select: none;
-    user-select: none;
   }
   .marquee {
     position: fixed;
