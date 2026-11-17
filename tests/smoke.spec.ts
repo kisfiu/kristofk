@@ -110,6 +110,7 @@ test("every desktop icon and folder item opens its window", async ({ page, isMob
     "Weather",
     "Recycle Bin",
     "Pipeline Green",
+    "Renovator XP",
   ];
   const folders: Record<string, string[]> = {
     Hobbies: ["Books", "Marketplace", "Travel", "Renovation", "Baseball"],
@@ -264,7 +265,8 @@ test("dragging on the desktop draws a selection rectangle; Enter opens the selec
   // during the ~250 ms login View Transition the browser hit-tests the page root; wait until the desktop takes input
   await page.waitForFunction(() => document.elementFromPoint(400, 20)?.matches(".icons"));
   const selected = page.locator(".desktop > .icons .icon.selected");
-  await page.mouse.move(400, 20);
+  // drags start at x 97: between the first icon column (ends at 92) and the second (Renovator XP, from 102)
+  await page.mouse.move(97, 20);
   await page.mouse.down();
   await page.mouse.move(20, 170, { steps: 6 });
   await expect(page.locator(".marquee")).toBeVisible();
@@ -274,12 +276,12 @@ test("dragging on the desktop draws a selection rectangle; Enter opens the selec
   await page.mouse.click(700, 400); // empty desktop clears the selection
   await expect(selected).toHaveCount(0);
   // a rectangle beside the icons (here just right of the pictures and labels) selects nothing
-  await page.mouse.move(400, 20);
+  await page.mouse.move(97, 20);
   await page.mouse.down();
   await page.mouse.move(93, 170, { steps: 6 });
   await expect(selected).toHaveCount(0);
   await page.mouse.up();
-  await page.mouse.move(400, 20);
+  await page.mouse.move(97, 20);
   await page.mouse.down();
   await page.mouse.move(20, 170, { steps: 6 });
   await page.mouse.up();
@@ -678,6 +680,31 @@ test("NGOs is the second desktop icon and the Recycle Bin sits bottom right", as
   const size = page.viewportSize()!;
   expect(bin.x + bin.width).toBeGreaterThan(size.width - 100);
   expect(bin.y + bin.height).toBeGreaterThan(size.height - 140);
+});
+
+test("renovation game: walk in, wrong tool scolds, hammer starts the knock-sweeper", async ({ page, isMobile }) => {
+  await skipBoot(page);
+  await openIcon(page, "Renovator XP", isMobile);
+  const win = page.locator(".window.active");
+  await win.getByRole("button", { name: "Open the flat door" }).click();
+  await win.getByRole("button", { name: "Open the door on the right" }).click();
+  await expect(win).toContainText("next year");
+  await win.getByRole("button", { name: "Open the door on the left" }).click();
+  await expect(win.locator("[data-budget]")).toHaveText(/150.000 Ft/);
+  await expect(win.locator("[data-sound]")).toContainText("Sound off");
+  const wall = win.locator(".reno-wall");
+  await win.getByRole("button", { name: "Paint roller" }).click();
+  await wall.click({ position: { x: 5, y: 5 } });
+  await expect(page.locator(".reno-dialog")).toContainText("peeled off");
+  await page.keyboard.press("Enter"); // Enter works like OK
+  await expect(page.locator(".reno-dialog")).toBeHidden();
+  await expect(win.locator("[data-budget]")).toHaveText(/125.000 Ft/);
+  await win.getByRole("button", { name: "Hammer" }).click();
+  await wall.click({ position: { x: 5, y: 5 } });
+  await expect(win.locator("[data-banner]")).toHaveText("KNOCK!");
+  await expect(win.locator("[data-banner]")).toBeHidden();
+  await expect(win.getByRole("button", { name: /Mode: Knock/ })).toBeVisible();
+  await expect(win.locator("[data-note]")).toContainText("Left-click knocks");
 });
 
 test("pipeline game starts its timer on the first click", async ({ page, isMobile }) => {

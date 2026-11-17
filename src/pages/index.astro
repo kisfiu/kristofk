@@ -7,6 +7,7 @@ import Icon from "../components/Icon.astro";
 import Icons from "../components/Icons.astro";
 import Internet from "../components/Internet.astro";
 import Pipeline from "../components/Pipeline.astro";
+import Renovation from "../components/Renovation.astro";
 import Window from "../components/Window.astro";
 
 const items = (await getCollection("items")).sort((a, b) => a.data.order - b.data.order);
@@ -112,6 +113,8 @@ const description =
             <Pipeline />
           ) : data.app === "internet" ? (
             <Internet links={data.links} />
+          ) : data.app === "renovation" ? (
+            <Renovation />
           ) : (
             <article class="doc"><Content /></article>
           )}
