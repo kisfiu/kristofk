@@ -13,7 +13,7 @@ const tips = [
   "The wallpaper follows the real weather at Hortobágy, right now. Come back at night!",
   "Drag icons to move them around, or drag on empty space to select several. Arrow keys work too, and right-click the desktop to tidy them up.",
   "Windows can be resized from their bottom-right corner, and moved by their title bar.",
-  "The Nine-hole Bridge on the wallpaper has only eight holes. Don't tell anyone.",
+  "On a sunny day the sun shines right through the middle arch of the Nine-hole Bridge. Come back when it's clear!",
   "The Internet icon has a surprise. Surf's up!",
   "Press R any time to call me back, even after you said bye.",
 ];

@@ -16,6 +16,6 @@ order: 4
 * Linux servers under his care went brrrr.
 * Renovates his flat brick by brick, by hand.
 * Founded a school that is invisible (see NGOs).
-* The Nine-hole Bridge on the wallpaper has eight holes.
-  The ninth is the sun. Look closely.
+* The wallpaper follows the real weather at Hortobágy.
+  Come back when it snows.
 </pre>

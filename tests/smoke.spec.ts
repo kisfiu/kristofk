@@ -402,6 +402,10 @@ test("the desktop follows the live Hortobágy weather", async ({ page }) => {
   const html = page.locator("html");
   await expect(html).toHaveAttribute("data-weather", "rain");
   await expect(html).toHaveAttribute("data-daylight", "night");
+  // the wallpaper photo follows it too: a cloudy night, and storks don't fly at night
+  const photo = () => page.locator(".wallpaper svg").evaluate((s) => getComputedStyle(s).backgroundImage);
+  await expect.poll(photo).toContain("night-cloudy");
+  await expect(page.locator(".wallpaper .storks")).toBeHidden();
   const tray = page.locator("#weather");
   await expect(tray).toHaveText("🌧️ 7°C");
   await expect(tray).toHaveAttribute("aria-label", "Hortobágy now: rain, 7°C");
@@ -419,6 +423,7 @@ test("the desktop follows the live Hortobágy weather", async ({ page }) => {
   await page.reload();
   await expect(html).toHaveAttribute("data-weather", "snow");
   await expect(tray).toHaveText("❄️ -2°C");
+  await expect.poll(photo).toContain("snow");
 });
 
 test("if the weather service is down, the desktop simply stays sunny", async ({ page }) => {
@@ -429,6 +434,7 @@ test("if the weather service is down, the desktop simply stays sunny", async ({ 
   await expect(page.locator("html")).not.toHaveAttribute("data-weather", /.+/);
   await expect(page.locator("#weather")).toBeHidden();
   await expect(page.locator("[data-wx-text]")).toContainText("Couldn't reach the weather service");
+  expect(await page.locator(".wallpaper svg").evaluate((s) => getComputedStyle(s).backgroundImage)).toContain("sun");
   errors.length = 0; // the browser logs the failed request itself; the page must not break
 });
 
