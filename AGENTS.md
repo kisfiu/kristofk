@@ -51,7 +51,7 @@ npm run build && npm run lighthouse                      # perf/a11y/BP/SEO must
 | CI/deploy | `.github/workflows/deploy.yml`, `lighthouserc.json`, `.github/dependabot.yml` |
 
 Storage keys: sessionStorage `kk-booted`, `kk-role`, `kk-balloon`, `kk-helper` (`off`/`greeted`);
-localStorage `kk-visits`, `kk-icons`. Always go through `store.get/set` (private mode throws).
+localStorage `kk-visits`, `kk-icons` (`kk-icons-phone` on phones). Always go through `store.get/set` (private mode throws).
 
 ## How common requests are done
 - **New window or text change:** add or edit a Markdown file in `src/content/items/`. A new icon goes in `Icons.astro`.

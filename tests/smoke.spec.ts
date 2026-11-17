@@ -572,7 +572,7 @@ test("desktop icons drag onto the grid, never onto each other, alone or as a gro
   page,
   isMobile,
 }) => {
-  test.skip(isMobile, "icons stay in their column on phones");
+  test.skip(isMobile, "phones drag after a long press, tested below");
   await page.addInitScript(() => sessionStorage.setItem("kk-booted", "1"));
   await page.goto("./");
   await settled(page);
@@ -616,6 +616,40 @@ test("desktop icons drag onto the grid, never onto each other, alone or as a gro
   await page.mouse.click(700, 160, { button: "right" }); // right-click the empty desktop
   await page.getByRole("menuitem", { name: "Arrange icons" }).click();
   expect((await box("NGOs")).x).toBe(8);
+});
+
+test("on phones a long press picks an icon up to drag it; a quick swipe doesn't, a tap still opens", async ({
+  page,
+  isMobile,
+}) => {
+  test.skip(!isMobile, "desktop drags at once, tested above");
+  await page.addInitScript(() => sessionStorage.setItem("kk-booted", "1"));
+  await page.goto("./");
+  await settled(page);
+  const icons = page.locator(".desktop > .icons");
+  const box = async (name: string) => (await icons.getByRole("button", { name, exact: true }).boundingBox())!;
+  const drag = async (from: { x: number; y: number }, to: { x: number; y: number }, holdMs: number) => {
+    await page.mouse.move(from.x, from.y);
+    await page.mouse.down();
+    await page.waitForTimeout(holdMs);
+    await page.mouse.move(to.x, to.y, { steps: 8 });
+    await page.mouse.up();
+  };
+  const ngos = await box("NGOs");
+  await drag({ x: ngos.x + 40, y: ngos.y + 30 }, { x: ngos.x + 240, y: ngos.y + 30 }, 0);
+  expect(await box("NGOs")).toEqual(ngos); // a swipe without holding leaves it
+
+  await drag({ x: ngos.x + 40, y: ngos.y + 30 }, { x: ngos.x + 240, y: ngos.y + 30 }, 600);
+  const dropped = await box("NGOs");
+  expect(dropped.x).toBeGreaterThan(ngos.x + 94); // moved right, onto the grid
+  expect((dropped.x - 8) % 94).toBe(0);
+  await expect(page.locator(".window:not([hidden])")).toHaveCount(0); // the drag didn't open it
+
+  await page.reload(); // remembered on this phone
+  await settled(page);
+  expect(await box("NGOs")).toEqual(dropped);
+  await icons.getByRole("button", { name: "NGOs", exact: true }).click();
+  await expect(page.locator(".window:not([hidden])")).toHaveCount(1); // a tap still opens
 });
 
 test("arrow keys move between desktop icons; Shift extends the selection; Enter opens it", async ({ page }) => {
