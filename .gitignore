@@ -27,3 +27,6 @@ pnpm-debug.log*
 test-results/
 playwright-report/
 .lighthouseci/
+
+# local screenshots of every weather look (see AGENTS.md)
+samples/
