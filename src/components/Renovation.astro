@@ -1,0 +1,159 @@
+---
+// Renovator XP: walk in from the gang, renovate the left room's wall. Logic: src/scripts/renovation-logic.ts
+import { TOOLS, type Tool } from "../scripts/renovation-logic";
+
+// Fixed toolbox order that gives nothing away about the job order.
+const order: Tool[] = [
+  "paint",
+  "hammer",
+  "putty",
+  "broom",
+  "scraper",
+  "primer",
+  "trowel",
+  "sander",
+  "chisel",
+  "deepPrimer",
+];
+const glyph: Record<Tool, string> = {
+  hammer: '<path d="M4 5h10v5H4z" fill="#6b7680"/><path d="M10 10h3v11h-3z" fill="#a8743a"/>',
+  scraper: '<path d="M5 4h14v6H5z" fill="#c9d1d8" stroke="#555"/><path d="M10 10h4v11h-4z" fill="#d9542b"/>',
+  chisel: '<path d="M11 3h3v10h-3z" fill="#b8c2c8" stroke="#555"/><path d="M10 13h5v8h-5z" fill="#e0b000"/>',
+  broom:
+    '<path d="M12 2v12" stroke="#a8743a" stroke-width="2"/><path d="M7 14h10l2 8H5z" fill="#e8c76a" stroke="#8a6a20"/>',
+  deepPrimer:
+    '<path d="M6 8h12v13H6z" fill="#4f8fd8" stroke="#123f8f"/><path d="M6 11h12" stroke="#fff"/><text x="12" y="19" font-size="6" text-anchor="middle" fill="#fff">D</text>',
+  trowel:
+    '<path d="M3 13l9-6 9 6-9 6z" fill="#9aa1a8" stroke="#444"/><path d="M12 7V3" stroke="#a8743a" stroke-width="2"/>',
+  putty: '<path d="M4 12h16v4H4z" fill="#dfe4e8" stroke="#555"/><path d="M10 4h4v8h-4z" fill="#2c6fd1"/>',
+  sander: '<path d="M4 12h16v7H4z" fill="#d9b26a" stroke="#7a5a20"/><path d="M6 8h12v4H6z" fill="#6b4a1a"/>',
+  primer:
+    '<path d="M5 4h14v6H5z" fill="#fff" stroke="#888"/><path d="M12 10v4M12 14h-2v8" stroke="#555" stroke-width="2" fill="none"/>',
+  paint:
+    '<path d="M5 4h14v6H5z" fill="#d9542b" stroke="#7a2a12"/><path d="M12 10v4M12 14h-2v8" stroke="#555" stroke-width="2" fill="none"/>',
+};
+const colors = [
+  ["Linen", "#efe3c8"],
+  ["Sky blue", "#a9cbe8"],
+  ["Mint", "#b4dcc0"],
+  ["Butter", "#f3dc8a"],
+  ["Peach", "#f3b796"],
+  ["Lavender", "#c5b7e0"],
+];
+---
+<div class="reno" data-reno>
+  <section class="reno-scene" data-scene="gang">
+    <p class="reno-cap">Budapest, an old courtyard house, third floor. The gang creaks under your feet. Your new old flat is waiting.</p>
+    <div class="reno-art">
+      <svg viewBox="0 0 320 200" aria-hidden="true">
+        <rect width="320" height="200" fill="#bcd9f0" />
+        <rect x="0" y="40" width="190" height="160" fill="#d9b97a" />
+        {[0, 1, 2].map((r) => (
+          <g>
+            <rect x="0" y={52 + r * 44} width="190" height="3" fill="#5a4a3a" />
+            {[0, 1, 2, 3, 4, 5].map((c) => <rect x={10 + c * 30} y={60 + r * 44} width="14" height="22" fill="#6b5a44" />)}
+          </g>
+        ))}
+        <rect x="0" y="178" width="190" height="22" fill="#9a9488" />
+        <path d="M0 140h190" stroke="#2b2b2b" stroke-width="3" />
+        {Array.from({ length: 20 }, (_, i) => <path d={`M${i * 10 + 4} 140v40`} stroke="#2b2b2b" stroke-width="1.5" />)}
+        <rect x="190" y="0" width="130" height="200" fill="#e3c98f" />
+        <rect x="190" y="180" width="130" height="20" fill="#8a8173" />
+        <rect x="214" y="70" width="48" height="110" fill="#6b3f1f" stroke="#3a2210" stroke-width="2" />
+        <path d="M238 72v106" stroke="#3a2210" />
+        <rect x="222" y="80" width="10" height="30" fill="#9ec3de" />
+        <rect x="244" y="80" width="10" height="30" fill="#9ec3de" />
+        <circle cx="244" cy="128" r="2" fill="#e0b000" />
+        <rect x="274" y="80" width="34" height="44" fill="#9ec3de" stroke="#fff" stroke-width="3" />
+        <rect x="270" y="124" width="42" height="8" fill="#a0522d" />
+        {[278, 288, 298, 306].map((x) => <circle cx={x} cy="120" r="4" fill="#e23a3a" />)}
+        <text x="226" y="64" font-size="9" fill="#3a2210">12</text>
+      </svg>
+      <button type="button" class="reno-hot" style="left:66.9%;top:35%;width:15%;height:55%" data-go="hall" aria-label="Open the flat door"></button>
+    </div>
+    <p class="reno-cap">Click the door to go in.</p>
+  </section>
+
+  <section class="reno-scene" data-scene="hall" hidden>
+    <p class="reno-cap">The hallway smells of old parquet. Three doors. The room on the <b>left</b> is the first job.</p>
+    <div class="reno-art">
+      <svg viewBox="0 0 320 200" aria-hidden="true">
+        <rect width="320" height="200" fill="#d8cdb2" />
+        <path d="M0 0l100 50v100L0 200z" fill="#c7b995" />
+        <path d="M320 0l-100 50v100l100 50z" fill="#c7b995" />
+        <path d="M0 200l100-50h120l100 50z" fill="#a46b35" />
+        {[1, 2, 3, 4, 5].map((i) => <path d={`M${100 - i * 20} ${150 + i * 10}h${120 + i * 40}`} stroke="#7d4f22" />)}
+        <rect x="130" y="70" width="60" height="80" fill="#f2efe6" stroke="#8a7a5a" stroke-width="3" />
+        <rect x="140" y="80" width="40" height="30" fill="#9ec3de" />
+        {/* side doors stand on the floor edge and follow their wall's perspective */}
+        <path d="M30 69.4L75 77.5V162.5L30 185z" fill="#6b3f1f" stroke="#3a2210" stroke-width="2" />
+        <circle cx="68" cy="124" r="2" fill="#e0b000" />
+        <path d="M290 69.4L245 77.5V162.5L290 185z" fill="#6b3f1f" stroke="#3a2210" stroke-width="2" />
+        <circle cx="252" cy="124" r="2" fill="#e0b000" />
+        <path d="M160 0v20" stroke="#333" />
+        <circle cx="160" cy="24" r="6" fill="#ffe9a0" stroke="#999" />
+      </svg>
+      <button type="button" class="reno-hot" style="left:9.4%;top:34.5%;width:14.1%;height:58%;clip-path:polygon(0 0,100% 7%,100% 80.4%,0 100%)" data-go="room" aria-label="Open the door on the left"></button>
+      <button type="button" class="reno-hot" style="left:40.6%;top:35%;width:18.8%;height:40%" data-say="The kitchen. The 1970s cooker stays. For now." aria-label="Look into the kitchen"></button>
+      <button type="button" class="reno-hot" style="left:76.5%;top:34.5%;width:14.1%;height:58%;clip-path:polygon(100% 0,0 7%,0 80.4%,100% 100%)" data-say="The bathroom. That one is next year's problem." aria-label="Open the door on the right"></button>
+    </div>
+    <p class="reno-cap" data-say-out aria-live="polite">&nbsp;</p>
+  </section>
+
+  <section class="reno-scene reno-room" data-scene="room" hidden>
+    <div class="reno-tools" role="toolbar" aria-label="Tools">
+      {order.map((t) => (
+        <button type="button" class="reno-tool" data-tool={t} aria-pressed="false">
+          <svg viewBox="0 0 24 24" aria-hidden="true" set:html={glyph[t]} />
+          <span>{TOOLS[t].name}</span>
+        </button>
+      ))}
+    </div>
+    <div class="reno-main">
+      <ol class="reno-steps" data-steps></ol>
+      <div class="reno-stage">
+        <canvas class="reno-wall" width="512" height="320" role="img" aria-label="The wall of the left room. Pick a tool, then click the wall to start a mini-game."></canvas>
+        <p class="reno-banner" data-banner aria-live="assertive" hidden></p>
+      </div>
+      <div class="reno-extra">
+        <button type="button" data-mode hidden>Mode: Knock 🔨</button>
+        <button type="button" data-tray hidden>Dip roller in the tray 🪣</button>
+      </div>
+      <div class="reno-palette" aria-label="Paint colour">
+        {colors.map(([name, hex], i) => (
+          <button type="button" class="reno-swatch" style={`background:${hex}`} data-color={hex} aria-label={name} title={name} aria-pressed={i === 0 ? "true" : "false"}></button>
+        ))}
+      </div>
+    </div>
+  </section>
+
+  <div class="reno-bar" data-bar hidden>
+    <span data-budget>Budget</span>
+    <span data-clock>0:00</span>
+    <progress max="100" value="0" data-progress aria-label="Job progress"></progress>
+    <button type="button" data-hint>Stuck? Ask Jóska bácsi (1 000 Ft)</button>
+    <button type="button" data-restart>Restart</button>
+    <button type="button" data-sound aria-pressed="false">🔇 Sound off — click to turn on</button>
+  </div>
+  <p class="reno-msg" data-note role="status" aria-live="polite" hidden></p>
+
+  <dialog class="reno-dialog" data-dialog>
+    <div class="reno-dtitle" data-dtitle>Renovator XP</div>
+    <div class="reno-dialog-body">
+      <p data-dtext></p>
+      <div class="reno-ba" data-ba hidden>
+        <figure><canvas width="256" height="160" data-before></canvas><figcaption>Before</figcaption></figure>
+        <figure><canvas width="256" height="160" data-after></canvas><figcaption>After</figcaption></figure>
+      </div>
+      <form method="dialog" class="reno-dialog-buttons">
+        <button value="again" data-again hidden>Play again</button>
+        <button value="ok" autofocus>OK</button>
+      </form>
+    </div>
+  </dialog>
+</div>
+<script>
+  import { initRenovation } from "../scripts/renovation-ui";
+
+  for (const el of document.querySelectorAll<HTMLElement>("[data-reno]")) initRenovation(el);
+</script>

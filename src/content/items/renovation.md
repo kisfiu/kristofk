@@ -15,3 +15,5 @@ I renovate my flat **alone**, room by room, starting from the bricks:
 - tiling
 
 Like infrastructure work, just with more dust. Before/after photos coming soon.
+
+<button type="button" class="link-button" data-open="renovate-game">Try it yourself: Renovator XP ▶</button>

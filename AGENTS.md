@@ -43,6 +43,7 @@ npm run build && npm run lighthouse                      # perf/a11y/BP/SEO must
 | Live weather fetch, tray, Weather window, lightning bolt mover | `src/scripts/weather.ts` |
 | WMO code → look (`clear partly cloudy fog rain snow storm`), labels, icons | `src/scripts/weather-codes.ts` (+ test) |
 | Pipeline Green game | `pipeline-logic.ts` (+ test), `pipeline-ui.ts`, `components/Pipeline.astro` |
+| Renovator XP game (walk-in, tool picking, one mini-game per job, budget/stars) | `renovation-logic.ts` (jobs, budget), `renovation-games.ts` (pure mini-game rules), `renovation-play.ts` (one controller per mini-game), `renovation-ui.ts` (window, wall drawing, loop), `renovation-sound.ts` (beeps, off until turned on), tests next to them, `components/Renovation.astro` |
 | Internet window (dial-up → surf → favorites) | `internet-ui.ts`, `components/Internet.astro`, `public/surf/` (made by `tools/make-surf.py`) |
 | All styles | `src/styles/os.css` (one file, sections marked `/* ---------- name ---------- */`) |
 | Icon sprite | `src/components/Icons.astro` (`<symbol id="i-…">`) |
@@ -51,7 +52,7 @@ npm run build && npm run lighthouse                      # perf/a11y/BP/SEO must
 | CI/deploy | `.github/workflows/deploy.yml`, `lighthouserc.json`, `.github/dependabot.yml` |
 
 Storage keys: sessionStorage `kk-booted`, `kk-role`, `kk-balloon`, `kk-helper` (`off`/`greeted`);
-localStorage `kk-visits`, `kk-icons` (`kk-icons-phone` on phones). Always go through `store.get/set` (private mode throws).
+localStorage `kk-visits`, `kk-icons` (`kk-icons-phone` on phones), `kk-reno-sound` (`on`/`off`; own try/catch so the game modules stay testable without the desktop). Always go through `store.get/set` (private mode throws).
 
 ## How common requests are done
 - **New window or text change:** add or edit a Markdown file in `src/content/items/`. A new icon goes in `Icons.astro`.
