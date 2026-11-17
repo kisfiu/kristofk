@@ -49,6 +49,9 @@
   html:is([data-weather="cloudy"], [data-weather="fog"], [data-weather="rain"], [data-weather="storm"]) .wallpaper svg {
     background-image: url("../assets/wallpaper/overcast.avif");
   }
+  html[data-weather="partly"] .wallpaper svg {
+    background-image: url("../assets/wallpaper/partly.avif");
+  }
   html[data-weather="snow"] .wallpaper svg {
     background-image: url("../assets/wallpaper/snow.avif");
   }
@@ -207,6 +210,13 @@
   html[data-weather="storm"] .weather::before {
     background: linear-gradient(rgb(40 46 62 / 0.75), rgb(80 88 104 / 0.55) 60%, rgb(60 66 80 / 0.35));
   }
+  /* at night the photo is already dark: fog becomes a dim grey haze, and a storm only a light extra shade */
+  html[data-daylight="night"][data-weather="fog"] .weather::before {
+    background: linear-gradient(rgb(70 78 92 / 0.25), rgb(95 102 115 / 0.55) 55%, rgb(85 92 104 / 0.4));
+  }
+  html[data-daylight="night"][data-weather="storm"] .weather::before {
+    background: linear-gradient(rgb(20 24 36 / 0.35), rgb(30 34 46 / 0.2) 60%, transparent);
+  }
   html:is([data-weather="rain"], [data-weather="storm"]) .weather::after {
     /* light, sparse rain falling straight down, so it doesn't hide the wallpaper */
     background: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='140' height='140'%3E%3Cg stroke='white' stroke-opacity='.35' stroke-width='1.1' stroke-linecap='round'%3E%3Cpath d='M12 0v14M70 40v14M118 86v14M40 96v14M98 8v14'/%3E%3C/g%3E%3C/svg%3E");
@@ -218,6 +228,40 @@
   }
   html[data-weather="storm"] .weather {
     animation: weather-lightning 9s infinite;
+  }
+  /* a bolt strikes with every flash (same timing); scripts/weather.ts moves it to a new spot each time */
+  .bolt {
+    display: none;
+    position: absolute;
+    top: 0;
+    left: 30%;
+    height: 48%;
+    width: auto;
+    opacity: 0;
+    fill: none;
+    stroke: #fff;
+    stroke-width: 3;
+    stroke-linejoin: bevel;
+    filter: drop-shadow(0 0 4px #fff) drop-shadow(0 0 14px #9fc4ff);
+  }
+  html[data-weather="storm"] .bolt {
+    display: block;
+    animation: weather-bolt 9s infinite;
+  }
+  @keyframes weather-bolt {
+    0%,
+    90.5%,
+    94%,
+    100% {
+      opacity: 0;
+    }
+    91%,
+    93% {
+      opacity: 1;
+    }
+    92% {
+      opacity: 0.4;
+    }
   }
   @keyframes weather-rain {
     to {
