@@ -1,0 +1,19 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1689 931" fill="transparent" aria-hidden="true">
+  <!-- Click map for the Hortobágy photo wallpapers (1689 × 931 AVIF files in this folder): one invisible box per animal.
+       All five weather versions share one layout, so one map fits them all; os.css lays it exactly over the photo.
+       Classes used by the page: .animal .cow / .sheep / .black / .stork (clicks), .storks (hidden at night and in snow). -->
+  <g class="storks">
+    <rect class="animal stork" x="892" y="116" width="86" height="28" />
+    <rect class="animal stork" x="986" y="148" width="72" height="24" />
+  </g>
+  <rect class="animal cow" x="1018" y="592" width="78" height="60" />
+  <rect class="animal cow" x="888" y="672" width="152" height="126" />
+  <rect class="animal cow" x="1103" y="703" width="197" height="157" />
+  <rect class="animal cow" x="1310" y="728" width="315" height="203" />
+  <rect class="animal sheep" x="966" y="662" width="50" height="44" />
+  <rect class="animal sheep" x="1004" y="652" width="64" height="52" />
+  <rect class="animal sheep" x="1064" y="666" width="62" height="44" />
+  <rect class="animal sheep" x="1114" y="644" width="60" height="50" />
+  <rect class="animal sheep" x="1220" y="652" width="60" height="48" />
+  <rect class="animal sheep black" x="1168" y="664" width="64" height="46" />
+</svg>
