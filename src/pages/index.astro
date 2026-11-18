@@ -8,6 +8,7 @@ import Icons from "../components/Icons.astro";
 import Internet from "../components/Internet.astro";
 import Pipeline from "../components/Pipeline.astro";
 import Renovation from "../components/Renovation.astro";
+import Solitaire from "../components/Solitaire.astro";
 import Sweeper from "../components/Sweeper.astro";
 import Window from "../components/Window.astro";
 
@@ -118,6 +119,8 @@ const description =
             <Renovation />
           ) : data.app === "sweeper" ? (
             <Sweeper />
+          ) : data.app === "solitaire" ? (
+            <Solitaire />
           ) : (
             <article class="doc"><Content /></article>
           )}

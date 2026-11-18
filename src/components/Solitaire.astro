@@ -1,0 +1,103 @@
+---
+// Solitaire: XP Klondike rules (src/scripts/solitaire-logic.ts), our own cards (card-art.ts). UI: solitaire-ui.ts
+import MenuBar from "./MenuBar.astro";
+---
+<div class="solitaire" data-solitaire>
+  <MenuBar
+    label="Solitaire"
+    menus={[
+      {
+        title: "Game",
+        items: [
+          { id: "deal", label: "Deal", key: "F2" },
+          "-",
+          { id: "undo", label: "Undo" },
+          "-",
+          { id: "deck", label: "Deck…" },
+          { id: "options", label: "Options…" },
+          "-",
+          { id: "exit", label: "Exit" },
+        ],
+      },
+      {
+        title: "Help",
+        items: [{ id: "help", label: "How to play", key: "F1" }, "-", { id: "about", label: "About Solitaire" }],
+      },
+    ]}
+  />
+  <div class="sol-table" data-table tabindex="0" role="application" aria-label="Solitaire table. Arrow keys choose a pile, Enter picks up or puts down, Escape cancels." aria-describedby="sol-live"></div>
+  <div class="status-bar sol-status" data-status>
+    <p class="status-bar-field" data-score>Score: 0</p>
+    <p class="status-bar-field" data-time>Time: 0</p>
+  </div>
+  <p class="visually-hidden" id="sol-live" data-live role="status" aria-live="polite"></p>
+
+  <dialog class="xp-dialog" data-options aria-labelledby="sol-opt-t">
+    <div class="xp-dtitle" id="sol-opt-t">Options</div>
+    <form method="dialog" class="xp-dialog-body sol-options">
+      <div class="sol-opt-cols">
+        <fieldset>
+          <legend>Draw</legend>
+          <label><input type="radio" name="draw" value="1" /> Draw One</label>
+          <label><input type="radio" name="draw" value="3" /> Draw Three</label>
+        </fieldset>
+        <fieldset>
+          <legend>Scoring</legend>
+          <label><input type="radio" name="scoring" value="standard" /> Standard</label>
+          <label><input type="radio" name="scoring" value="vegas" /> Vegas</label>
+          <label><input type="radio" name="scoring" value="none" /> None</label>
+        </fieldset>
+      </div>
+      <label><input type="checkbox" name="timed" /> Timed game</label>
+      <label><input type="checkbox" name="status" /> Status bar</label>
+      <label><input type="checkbox" name="outline" /> Outline dragging</label>
+      <label><input type="checkbox" name="keep" /> Keep score</label>
+      <div class="xp-dialog-buttons"><button value="ok">OK</button><button value="cancel">Cancel</button></div>
+    </form>
+  </dialog>
+
+  <dialog class="xp-dialog" data-deck aria-labelledby="sol-deck-t">
+    <div class="xp-dtitle" id="sol-deck-t">Select Card Back</div>
+    <form method="dialog" class="xp-dialog-body">
+      <div class="sol-backs" data-backs role="radiogroup" aria-label="Card backs"></div>
+      <div class="xp-dialog-buttons"><button value="ok">OK</button><button value="cancel">Cancel</button></div>
+    </form>
+  </dialog>
+
+  <dialog class="xp-dialog" data-again aria-labelledby="sol-again-t">
+    <div class="xp-dtitle" id="sol-again-t">Game Over</div>
+    <form method="dialog" class="xp-dialog-body">
+      <p data-again-text>Deal again?</p>
+      <div class="xp-dialog-buttons"><button value="yes">Yes</button><button value="no">No</button></div>
+    </form>
+  </dialog>
+
+  <dialog class="xp-dialog" data-help aria-labelledby="sol-help-t">
+    <div class="xp-dtitle" id="sol-help-t">Solitaire — How to play</div>
+    <form method="dialog" class="xp-dialog-body sw-help">
+      <p>Seven piles, one Saturday morning. Build the four suits up from the Ace, like stacking crates at the market.</p>
+      <ul>
+        <li>On the table, build down in alternating colours (red 7 on a black 8). Only a King goes into an empty column.</li>
+        <li>Click the deck to turn cards over (one or three, see Options). Click a face-down card on a column to turn it.</li>
+        <li><b>Drag</b> cards to move them. <b>Double-click</b> a card to send it up; <b>right-click</b> the table to send up everything that fits.</li>
+        <li>Scoring is XP's: Standard (+10 for each card up, a time bonus if timed), Vegas ($52 a game, $5 a card) or none.</li>
+        <li>Keyboard: arrows choose a pile, Enter picks up (↑/↓ take more or fewer cards) and Enter again puts down.</li>
+      </ul>
+      <div class="xp-dialog-buttons"><button value="ok">OK</button></div>
+    </form>
+  </dialog>
+
+  <dialog class="xp-dialog" data-about aria-labelledby="sol-about-t">
+    <div class="xp-dtitle" id="sol-about-t">About Solitaire</div>
+    <form method="dialog" class="xp-dialog-body">
+      <p>Solitaire 1.0 for the KK desktop.<br />The Windows XP rules and scoring, with cards drawn for this site: the court cards are the Hortobágy animals. Not affiliated with Microsoft.</p>
+      <div class="xp-dialog-buttons"><button value="ok">OK</button></div>
+    </form>
+  </dialog>
+</div>
+<script>
+  import { whenOpen } from "../scripts/lazy";
+
+  for (const el of document.querySelectorAll<HTMLElement>("[data-solitaire]"))
+    whenOpen(el, () => import("../scripts/solitaire-ui").then((m) => m.initSolitaire(el)));
+</script>

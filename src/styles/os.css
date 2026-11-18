@@ -1719,6 +1719,127 @@
     max-width: 46ch;
   }
 
+  /* ---------- Solitaire (XP Klondike) ---------- */
+  .solitaire {
+    display: grid;
+  }
+  .sol-table {
+    position: relative;
+    height: min(620px, calc(100dvh - 210px));
+    min-height: 340px;
+    overflow: hidden;
+    background: #007f0e;
+    border: 2px inset #ccc;
+    touch-action: none;
+    user-select: none;
+    &:focus-visible {
+      outline: 2px dotted #fff;
+      outline-offset: -4px;
+    }
+  }
+  .sol-card,
+  .sol-slot {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: var(--cw, 84px);
+    height: var(--ch, 114px);
+  }
+  .sol-card svg {
+    display: block;
+    width: 100%;
+    height: 100%;
+  }
+  .sol-lift {
+    filter: drop-shadow(2px 4px 3px rgb(0 0 0 / 0.45));
+  }
+  .sol-slot {
+    box-sizing: border-box;
+    border: 1px solid rgb(0 0 0 / 0.35);
+    border-radius: 5px;
+    background: rgb(0 0 0 / 0.06);
+  }
+  /* the empty deck: a ring when it can be turned over again, a cross when not (Vegas) */
+  .sol-stock.ring::after,
+  .sol-stock.cross::after {
+    position: absolute;
+    inset: 0;
+    display: grid;
+    place-items: center;
+    color: #3ad13a;
+    font:
+      bold calc(var(--cw, 84px) * 0.55) / 1 Verdana,
+      sans-serif;
+  }
+  .sol-stock.ring::after {
+    content: "○";
+  }
+  .sol-stock.cross::after {
+    content: "✕";
+  }
+  .sol-cursor {
+    outline: 3px solid #ffd34d;
+    outline-offset: 1px;
+    border-radius: 5px;
+  }
+  /* keyboard pick-up shows inverted, like XP's selection */
+  .sol-held {
+    filter: invert(1);
+  }
+  .sol-outline {
+    position: absolute;
+    top: 0;
+    left: 0;
+    z-index: 2000;
+    width: var(--cw, 84px);
+    box-sizing: border-box;
+    border: 2px dotted #fff;
+    border-radius: 5px;
+    pointer-events: none;
+  }
+  .sol-bounce {
+    position: absolute;
+    inset: 0;
+    z-index: 3000;
+  }
+  .sol-status [hidden] {
+    display: none;
+  }
+  .sol-neg {
+    color: #c00;
+  }
+  .sol-options fieldset label,
+  .sol-options > label {
+    display: block;
+  }
+  .sol-opt-cols {
+    display: flex;
+    gap: 10px;
+  }
+  .sol-backs {
+    display: grid;
+    grid-template-columns: repeat(3, 84px);
+    gap: 10px;
+    & button {
+      all: unset;
+      width: 84px;
+      height: 114px;
+      border-radius: 5px;
+      &[aria-checked="true"] {
+        outline: 3px solid #316ac5;
+        outline-offset: 2px;
+      }
+      &:focus-visible {
+        outline: 2px dotted #000;
+      }
+    }
+    & svg {
+      display: block;
+      width: 100%;
+      height: 100%;
+    }
+  }
+
   /* ---------- Renovator XP ---------- */
   .reno {
     display: grid;

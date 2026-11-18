@@ -44,6 +44,8 @@ npm run build && npm run lighthouse                      # perf/a11y/BP/SEO must
 | WMO code → look (`clear partly cloudy fog rain snow storm`), labels, icons | `src/scripts/weather-codes.ts` (+ test) |
 | Pipeline Green game | `pipeline-logic.ts` (+ test), `pipeline-ui.ts`, `components/Pipeline.astro` |
 | Games folder: the Windows XP games remade (plan: `~/.claude/plans/i-d-like-to-copy-effervescent-boole.md`; XP rules exactly, own art and text) | `content/items/games.md` + items with `parent: games`. Shared: `components/MenuBar.astro` + `menubar.ts` (XP menus, F-key shortcuts while the window is active), `lazy.ts` (`whenOpen`: a game's code loads on first open), `sound.ts` (beeps, off until turned on), `scores.ts` (records, own try/catch), `.xp-dialog` styles |
+| Cards for the card games | `cards.ts` (deck, shuffle, names; pure), `card-art.ts` (faces and 6 backs as SVG strings, drawn at runtime: courts are stork/Racka/grey cattle) |
+| Solitaire (XP Klondike, Standard/Vegas/None scoring) | `solitaire-logic.ts` (+ test, one per XP rule), `solitaire-ui.ts` (absolute-positioned cards, drag only captures once moved so double-click still hits the card, canvas bouncing-card win), `components/Solitaire.astro` |
 | Wall Sweeper (XP Minesweeper) | `sweeper-logic.ts` (+ test, one per XP rule), `sweeper-ui.ts` (mouse chords via `buttons`, touch long-press marks), `components/Sweeper.astro` |
 | Renovator XP game: **hidden** since 2026-11-18 (no content item), code kept for reuse | `renovation-logic.ts`, `renovation-games.ts`, `renovation-play.ts`, `renovation-ui.ts`, tests next to them, `components/Renovation.astro` |
 | Internet window (dial-up → surf → favorites) | `internet-ui.ts`, `components/Internet.astro`, `public/surf/` (made by `tools/make-surf.py`) |
@@ -54,7 +56,7 @@ npm run build && npm run lighthouse                      # perf/a11y/BP/SEO must
 | CI/deploy | `.github/workflows/deploy.yml`, `lighthouserc.json`, `.github/dependabot.yml` |
 
 Storage keys: sessionStorage `kk-booted`, `kk-role`, `kk-balloon`, `kk-helper` (`off`/`greeted`);
-localStorage `kk-visits`, `kk-icons` (`kk-icons-phone` on phones), `kk-sound` (`on`/`off`, all games), `kk-sweeper` (options), `kk-sweeper-best` (records); game keys use `scores.ts`/`sound.ts`, which have their own try/catch so the game modules stay testable without the desktop. Always go through `store.get/set` (private mode throws).
+localStorage `kk-visits`, `kk-icons` (`kk-icons-phone` on phones), `kk-sound` (`on`/`off`, all games), `kk-sweeper` (options), `kk-sweeper-best` (records), `kk-solitaire` (options, card back), `kk-solitaire-vegas` (Keep score total); game keys use `scores.ts`/`sound.ts`, which have their own try/catch so the game modules stay testable without the desktop. Always go through `store.get/set` (private mode throws).
 
 ## How common requests are done
 - **New window or text change:** add or edit a Markdown file in `src/content/items/`. A new icon goes in `Icons.astro`.
@@ -91,6 +93,9 @@ localStorage `kk-visits`, `kk-icons` (`kk-icons-phone` on phones), `kk-sound` (`
 - Lighthouse in CI needs `--no-sandbox` (already in `lighthouserc.json`).
 - TypeScript 7 is blocked: `astro check` supports TS 5/6 only (Dependabot ignores TS majors).
 - On phones, a tap near an icon snaps onto it, so animal tests pick points no icon covers.
+- XP.css draws radios and checkboxes itself; the real inputs are invisible, so tests click the `<label>`, not `.check()`.
+- Game dialogs (`<dialog>`) take Esc themselves: `desktop.ts` doesn't close the window while a `dialog[open]` exists.
+- A key or click that starts an effect must not also hit the listener the effect adds: add "any key stops it" listeners on the next frame.
 
 ## Definition of done
 1. Lint, type check and unit tests are clean. The e2e suite passes at `/` **and** `/kristofk`.
