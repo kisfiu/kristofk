@@ -14,6 +14,8 @@ gotchas below each cost an earlier session real time. Keep it current when you c
 1. **Ask before every commit and push.** Stage explicit paths, never `git add -A`.
    If other work is in progress in the tree, stage only your own hunks (`git apply --cached <patch>`).
 2. **No phone number anywhere public.** The public CV says "Tel: on request" (`tools/make-public-cv.py`).
+   CI runs `npm run check:pdfs` (`tools/check-public-pdfs.sh`) on every PDF in `public/`. Never commit the original CV:
+   one with the number reached the public git history once and had to be rewritten out (2026-11-18).
 3. Commits are authored with his GitHub noreply address (repo-local git config). Never put work emails in the repo.
 4. `.npmrc` pins public npm. `package-lock.json` must only reference `registry.npmjs.org`
    (the machine's default registry is a private mirror; CI can't reach it).

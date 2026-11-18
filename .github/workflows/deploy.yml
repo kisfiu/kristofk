@@ -29,6 +29,9 @@ jobs:
           node-version: 24
           cache: npm
       - run: npm ci
+      # owner rule: no phone number anywhere public (a hand-uploaded CV once skipped tools/make-public-cv.py)
+      - name: No phone number in public PDFs
+        run: sudo apt-get install -y -qq poppler-utils > /dev/null && npm run check:pdfs
       - run: npm run lint
       - run: npm run check
       - run: npm run test:unit

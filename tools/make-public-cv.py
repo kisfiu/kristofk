@@ -6,10 +6,16 @@ Run: python3 tools/make-public-cv.py ~/Downloads/KK-CV-20261115.pdf
 Writes public/Kristof-Kovacs-CV.pdf and checks that no phone number is left in it.
 """
 
+import re
 import sys
 from pathlib import Path
 
 import fitz  # PyMuPDF
+
+
+def has_phone(text: str) -> bool:
+    """A run of digits and separators with 9+ digits: the same rule as tools/check-public-pdfs.sh."""
+    return any(len(re.sub(r"\D", "", m)) >= 9 for m in re.findall(r"[+(0-9][0-9 ()/.+-]{7,}[0-9]", text))
 
 OUT = Path(__file__).resolve().parent.parent / "public" / "Kristof-Kovacs-CV.pdf"
 LM = "/usr/share/texmf/fonts/opentype/public/lm/"
@@ -32,7 +38,7 @@ PIECES = [
 def main(src: str) -> None:
     doc = fitz.open(src)
     page = doc[0]
-    assert "5828" in page.get_text(), "expected the original CV with the phone number on page 1"
+    assert has_phone(page.get_text()), "expected the original CV with the phone number on page 1"
 
     for link in page.get_links():
         if link["from"].intersects(fitz.Rect(LINE)):
@@ -60,7 +66,7 @@ def main(src: str) -> None:
     check = fitz.open(OUT)
     text = "".join(p.get_text() for p in check)
     uris = [link.get("uri") for p in check for link in p.get_links()]
-    assert "5828" not in text and "+36" not in text, "phone number still in the text"
+    assert not has_phone(text), "phone number still in the text"
     assert not any(u and u.startswith("tel:") for u in uris), "tel: link still present"
     assert "Tel: on request" in text and EMAIL in text and check.page_count == doc.page_count
     print(f"wrote {OUT} ({OUT.stat().st_size // 1024} KB); links: {uris}")
