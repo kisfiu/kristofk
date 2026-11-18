@@ -43,6 +43,13 @@ const GAMES: Record<string, ZoneGame> = {
     help: `<p>Debrecen against Budapest: the hometown versus the home. Jumps are compulsory, so think twice.</p><ul><li>Red moves first. Pieces move one square diagonally forward, onto dark squares.</li><li>Jump over an opponent's piece to capture it. If you can jump, you must, and you must keep jumping while you can (click each landing square in turn).</li><li>A piece reaching the far row is crowned king and may then move one square backward too.</li><li>You win when your opponent has no pieces or no move left. Offer Draw sends the offer with your next move.</li></ul>`,
     load: () => import("./checkers-ui").then((m) => m.startCheckers),
   },
+  backgammon: {
+    title: "Internet Backgammon",
+    players: 2,
+    web: "travel",
+    help: `<p>Thirty-seven countries and counting. Race your fifteen stones home across a board tiled like Santarém, where Kristóf spent his Erasmus year.</p><ul><li>Each player rolls one die to start (a tie rolls again); the higher die goes first and plays both numbers. Your stones travel to your home board, bottom right.</li><li>Click a stone, then a green diamond to move it by one die. Use both dice if you can; if only one fits, it must be the higher. Doubles play four times. A stone on the bar must enter first.</li><li>Landing on a lone stone sends it to the bar. Once all fifteen are home, bear them off into the tray on the right.</li><li>The match is to 5 points. Before your roll you may double (up to 64): your opponent accepts or gives up the game. A gammon counts double, a backgammon triple. In the Crawford game, after someone first reaches 4, only that player may double.</li><li>Keys: Alt+L roll, Alt+D double, Alt+R resign; arrows move between points, Space or Enter picks and drops.</li></ul>`,
+    load: () => import("./backgammon-ui").then((m) => m.startBackgammon),
+  },
 };
 
 const KEY = "kk-zone";
