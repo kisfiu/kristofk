@@ -1,4 +1,7 @@
 ---
+import Icon from "./Icon.astro";
+import MenuBar from "./MenuBar.astro";
+
 interface Props {
   links: { label: string; href: string }[];
 }
@@ -29,11 +32,100 @@ const { links } = Astro.props;
       <ul>
         {links.map((l) => <li><a href={l.href} target="_blank" rel="noopener">🌐 {l.label}</a></li>)}
         <li><button type="button" class="link-button" data-open="side-projects">💾 My side projects</button></li>
+        <li><button type="button" class="link-button" data-ie-zone>🎮 KK Game Zone: play against people from 2003</button></li>
       </ul>
       <p class="muted">Best viewed in KK Explorer at 800×600.</p>
     </div>
+    <div class="ie-zone" data-ie-screen="zone" hidden>
+      <div class="zone-home" data-zone-home>
+        <h2>🎮 KK Game Zone</h2>
+        <p>The five Internet games from Windows XP, with opponents found for you "worldwide". They're friendly bots from 2003: nothing about you leaves this page.</p>
+        <ul class="zone-games">
+          <li><button type="button" data-zone-game="reversi"><Icon name="reversi" size={32} /><span><b>Internet Reversi</b>Jenkins against GitLab CI</span></button></li>
+          <li><button type="button" disabled><Icon name="reversi" size={32} /><span><b>Internet Checkers</b>Coming soon</span></button></li>
+          <li><button type="button" disabled><Icon name="reversi" size={32} /><span><b>Internet Backgammon</b>Coming soon</span></button></li>
+          <li><button type="button" disabled><Icon name="reversi" size={32} /><span><b>Internet Hearts</b>Coming soon</span></button></li>
+          <li><button type="button" disabled><Icon name="reversi" size={32} /><span><b>Internet Spades</b>Coming soon</span></button></li>
+        </ul>
+      </div>
+      <div class="zone-room" data-zone-room hidden>
+        <MenuBar
+          label="Game Zone"
+          menus={[
+            {
+              title: "Game",
+              items: [
+                { id: "find", label: "Find New Opponent" },
+                "-",
+                { id: "skill0", label: "Beginner", group: "skill" },
+                { id: "skill1", label: "Intermediate", group: "skill" },
+                { id: "skill2", label: "Expert", group: "skill" },
+                "-",
+                { id: "chatstart", label: "Turn Chat On at Startup", check: true, on: true },
+                "-",
+                { id: "leave", label: "Exit" },
+              ],
+            },
+            {
+              title: "Help",
+              items: [
+                { id: "help", label: "How to play", key: "F1" },
+                { id: "web", label: "On the Web" },
+                "-",
+                { id: "about", label: "About the Game Zone" },
+              ],
+            },
+          ]}
+        />
+        <ol class="zone-connect" data-zone-connect aria-live="polite"></ol>
+        <div class="zone-play" data-zone-play hidden>
+          <div class="zone-board" data-zone-board></div>
+          <aside class="zone-side">
+            <ul class="zone-players" data-zone-players aria-label="Players"></ul>
+            <ul class="zone-chat" data-zone-chat aria-label="Chat" aria-live="polite"></ul>
+            <select data-zone-say aria-label="Chat message"></select>
+            <div class="zone-chaton" role="radiogroup" aria-label="Chat">
+              <label><input type="radio" name="zone-chat" value="on" checked /> Chat on</label>
+              <label><input type="radio" name="zone-chat" value="off" /> Off</label>
+            </div>
+          </aside>
+        </div>
+      </div>
+    </div>
   </div>
   <div class="status-bar"><p class="status-bar-field" data-ie-status>Dialing…</p></div>
+
+  <dialog class="xp-dialog" data-ask aria-labelledby="ie-ask-t">
+    <div class="xp-dtitle" id="ie-ask-t" data-ask-title>Game Zone</div>
+    <form method="dialog" class="xp-dialog-body">
+      <p data-ask-text></p>
+      <div class="xp-dialog-buttons" data-ask-buttons></div>
+    </form>
+  </dialog>
+  <dialog class="xp-dialog" data-zone-notice aria-labelledby="ie-notice-t">
+    <div class="xp-dtitle" id="ie-notice-t">KK Game Zone</div>
+    <form method="dialog" class="xp-dialog-body">
+      <p>Welcome to the KK Game Zone. You'll be matched with players from around the world, at the skill level you choose.</p>
+      <p>Honest version: the players are bots from 2003 and nothing leaves this page. No names, no data, no servers.</p>
+      <label><input type="checkbox" name="again" checked /> Show this every time</label>
+      <div class="xp-dialog-buttons"><button value="play">Play</button><button value="quit">Quit</button><button value="help">Help</button></div>
+    </form>
+  </dialog>
+  <dialog class="xp-dialog" data-zone-illegal aria-labelledby="ie-ill-t">
+    <div class="xp-dtitle" id="ie-ill-t">Internet Reversi</div>
+    <form method="dialog" class="xp-dialog-body">
+      <p>That square isn't a legal move. A move must trap at least one of your opponent's stones in a straight line (across, down or diagonally) between the new stone and one of yours.</p>
+      <label><input type="checkbox" name="tell" checked /> Tell me this every time</label>
+      <div class="xp-dialog-buttons"><button value="ok">OK</button></div>
+    </form>
+  </dialog>
+  <dialog class="xp-dialog" data-zone-help aria-labelledby="ie-zhelp-t">
+    <div class="xp-dtitle" id="ie-zhelp-t" data-zone-help-title>How to play</div>
+    <form method="dialog" class="xp-dialog-body sw-help">
+      <div data-zone-help-text></div>
+      <div class="xp-dialog-buttons"><button value="ok">OK</button></div>
+    </form>
+  </dialog>
 </div>
 <script>
   import { initInternet } from "../scripts/internet-ui";
