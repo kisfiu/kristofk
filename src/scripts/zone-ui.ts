@@ -13,11 +13,13 @@ export interface ZoneApi {
   /** A line in the chat from a player (shown only with chat on), or from the system. */
   chat(from: Player | null, text: string): void;
   status(text: string): void;
-  /** After a bot move, a bot may (rarely) leave. 2-player games: true, the game should stop.
-   *  4-player games: the bot is replaced by a computer player in `opponents`, and play goes on (false). */
-  maybeLeave(): boolean;
+  /** After a bot move, a bot may (rarely) leave. 2-player games: once the move has played out, unless it ended the
+   *  game, the Zone stops the game (its cleanup runs) and offers a new opponent. 4-player games: the bot is replaced by
+   *  a computer player in `opponents`, and play goes on. */
+  maybeLeave(): void;
   /** The game is over: show the result and Play Again / New Opponent / Quit. */
   end(text: string): void;
+  /** A message box; "" if the game ended (or the opponent left) while it was open, so a late answer changes nothing. */
   ask(title: string, text: string, buttons: string[]): Promise<string>;
 }
 interface ZoneGame {
@@ -242,7 +244,10 @@ export function initZone(
       skill: opponents[0]?.skill ?? skillOf(game!),
       chat: line,
       status: ctx.status,
-      ask,
+      ask: async (title, text, buttons) => {
+        const a = await ask(title, text, buttons);
+        return playing ? a : "";
+      },
       maybeLeave() {
         moves++;
         if (g.players === 4) {
@@ -257,17 +262,20 @@ export function initZone(
             bot: true,
           };
           players();
-          return false;
+          return;
         }
-        if (moves < 6 || Math.random() > 1 / 150) return false;
-        playing = false;
-        stop?.();
-        stop = null;
-        line(null, `${opponents[0].name} has left the game.`);
-        void ask(g.title, "Your opponent has left the game.", ["New Opponent", "Quit"]).then((a) =>
-          a === "New Opponent" ? connect() : home(),
-        );
-        return true;
+        if (moves < 6 || Math.random() > 1 / 150) return;
+        // after the move has played out: a move that ended the game has called end() by then, and nobody leaves
+        later(() => {
+          if (!playing) return;
+          playing = false;
+          stop?.();
+          stop = null;
+          line(null, `${opponents[0].name} has left the game.`);
+          void ask(g.title, "Your opponent has left the game.", ["New Opponent", "Quit"]).then((a) =>
+            a === "New Opponent" ? connect() : home(),
+          );
+        }, 0);
       },
       end(text) {
         playing = false;

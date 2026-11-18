@@ -385,3 +385,27 @@ export function insertScore(table: Entry[], e: Entry): { table: Entry[]; at: num
   if (at < 0) return { table, at };
   return { table: [...table.slice(0, at), e, ...table.slice(at)].slice(0, TABLE_SIZE), at };
 }
+
+// ---------- Player Controls and the message queue ----------
+/** Keys a control can't use: the menu's F-keys, and modifiers (a press with Ctrl, Alt or ⌘ is left to the browser). */
+const RESERVED = /^(F\d+|Control|Alt|AltGraph|Meta|Shift|OS)$/;
+/** The same key whatever the Shift or Caps Lock state ("A" is "a"). */
+export const sameKey = (a: string, b: string) =>
+  (a.length === 1 ? a.toLowerCase() : a) === (b.length === 1 ? b.toLowerCase() : b);
+
+/** Player Controls: `action` gets `key`, and a control that already had that key gets `action`'s old one, so no two
+ *  controls share a key. false (nothing changes) for a key no control may use. */
+export function bindKey<A extends string>(keys: Record<A, string>, action: A, key: string): boolean {
+  if (RESERVED.test(key)) return false;
+  const other = (Object.keys(keys) as A[]).find((a) => a !== action && sameKey(keys[a], key));
+  if (other) keys[other] = keys[action];
+  keys[action] = key;
+  return true;
+}
+
+/** Messages waiting at most: the one on screen and the newest ones. */
+export const MESSAGES_KEPT = 4;
+/** Fast repeats (orbit, spinner) mustn't push news like Extra Ball seconds behind the game: drop the oldest waiting. */
+export function trimMessages(queue: unknown[]) {
+  if (queue.length > MESSAGES_KEPT) queue.splice(1, queue.length - MESSAGES_KEPT);
+}

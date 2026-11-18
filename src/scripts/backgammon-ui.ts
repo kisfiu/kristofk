@@ -305,10 +305,7 @@ export function startBackgammon(host: HTMLElement, api: ZoneApi): () => void {
 
   function botDone() {
     if (checkOver()) return;
-    if (api.maybeLeave()) {
-      done = true;
-      return;
-    }
+    api.maybeLeave();
     phase = "roll";
     dice = [];
     left = [];

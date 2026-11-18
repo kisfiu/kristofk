@@ -2,11 +2,13 @@ import { describe, expect, it } from "vitest";
 import {
   BALL_SAVE,
   BANKS,
+  bindKey,
   drain,
   hit,
   insertScore,
   LANES,
   launchSpeed,
+  MESSAGES_KEPT,
   multiplier,
   newGame,
   nudge,
@@ -19,6 +21,7 @@ import {
   shiftLanes,
   TABLE_SIZE,
   TICKETS,
+  trimMessages,
 } from "./pinball-logic";
 
 const clearAll = (g: ReturnType<typeof newGame>) =>
@@ -194,5 +197,21 @@ describe("Pipeline Pinball rules", () => {
     expect(msgs).toContain("Ticket closed: Test on staging");
     expect(p.score - before).toBe(POINTS.smoke + POINTS.staging * 2 + POINTS.ticket * 2);
     expect(p.smoke).toEqual([false, false, false]);
+  });
+
+  it("Player Controls: a key in use swaps with the other control; F-keys and modifiers are refused", () => {
+    const keys = { left: "a", right: "d", plunger: " " };
+    expect(bindKey(keys, "plunger", "A")).toBe(true); // Shift doesn't make it another key
+    expect(keys).toEqual({ left: " ", right: "d", plunger: "A" });
+    for (const k of ["F2", "Control", "Alt", "Meta", "Shift"]) expect(bindKey(keys, "left", k)).toBe(false);
+    expect(keys.left).toBe(" ");
+  });
+
+  it("the message queue keeps the one on screen and the newest few", () => {
+    const q = ["Extra Ball", ...Array.from({ length: 10 }, (_, i) => `Renovate bot ×${i}`)];
+    trimMessages(q);
+    expect(q).toHaveLength(MESSAGES_KEPT);
+    expect(q[0]).toBe("Extra Ball");
+    expect(q.at(-1)).toBe("Renovate bot ×9");
   });
 });

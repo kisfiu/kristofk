@@ -118,11 +118,7 @@ export function startCheckers(host: HTMLElement, api: ZoneApi): () => void {
     if (opp.chat && m.captured.length > 1 && Math.random() < 0.6) api.chat(opp, "Jump!");
     else if (opp.chat && wasMan && isKing(b[m.path[m.path.length - 1]]) && Math.random() < 0.6)
       api.chat(opp, "King me!");
-    // an opponent leaves mid-game, never on the move that ended it
-    if (!lost(b, me) && api.maybeLeave()) {
-      done = true;
-      return;
-    }
+    api.maybeLeave();
     turn = me;
     next();
   }
@@ -216,12 +212,8 @@ export function startCheckers(host: HTMLElement, api: ZoneApi): () => void {
     api.status(drawOffer ? "Your draw offer goes with your next move." : "Draw offer taken back.");
   });
   host.querySelector("[data-ck-resign]")!.addEventListener("click", async () => {
-    // `done` again after the box: the bot may have ended the game while it was open
-    if (
-      done ||
-      (await api.ask("Internet Checkers", "Are you sure you want to resign?", ["Yes", "No"])) !== "Yes" ||
-      done
-    )
+    // the Zone's ask answers "" if the bot ended the game while the box was open
+    if (done || (await api.ask("Internet Checkers", "Are you sure you want to resign?", ["Yes", "No"])) !== "Yes")
       return;
     finish(`You resigned. ${opp.name} wins.`, false);
   });

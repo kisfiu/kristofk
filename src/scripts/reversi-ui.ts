@@ -83,11 +83,7 @@ export function startReversi(host: HTMLElement, api: ZoneApi): () => void {
     beep("knock");
     if (opp.chat && (m === 0 || m === 7 || m === 56 || m === 63) && Math.random() < 0.5) api.chat(opp, "Corner!");
     else if (opp.chat && flipped >= 5 && Math.random() < 0.4) api.chat(opp, "That's a lot of flips.");
-    // an opponent leaves mid-game, never on the move that ended it
-    if (nextTurn(b, me) !== null && api.maybeLeave()) {
-      done = true;
-      return;
-    }
+    api.maybeLeave();
     after(bot);
   }
 
@@ -143,12 +139,8 @@ export function startReversi(host: HTMLElement, api: ZoneApi): () => void {
     cells[focus].focus();
   });
   host.querySelector("[data-rv-resign]")!.addEventListener("click", async () => {
-    // `done` again after the box: the bot may have ended the game while it was open
-    if (
-      done ||
-      (await api.ask("Internet Reversi", "Are you sure you want to resign?", ["Yes", "No"])) !== "Yes" ||
-      done
-    )
+    // the Zone's ask answers "" if the bot ended the game while the box was open
+    if (done || (await api.ask("Internet Reversi", "Are you sure you want to resign?", ["Yes", "No"])) !== "Yes")
       return;
     done = true;
     clearTimeout(timer);

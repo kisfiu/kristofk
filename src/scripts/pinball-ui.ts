@@ -18,6 +18,7 @@ import { initMenuBar } from "./menubar";
 import {
   BALL_SAVE,
   BANKS,
+  bindKey,
   type Entry,
   fmt,
   type Game,
@@ -32,11 +33,13 @@ import {
   plungerStrength,
   RANKS,
   rampLit,
+  sameKey,
   shiftLanes,
   TICKETS,
   TILT_TIMEOUT,
   drain as toDrain,
   hit as toHit,
+  trimMessages,
 } from "./pinball-logic";
 import { load, save } from "./scores";
 
@@ -51,16 +54,11 @@ const DEFAULT_KEYS: Record<Action, string> = {
   nudgeU: "n",
 };
 const OPTS = "kk-pinball";
-/** Messages waiting to be shown at most (the one on screen and the newest ones). */
-const MESSAGES_KEPT = 4;
 const SCORES = "kk-pinball-scores";
 const keyName = (k: string) =>
   ({ " ": "Space", ArrowUp: "↑", ArrowDown: "↓", ArrowLeft: "←", ArrowRight: "→" })[k] ??
   (k.length === 1 ? k.toUpperCase() : k);
-const norm = (k: string) => (k.length === 1 ? k.toLowerCase() : k);
-const actionFor = (keys: Record<Action, string>, key: string) => ACTIONS.find((a) => norm(keys[a]) === norm(key));
-/** Keys a control can't use: the menu's F-keys, and modifiers (a press with Ctrl, Alt or ⌘ is left to the browser). */
-const RESERVED = /^(F\d+|Control|Alt|AltGraph|Meta|Shift|OS)$/;
+const actionFor = (keys: Record<Action, string>, key: string) => ACTIONS.find((a) => sameKey(keys[a], key));
 
 import { createView, type View } from "./pinball-3d";
 import {
@@ -293,7 +291,7 @@ export function initPinball(el: HTMLElement) {
   function say(...texts: string[]) {
     for (const text of texts) messages.push({ text, until: 0 });
     // fast repeats (orbit, spinner) mustn't push news like Extra Ball seconds behind the game: keep the newest few
-    if (messages.length > MESSAGES_KEPT) messages.splice(1, messages.length - MESSAGES_KEPT);
+    trimMessages(messages);
   }
 
   /** Let go of every key, the demo's held flippers and a half-pulled plunger. */
@@ -896,11 +894,7 @@ export function initPinball(el: HTMLElement) {
       if (!waiting || e.key === "Escape" || e.key === "Tab" || e.key === "Enter") return;
       e.preventDefault();
       e.stopPropagation();
-      if (RESERVED.test(e.key)) return;
-      // a key already used by another control swaps with it, so no two controls share a key
-      const other = ACTIONS.find((a) => a !== waiting && norm(keys[a]) === norm(e.key));
-      if (other) keys[other] = keys[waiting];
-      keys[waiting] = e.key;
+      if (!bindKey(keys, waiting, e.key)) return; // keeps waiting for a key a control can use
       waiting = null;
       draw();
     };

@@ -167,7 +167,7 @@ export function cardTable(host: HTMLElement, api: ZoneApi, o: TableOptions) {
       o.bot(g.turn);
       render();
       // in a four-player game a leaving bot is replaced by a computer player and play goes on
-      if (api.maybeLeave()) return;
+      api.maybeLeave();
     }
     busy = false;
     await o.handOver();
