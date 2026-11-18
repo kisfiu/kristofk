@@ -1,0 +1,113 @@
+---
+// Hearts: XP rules against Racka, the stork and the grey cattle (src/scripts/hearts-logic.ts). UI: hearts-ui.ts
+import MenuBar from "./MenuBar.astro";
+---
+<div class="hearts" data-hearts>
+  <MenuBar
+    label="Hearts"
+    menus={[
+      {
+        title: "Game",
+        items: [
+          { id: "options", label: "Options…", key: "F7" },
+          { id: "sound", label: "Sound", key: "F8", check: true },
+          { id: "score", label: "Score…", key: "F9" },
+          "-",
+          { id: "exit", label: "Exit" },
+        ],
+      },
+      {
+        title: "Help",
+        items: [{ id: "help", label: "How to play", key: "F1" }, "-", { id: "about", label: "About Hearts" }],
+      },
+    ]}
+  />
+  <div class="hz-table" data-table>
+    {[2, 1, 3].map((s) => (
+      <div class={`hz-seat hz-seat-${s}`}>
+        <span class="hz-name" data-name={s}></span>
+        <div class="hz-backs" data-backs={s} aria-hidden="true"></div>
+        <p class="hz-say" data-say={s} hidden></p>
+      </div>
+    ))}
+    <div class="hz-trick" data-trick aria-label="Cards on the table" role="group"></div>
+    <div class="hz-seat hz-seat-0">
+      <div class="hz-me"><span class="hz-name" data-name="0"></span><button type="button" class="hz-act" data-pass hidden>Pass Left</button></div>
+      <div class="hz-hand" data-hand role="group" aria-label="Your hand"></div>
+    </div>
+  </div>
+  <div class="status-bar"><p class="status-bar-field" data-msg role="status" aria-live="polite">Press F2 to begin.</p></div>
+
+  <dialog class="xp-dialog" data-ask aria-labelledby="hz-ask-t">
+    <div class="xp-dtitle" id="hz-ask-t" data-ask-title>Hearts</div>
+    <form method="dialog" class="xp-dialog-body">
+      <p data-ask-text></p>
+      <div class="xp-dialog-buttons" data-ask-buttons></div>
+    </form>
+  </dialog>
+
+  <dialog class="xp-dialog" data-welcome aria-labelledby="hz-wel-t">
+    <div class="xp-dtitle" id="hz-wel-t">Welcome to Hearts</div>
+    <form method="dialog" class="xp-dialog-body">
+      <p>You'll play against Racka, the stork and the grey cattle from the Hortobágy.</p>
+      <label>What is your name? <input name="who" maxlength="20" required /></label>
+      <div class="xp-dialog-buttons"><button value="ok">OK</button><button value="quit" formnovalidate>Quit</button></div>
+    </form>
+  </dialog>
+
+  <dialog class="xp-dialog" data-sheet aria-labelledby="hz-sheet-t">
+    <div class="xp-dtitle" id="hz-sheet-t">Score Sheet</div>
+    <form method="dialog" class="xp-dialog-body">
+      <table class="hz-sheet" data-sheet-rows></table>
+      <div class="xp-dialog-buttons"><button value="ok">OK</button></div>
+    </form>
+  </dialog>
+
+  <dialog class="xp-dialog" data-options aria-labelledby="hz-opt-t">
+    <div class="xp-dtitle" id="hz-opt-t">Hearts Options</div>
+    <form method="dialog" class="xp-dialog-body sol-options">
+      <fieldset>
+        <legend>Animation speed</legend>
+        <label><input type="radio" name="speed" value="slow" /> Slow</label>
+        <label><input type="radio" name="speed" value="normal" /> Normal</label>
+        <label><input type="radio" name="speed" value="fast" /> Fast</label>
+      </fieldset>
+      <fieldset class="hz-names">
+        <legend>Computer player names</legend>
+        <label>Left: <input name="n1" maxlength="20" /></label>
+        <label>Across: <input name="n2" maxlength="20" /></label>
+        <label>Right: <input name="n3" maxlength="20" /></label>
+      </fieldset>
+      <div class="xp-dialog-buttons"><button value="ok">OK</button><button value="cancel">Cancel</button></div>
+    </form>
+  </dialog>
+
+  <dialog class="xp-dialog" data-help aria-labelledby="hz-help-t">
+    <div class="xp-dtitle" id="hz-help-t">Hearts — How to play</div>
+    <form method="dialog" class="xp-dialog-body sw-help">
+      <p>Every heart you take costs a point, and the Queen of Spades costs thirteen. At the Invisible School it's the other way round: you want every heart you can get. Here, avoid them.</p>
+      <ul>
+        <li>Before each hand, pick three cards to pass: left, right, across, then no pass, and round again.</li>
+        <li>The 2 of clubs starts. Follow suit if you can; the highest card of the suit led takes the trick.</li>
+        <li>No hearts or Queen of Spades on the first trick. You can't lead hearts until a heart (or the Queen) has been played.</li>
+        <li>Take every heart and the Queen, and you "shoot the moon": everyone else gets 26.</li>
+        <li>The game ends when someone reaches 100. Lowest score wins. F2 starts a new game.</li>
+      </ul>
+      <div class="xp-dialog-buttons"><button value="ok">OK</button></div>
+    </form>
+  </dialog>
+
+  <dialog class="xp-dialog" data-about aria-labelledby="hz-about-t">
+    <div class="xp-dtitle" id="hz-about-t">About Hearts</div>
+    <form method="dialog" class="xp-dialog-body">
+      <p>Hearts 1.0 for the KK desktop.<br />The Windows XP rules, against the animals from the wallpaper. Not affiliated with Microsoft.</p>
+      <div class="xp-dialog-buttons"><button value="ok">OK</button></div>
+    </form>
+  </dialog>
+</div>
+<script>
+  import { whenOpen } from "../scripts/lazy";
+
+  for (const el of document.querySelectorAll<HTMLElement>("[data-hearts]"))
+    whenOpen(el, () => import("../scripts/hearts-ui").then((m) => m.initHearts(el)));
+</script>

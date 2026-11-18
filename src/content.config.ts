@@ -19,7 +19,9 @@ const items = defineCollection({
     /** Shortcut: clicking opens another item instead of its own window. */
     opens: z.string().optional(),
     /** Built-in app rendered instead of Markdown. */
-    app: z.enum(["pipeline", "internet", "renovation", "sweeper", "solitaire", "freecell", "spider"]).optional(),
+    app: z
+      .enum(["pipeline", "internet", "renovation", "sweeper", "solitaire", "freecell", "spider", "hearts"])
+      .optional(),
     width: z.number().default(460),
     links: z.array(z.object({ label: z.string(), href: z.url() })).default([]),
   }),

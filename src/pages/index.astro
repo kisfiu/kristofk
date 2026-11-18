@@ -3,6 +3,7 @@ import "../styles/os.css";
 import { getCollection, render } from "astro:content";
 import wallpaper from "../assets/wallpaper/animals.svg?raw";
 import FreeCell from "../components/FreeCell.astro";
+import Hearts from "../components/Hearts.astro";
 import Helper from "../components/Helper.astro";
 import Icon from "../components/Icon.astro";
 import Icons from "../components/Icons.astro";
@@ -127,6 +128,8 @@ const description =
             <FreeCell />
           ) : data.app === "spider" ? (
             <Spider />
+          ) : data.app === "hearts" ? (
+            <Hearts />
           ) : (
             <article class="doc"><Content /></article>
           )}
