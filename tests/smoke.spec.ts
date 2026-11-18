@@ -965,6 +965,50 @@ test("Game Zone: Internet Backgammon, roll for the start, then move a stone onto
   await expect(win.locator(".bg-die.used")).not.toHaveCount(0);
 });
 
+test("Game Zone: Internet Hearts, pass, double-click a card, Last Trick, Auto-Play, Show Score", async ({
+  page,
+  isMobile,
+}) => {
+  test.setTimeout(60_000);
+  await skipBoot(page);
+  await openIcon(page, "Internet", isMobile);
+  const win = page.getByRole("dialog", { name: /Internet/ });
+  await win.getByRole("button", { name: "Skip" }).click();
+  await win.getByRole("button", { name: /Surf with me/ }).click();
+  await win.getByRole("button", { name: /KK Game Zone/ }).click();
+  await win.getByRole("button", { name: /Internet Hearts/ }).click();
+  await page.getByRole("button", { name: "Play", exact: true }).click();
+  await expect(win.locator("[data-ie-address]")).toHaveValue("kk://zone/hearts");
+  const hand = win.locator("[data-hand] [data-card]");
+  await expect(hand).toHaveCount(13, { timeout: 8000 });
+  await expect(win.locator("[data-zone-players] li")).toHaveCount(4);
+  // the first hand passes left; hand cards overlap, so click their left edge
+  const act = win.locator("[data-ih-act]");
+  await expect(act).toHaveText("Pass Left");
+  for (const i of [0, 1, 2]) await hand.nth(i).click({ position: { x: 6, y: 30 } });
+  await act.click();
+  await expect(act).toHaveText("OK");
+  await act.click();
+  await expect(win.locator("[data-ie-status]")).toHaveText(/Your turn/, { timeout: 10000 });
+  await win
+    .locator('[data-hand] [data-card]:not([aria-disabled="true"])')
+    .first()
+    .dblclick({ position: { x: 6, y: 30 } });
+  await expect(hand).toHaveCount(12);
+  await expect(win.locator(".hz-played.hz-at-0")).toBeVisible();
+  // once the trick is taken, Last Trick shows its four cards again
+  await expect(win.locator("[data-ih-last]")).toBeEnabled({ timeout: 10000 });
+  await win.locator("[data-ih-last]").click();
+  await expect(win.locator(".ih-last .hz-played")).toHaveCount(4);
+  // Auto-Play: the computer plays your next card
+  await win.locator("[data-ih-auto]").click();
+  await expect(win.locator("[data-ih-auto]")).toHaveText("Stop");
+  await expect(hand).toHaveCount(11, { timeout: 10000 });
+  await win.getByRole("menuitem", { name: "Game" }).click();
+  await page.getByRole("menuitem", { name: "Show Score" }).click();
+  await expect(page.getByRole("dialog", { name: "Score History" })).toBeVisible();
+});
+
 test("pipeline game starts its timer on the first click", async ({ page, isMobile }) => {
   await skipBoot(page);
   await openIcon(page, "Games", isMobile);

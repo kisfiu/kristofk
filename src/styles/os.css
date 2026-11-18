@@ -2141,6 +2141,32 @@
     grid-template-columns: 5em 12em;
   }
 
+  /* Internet Hearts: the same table, a little shorter, with panels that close by themselves */
+  .ih-table {
+    height: min(480px, calc(100dvh - 230px));
+    min-height: 380px;
+  }
+  .ih-panel {
+    position: absolute;
+    z-index: 6;
+    left: 50%;
+    top: 45%;
+    translate: -50% -50%;
+    padding: 8px 14px;
+    background: #ffffe1;
+    border: 1px solid #555;
+    box-shadow: 2px 2px 6px rgb(0 0 0 / 0.4);
+    text-align: center;
+  }
+  .ih-moon {
+    font-size: 16px;
+    color: #b0120a;
+  }
+  .ih-last {
+    outline: 2px dashed #ffd34d;
+    outline-offset: 4px;
+  }
+
   /* ---------- KK Game Zone (inside the Internet window) ---------- */
   .ie-zone {
     padding: 10px 12px;

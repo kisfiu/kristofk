@@ -149,10 +149,10 @@ export function botPass(hand: Card[]): Card[] {
   return [...hand].sort((a, b) => danger(b) - danger(a)).slice(0, 3);
 }
 
-/** Pick a card. `skill` 0 (Beginner) plays any legal card now and then; 2 (Expert) always plays the heuristic. */
+/** Pick a card. `skill` 0 (Beginner) plays any legal card often, 1 (Intermediate) now and then; 2 (Expert) always plays the heuristic. */
 export function botPlay(g: Hearts, p: number, skill = 2, rnd: () => number = Math.random): Card {
   const ok = legal(g, p);
-  if (skill === 0 && rnd() < 0.35) return ok[Math.floor(rnd() * ok.length)];
+  if (skill < 2 && rnd() < (skill ? 0.12 : 0.35)) return ok[Math.floor(rnd() * ok.length)];
   const lowFirst = [...ok].sort((a, b) => hi(a) - hi(b));
   if (!g.trick.length) {
     // lead low, and not from hearts if there's a choice

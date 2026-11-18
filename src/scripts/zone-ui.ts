@@ -13,7 +13,8 @@ export interface ZoneApi {
   /** A line in the chat from a player (shown only with chat on), or from the system. */
   chat(from: Player | null, text: string): void;
   status(text: string): void;
-  /** 2-player games: after a bot move, the bot may (rarely) leave. True if it did; the game should stop. */
+  /** After a bot move, a bot may (rarely) leave. 2-player games: true, the game should stop.
+   *  4-player games: the bot is replaced by a computer player in `opponents`, and play goes on (false). */
   maybeLeave(): boolean;
   /** The game is over: show the result and Play Again / New Opponent / Quit. */
   end(text: string): void;
@@ -25,6 +26,8 @@ export interface ZoneGame {
   /** The site window that "<Game> on the Web" opens. */
   web: string;
   help: string;
+  /** Game ▸ Show Score: the Zone sends a "zone-score" event to the game's host element. */
+  score?: boolean;
   load(): Promise<(host: HTMLElement, api: ZoneApi) => () => void>;
 }
 
@@ -49,6 +52,14 @@ const GAMES: Record<string, ZoneGame> = {
     web: "travel",
     help: `<p>Thirty-seven countries and counting. Race your fifteen stones home across a board tiled like Santarém, where Kristóf spent his Erasmus year.</p><ul><li>Each player rolls one die to start (a tie rolls again); the higher die goes first and plays both numbers. Your stones travel to your home board, bottom right.</li><li>Click a stone, then a green diamond to move it by one die. Use both dice if you can; if only one fits, it must be the higher. Doubles play four times. A stone on the bar must enter first.</li><li>Landing on a lone stone sends it to the bar. Once all fifteen are home, bear them off into the tray on the right.</li><li>The match is to 5 points. Before your roll you may double (up to 64): your opponent accepts or gives up the game. A gammon counts double, a backgammon triple. In the Crawford game, after someone first reaches 4, only that player may double.</li><li>Keys: Alt+L roll, Alt+D double, Alt+R resign; arrows move between points, Space or Enter picks and drops.</li></ul>`,
     load: () => import("./backgammon-ui").then((m) => m.startBackgammon),
+  },
+  hearts: {
+    title: "Internet Hearts",
+    players: 4,
+    web: "invisible-school",
+    score: true,
+    help: `<p>Same table as offline Hearts, but your rivals are on the line from 2003. Somebody always tries to shoot the moon.</p><ul><li>Pass three cards: left, right, across, then no pass every fourth hand. The 2 of clubs leads the first trick.</li><li>Follow suit if you can. No hearts or Queen of Spades on the first trick, and no heart lead until hearts are broken.</li><li>Every heart you take costs 1 point, the Queen of Spades 13. Take all of them (shoot the moon) and everyone else gets 26.</li><li>The game ends when someone reaches 100. The lowest score wins.</li><li>Double-click a card, or click it and press Play. Auto-Play plays your cards for you, Last Trick shows the trick just taken, and Game ▸ Show Score lists every hand.</li></ul>`,
+    load: () => import("./internet-hearts-ui").then((m) => m.startHearts),
   },
 };
 
@@ -114,6 +125,8 @@ export function initZone(
     ctx.wide(true);
     ctx.address(`kk://zone/${id}`);
     menu.set(`skill${skillOf(id)}`, true);
+    menu.disable("score", !GAMES[id].score);
+    $('[data-cmd="find"] span').textContent = GAMES[id].players > 2 ? "Find New Opponents" : "Find New Opponent";
     const say = $<HTMLSelectElement>("[data-zone-say]");
     say.innerHTML = `<option value="">(Select a message to send)</option>${[
       ...PHRASES.common,
@@ -211,7 +224,21 @@ export function initZone(
       ask,
       maybeLeave() {
         moves++;
-        if (g.players !== 2 || moves < 6 || Math.random() > 1 / 150) return false;
+        if (g.players === 4) {
+          const i = Math.floor(Math.random() * opponents.length);
+          if (moves < 20 || Math.random() > 1 / 400 || opponents[i].name.startsWith("Computer ")) return false;
+          line(null, `${opponents[i].name} left the game and has been replaced by a computer player.`);
+          opponents[i] = {
+            name: `Computer ${i + 1}`,
+            language: "English",
+            skill: opponents[i].skill,
+            chat: false,
+            bot: true,
+          };
+          players();
+          return false;
+        }
+        if (moves < 6 || Math.random() > 1 / 150) return false;
         playing = false;
         stop?.();
         stop = null;
@@ -226,11 +253,8 @@ export function initZone(
         for (const o of opponents)
           if (o.chat && Math.random() < 0.7) line(o, Math.random() < 0.5 ? "Good game!" : "Thanks for the game!");
         later(async () => {
-          const a = await ask(g.title, `${text}\n\nWould you like to play again?`, [
-            "Play Again",
-            "New Opponent",
-            "Quit",
-          ]);
+          const newOpp = g.players > 2 ? "New Opponents" : "New Opponent";
+          const a = await ask(g.title, `${text}\n\nWould you like to play again?`, ["Play Again", newOpp, "Quit"]);
           if (a === "Play Again") {
             // the opponents decide too
             ctx.status(`${opponents.map((o) => o.name).join(", ")} ${opponents.length > 1 ? "are" : "is"} deciding…`);
@@ -242,7 +266,7 @@ export function initZone(
                 );
               } else void start();
             }, 1200);
-          } else if (a === "New Opponent") connect();
+          } else if (a === newOpp) connect();
           else home();
         }, 900);
       },
@@ -262,7 +286,8 @@ export function initZone(
   async function command(cmd: string) {
     if (!game) return;
     const g = GAMES[game];
-    if (cmd === "find") {
+    if (cmd === "score") $("[data-zone-board]").dispatchEvent(new Event("zone-score"));
+    else if (cmd === "find") {
       if (!playing || (await ask(g.title, "Leave this game and find a new opponent?", ["Yes", "No"])) === "Yes")
         connect();
     } else if (cmd.startsWith("skill")) {
