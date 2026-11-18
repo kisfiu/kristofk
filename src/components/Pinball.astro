@@ -53,7 +53,8 @@ const controls = [
   />
   <div class="pb-main">
     <div class="pb-view">
-      <canvas class="pb-table" data-canvas role="img" aria-label="Pinball table. Z and / flip, hold Space to launch, X, full stop and ↑ nudge."></canvas>
+      <canvas class="pb-table" data-canvas role="img" aria-label="Pinball table. A and D flip, hold Space to launch, N, X and full stop nudge."></canvas>
+      <p class="pb-overlay" data-overlay aria-hidden="true"></p>
     </div>
     <div class="pb-panel">
       <svg class="pb-logo" viewBox="0 0 240 92" role="img" aria-label="Pipeline Pinball">
@@ -84,6 +85,7 @@ const controls = [
       <dl class="pb-info">
         <dt>Rank</dt><dd data-rank>Intern</dd>
         <dt>Renovate</dt><dd data-mult>×1</dd>
+        <dt>Ticket</dt><dd data-ticket>Fix flaky tests 0/10</dd>
       </dl>
       <ol class="pb-ladder" data-ladder reversed aria-label="Ranks, from CTO down to Intern"></ol>
     </div>
@@ -128,11 +130,15 @@ const controls = [
     <form method="dialog" class="xp-dialog-body sw-help">
       <p>Launch a commit and keep it on the table. Light Build, Test and Deploy, and a green pipeline pays the jackpot. Drain down the middle and the build is broken.</p>
       <ul>
-        <li><b>Hold Space</b> to pull the plunger (git push); the longer you hold, the harder the launch. <b>Z</b> and <b>/</b> work the left and right flippers.</li>
+        <li><b>Hold Space</b> to pull the plunger (git push); the longer you hold, the harder the launch. <b>A</b> and <b>D</b> work the left and right flippers.</li>
         <li>Knock down all three targets of a bank to pass that stage. With BUILD, TEST and DEPLOY passed, the GREEN PIPELINE lane lights: shoot it for the jackpot and a promotion, from Intern up to CTO. Your rank stays when a ball drains.</li>
         <li>The Renovate bot lane on the left raises the multiplier: ×2, ×3, ×5, ×10, then extra balls. The Helm upgrade lane on the right spins for points. The flaky-test bumpers kick the ball back.</li>
+        <li>The GREEN PIPELINE ramp lifts the ball over the table and drops it back at the right flipper.</li>
+        <li>The STAGING hole lifts the ball up to the small staging table above the top left, with its own small flippers (they move with the main ones, on the same keys). Bounce off the pods and hit all three smoke tests: staging goes green and pays big. A ball that drops off rides the chute back to the left flipper.</li>
+        <li>Roll through the three CODE REVIEW lanes at the top to light them; the flipper keys move the lit lanes. All three approved lights Parallel jobs: the next ball in a CACHE hole starts a three-ball multiball. A cache hole holds the ball and shoots it back out.</li>
+        <li>One ticket is always open (the panel shows it): fix the flaky tests, bump dependencies, ship it… Closing one pays, and every third closed ticket is an extra ball.</li>
         <li>Three balls each for 1–4 players, taking turns. A drain within 15 seconds of the launch gives the ball back. Every million points is a replay.</li>
-        <li><b>X</b>, <b>.</b> and <b>↑</b> nudge the table. Too much and it tilts: the flippers stop and the ball is lost with no bonus. Change the keys in Options ▸ Player Controls (F8).</li>
+        <li><b>N</b> nudges the table up, <b>X</b> and <b>.</b> to the right and left. Too much and it tilts: the flippers stop and the ball is lost with no bonus. Change the keys in Options ▸ Player Controls (F8).</li>
         <li>On a phone, use the buttons under the table.</li>
       </ul>
       <div class="xp-dialog-buttons"><button value="ok">OK</button></div>

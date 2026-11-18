@@ -5,6 +5,7 @@ import {
   drain,
   hit,
   insertScore,
+  LANES,
   launchSpeed,
   multiplier,
   newGame,
@@ -15,7 +16,9 @@ import {
   RANKS,
   REPLAY_EVERY,
   rampLit,
+  shiftLanes,
   TABLE_SIZE,
+  TICKETS,
 } from "./pinball-logic";
 
 const clearAll = (g: ReturnType<typeof newGame>) =>
@@ -142,5 +145,50 @@ describe("Pipeline Pinball rules", () => {
     expect(table.map((e) => e.name)).toEqual(["Old 0", "Old 1", "Old 2", "Player 1", "Old 3"]);
     expect(table).toHaveLength(TABLE_SIZE);
     expect(placeOf([], 0)).toBe(-1);
+  });
+
+  it("all three review lanes light Parallel jobs; a cache hole then starts the multiball", () => {
+    const g = newGame(1);
+    const p = g.players[0];
+    hit(g, { kind: "rollover", i: 0 });
+    shiftLanes(p, 1);
+    expect(p.lanes).toEqual([false, true, false]);
+    hit(g, { kind: "rollover", i: 1 }); // already lit after the shift: no change
+    hit(g, { kind: "rollover", i: 0 });
+    expect(hit(g, { kind: "rollover", i: 2 })).toContain("Parallel jobs ready");
+    expect(p.lanes).toEqual(Array(LANES).fill(false));
+    expect(hit(g, { kind: "cache" })).toContain("Parallel jobs!");
+    expect([g.startMultiball, p.multiballLit]).toEqual([true, false]);
+  });
+
+  it("tickets close after their goal, pay, open the next, and every third is an extra ball", () => {
+    const g = newGame(1);
+    const p = g.players[0];
+    for (let i = 0; i < TICKETS[0].goal - 1; i++) hit(g, { kind: "bumper" });
+    const before = p.score;
+    expect(hit(g, { kind: "bumper" })).toEqual(["Ticket closed: Fix flaky tests", "New ticket: Speed up the build"]);
+    expect(p.score - before).toBe(POINTS.bumper + POINTS.ticket);
+    hit(g, { kind: "orbit" }); // not this ticket's shot
+    expect(p.progress).toBe(0);
+    for (const i of [0, 1, 2]) hit(g, { kind: "target", bank: "BUILD", i });
+    for (let i = 0; i < 3; i++) hit(g, { kind: "orbit" });
+    expect([p.closed, p.extraBalls, TICKETS[p.ticket].name]).toEqual([3, 1, "Clear the cache"]);
+  });
+
+  it("staging: three smoke tests make staging green, pay by rank and close its ticket", () => {
+    const g = newGame(1);
+    const p = g.players[0];
+    p.ticket = TICKETS.findIndex((t) => t.on === "staging");
+    p.rank = 1;
+    expect(hit(g, { kind: "stage" })).toEqual(["Deployed to staging"]);
+    hit(g, { kind: "smoke", i: 0 });
+    hit(g, { kind: "smoke", i: 0 }); // already lit
+    hit(g, { kind: "smoke", i: 1 });
+    const before = p.score;
+    const msgs = hit(g, { kind: "smoke", i: 2 });
+    expect(msgs).toContain("Staging is green! 50,000");
+    expect(msgs).toContain("Ticket closed: Test on staging");
+    expect(p.score - before).toBe(POINTS.smoke + POINTS.staging * 2 + POINTS.ticket * 2);
+    expect(p.smoke).toEqual([false, false, false]);
   });
 });

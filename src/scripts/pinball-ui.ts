@@ -1,6 +1,7 @@
 // Pipeline Pinball: the table (planck.js physics, canvas drawing), keys and touch buttons, menus and dialogs.
 // The rules live in pinball-logic.ts. Loaded on the window's first open (lazy.ts), so planck stays out of startup.
 import {
+  type Body,
   Box,
   Chain,
   Circle,
@@ -17,13 +18,13 @@ import { initMenuBar } from "./menubar";
 import {
   BALL_SAVE,
   BANKS,
-  type Bank,
   type Entry,
   fmt,
   type Game,
   type Hit,
   insertScore,
   launchSpeed,
+  MULTIBALL,
   MULTIPLIERS,
   newGame,
   nudge,
@@ -31,6 +32,8 @@ import {
   plungerStrength,
   RANKS,
   rampLit,
+  shiftLanes,
+  TICKETS,
   TILT_TIMEOUT,
   drain as toDrain,
   hit as toHit,
@@ -47,12 +50,12 @@ const ACTIONS: [Action, string][] = [
   ["nudgeU", "Nudge up"],
 ];
 const DEFAULT_KEYS: Record<Action, string> = {
-  left: "z",
-  right: "/",
+  left: "a",
+  right: "d",
   plunger: " ",
   nudgeR: "x",
   nudgeL: ".",
-  nudgeU: "ArrowUp",
+  nudgeU: "n",
 };
 const OPTS = "kk-pinball";
 const SCORES = "kk-pinball-scores";
@@ -61,133 +64,47 @@ const keyName = (k: string) =>
   (k.length === 1 ? k.toUpperCase() : k);
 const norm = (k: string) => (k.length === 1 ? k.toLowerCase() : k);
 
-// ---------- the table, in table units (10 × 18, y down) ----------
-const W = 10;
-const H = 18;
-const R = 0.22;
-const STEP = 1 / 120;
-const PLUNGER = { x: 9.35, y: H - 1.1 };
-type P = { x: number; y: number };
-const arc = (cx: number, cy: number, r: number, a0: number, a1: number, n: number): P[] =>
-  Array.from({ length: n + 1 }, (_, i) => {
-    const a = a0 + ((a1 - a0) * i) / n;
-    return { x: cx + r * Math.cos(a), y: cy + r * Math.sin(a) };
-  });
-const mirror = (ps: P[]) => ps.map((p) => ({ x: 9.3 - p.x, y: p.y }));
-const INLANE: P[] = [
-  { x: 1.2, y: 12.4 },
-  { x: 1.2, y: 14.7 },
-  { x: 2.72, y: 15.62 },
-];
-const WALLS: P[][] = [
-  [{ x: 0.3, y: H }, ...arc(5, 5, 4.7, Math.PI, 2 * Math.PI, 32), { x: 9.7, y: H }],
-  [
-    { x: 9, y: H },
-    { x: 9, y: 6 },
-  ],
-  [
-    { x: 1.35, y: 7.4 },
-    { x: 1.35, y: 4.6 },
-  ], // Renovate orbit lane
-  [
-    { x: 7.95, y: 8 },
-    { x: 7.95, y: 5 },
-  ], // Helm spinner lane
-  [
-    { x: 5.4, y: 4.2 },
-    { x: 5.4, y: 2.3 },
-  ], // green pipeline lane
-  [
-    { x: 6.6, y: 4.2 },
-    { x: 6.6, y: 2.3 },
-  ],
-  INLANE,
-  mirror(INLANE),
-];
-const GATE: [P, P] = [
-  { x: 9.02, y: 5.95 },
-  { x: 9.68, y: 5.2 },
-];
-const SLING: P[] = [
-  { x: 1.85, y: 12.9 },
-  { x: 1.85, y: 14.4 },
-  { x: 2.55, y: 14.85 },
-];
-const SLINGS = [SLING, mirror(SLING)];
-const BUMPERS: P[] = [
-  { x: 2.7, y: 4.5 },
-  { x: 4.1, y: 3.7 },
-  { x: 3.8, y: 5.6 },
-];
-const BUMPER_R = 0.45;
-type Target = { bank: Bank; i: number; x: number; y: number; hw: number; hh: number };
-const TARGETS: Target[] = [
-  ...[8.4, 9.1, 9.8].map((y, i) => ({ bank: "BUILD" as Bank, i, x: 0.4, y, hw: 0.08, hh: 0.28 })),
-  ...[3.2, 3.9, 4.6].map((x, i) => ({ bank: "TEST" as Bank, i, x, y: 8.4, hw: 0.28, hh: 0.08 })),
-  ...[8.9, 9.6, 10.3].map((y, i) => ({ bank: "DEPLOY" as Bank, i, x: 8.9, y, hw: 0.08, hh: 0.28 })),
-];
-const SENSORS: { tag: string; x: number; y: number; hw: number; hh: number }[] = [
-  { tag: "orbit", x: 0.82, y: 6, hw: 0.5, hh: 0.1 },
-  { tag: "spinner", x: 8.47, y: 5.6, hw: 0.5, hh: 0.1 },
-  { tag: "ramp", x: 6, y: 3.2, hw: 0.55, hh: 0.1 },
-  { tag: "outlane", x: 0.75, y: 15.2, hw: 0.42, hh: 0.1 },
-  { tag: "outlane", x: 8.55, y: 15.2, hw: 0.42, hh: 0.1 },
-  { tag: "drain", x: 4.65, y: H - 0.2, hw: 4.35, hh: 0.1 },
-];
-/** Printed playfield art: circuit traces with pads at their ends. */
-const TRACES: P[][] = [
-  [
-    { x: 2.2, y: 11.2 },
-    { x: 2.2, y: 9.8 },
-    { x: 2.9, y: 9.1 },
-    { x: 2.9, y: 8.9 },
-  ],
-  [
-    { x: 7.1, y: 11.2 },
-    { x: 7.1, y: 9.6 },
-    { x: 6.4, y: 8.9 },
-    { x: 5.6, y: 8.9 },
-  ],
-  [
-    { x: 3.3, y: 13.3 },
-    { x: 4.1, y: 13.3 },
-    { x: 4.6, y: 13.8 },
-    { x: 4.6, y: 14.6 },
-  ],
-  [
-    { x: 6.1, y: 13.3 },
-    { x: 5.3, y: 13.3 },
-    { x: 4.9, y: 12.9 },
-  ],
-  [
-    { x: 4.9, y: 6.6 },
-    { x: 5.6, y: 6.6 },
-    { x: 6.3, y: 7.3 },
-    { x: 7.2, y: 7.3 },
-  ],
-  [
-    { x: 2.4, y: 2.6 },
-    { x: 3.1, y: 2.6 },
-    { x: 3.6, y: 2.1 },
-    { x: 4.6, y: 2.1 },
-  ],
-  [
-    { x: 1.9, y: 5.2 },
-    { x: 1.9, y: 3.8 },
-  ],
-  [
-    { x: 7.2, y: 2.4 },
-    { x: 7.2, y: 4.3 },
-    { x: 6.9, y: 4.6 },
-  ],
-];
-const FLIP_LEN = 1.55;
-const REST = 0.52;
-const FLIPPERS = [
-  { pivot: { x: 2.9, y: 15.8 }, dir: 1 },
-  { pivot: { x: 6.4, y: 15.8 }, dir: -1 },
-];
-const WALL_BITS = 4; // flippers only hit the ball, not the walls around their pivots
+import { createView, type View } from "./pinball-3d";
+import {
+  BUMPER_R,
+  BUMPERS,
+  CACHES,
+  FIELD_MASK,
+  FLIP_LEN,
+  FLIPPERS,
+  GATE,
+  H,
+  KICKERS,
+  LAMPS,
+  LANE_X,
+  LIFT,
+  type P,
+  PLUNGER,
+  POD_R,
+  PODS,
+  POST_R,
+  POSTS,
+  R,
+  RAMP_BITS,
+  RAMPS,
+  REST,
+  SENSORS,
+  SLINGS,
+  SMOKE,
+  STAGE_BITS,
+  STAGE_DRAIN,
+  STAGE_ENTRY,
+  STAGE_FLIP_LEN,
+  STAGE_FLIPPERS,
+  STAGE_H,
+  STAGE_WALL,
+  STEP,
+  TARGETS,
+  type Target,
+  W,
+  WALL_BITS,
+  WALLS,
+} from "./pinball-table";
 
 // ---------- sounds: own tiny Web Audio, so the pinball's Sounds and Music items work on their own ----------
 let audio: AudioContext | null = null;
@@ -228,7 +145,6 @@ export function initPinball(el: HTMLElement) {
   const $ = <T extends Element = HTMLElement>(s: string) => el.querySelector<T>(s)!;
   const win = el.closest<HTMLElement>(".window")!;
   const canvas = $<HTMLCanvasElement>("[data-canvas]");
-  const g2 = canvas.getContext("2d")!;
   const opts = load(OPTS, { players: 1, sounds: true, music: false, controls: { ...DEFAULT_KEYS } });
   let scores = load(SCORES, { table: [] as Entry[] }).table;
 
@@ -249,26 +165,39 @@ export function initPinball(el: HTMLElement) {
   fix(new Box(0.35, 0.15, { x: PLUNGER.x, y: H - 0.65 }), "wall");
   for (const s of SLINGS) fix(new Polygon(s), "sling", { restitution: 0.6 });
   for (const b of BUMPERS) fix(new Circle(b, BUMPER_R), "bumper");
-  for (const s of SENSORS) fix(new Box(s.hw, s.hh, { x: s.x, y: s.y }), s.tag, { isSensor: true });
+  for (const p of POSTS) fix(new Circle(p, POST_R), "post", { restitution: 0.75 });
+  for (const k of KICKERS) fix(new Edge(k.a, k.b), k);
+  for (const s of SENSORS)
+    fix(new Box(s.hw, s.hh, { x: s.x, y: s.y }), s.tag, {
+      isSensor: true,
+      filterCategoryBits: s.tag === "ramp" ? WALL_BITS | RAMP_BITS : WALL_BITS,
+    });
+  for (const rp of RAMPS) {
+    for (const side of rp.sides) fix(new Chain(side.slice(1), false), "wall", { filterCategoryBits: RAMP_BITS });
+    fix(new Box(0.4, 0.1, rp.end), rp.tag, { isSensor: true, filterCategoryBits: RAMP_BITS });
+  }
+  for (const [i, x] of LANE_X.entries()) fix(new Box(0.25, 0.08, { x, y: 2.3 }), { lane: i }, { isSensor: true });
+  for (const [i, h] of CACHES.entries()) fix(new Circle(h, 0.26), { cache: i }, { isSensor: true });
   const targetBodies = TARGETS.map((t) => {
     const body = world.createBody({ position: { x: t.x, y: t.y } });
     body.createFixture({ shape: new Box(t.hw, t.hh), userData: t, filterCategoryBits: WALL_BITS, restitution: 0.2 });
     return body;
   });
-  const flippers = FLIPPERS.map(({ pivot, dir }) => {
+  /** A flipper: a tapered bat on a motorised hinge. `k` scales the bat; `cat` is the layer it lives on. */
+  const makeFlipper = ({ pivot, dir }: { pivot: P; dir: number }, len: number, k: number, cat: number) => {
     const body = world.createDynamicBody({ position: pivot, angle: dir * REST, allowSleep: false, gravityScale: 0 });
-    const f = { filterMaskBits: 1, density: 3, friction: 0.2, restitution: 0.1 };
+    const f = { filterMaskBits: 1, filterCategoryBits: cat, density: 3, friction: 0.2, restitution: 0.1 };
     body.createFixture({
       ...f,
       shape: new Polygon([
-        { x: 0, y: -0.2 },
-        { x: dir * FLIP_LEN, y: -0.09 },
-        { x: dir * FLIP_LEN, y: 0.09 },
-        { x: 0, y: 0.2 },
+        { x: 0, y: -0.2 * k },
+        { x: dir * len, y: -0.09 * k },
+        { x: dir * len, y: 0.09 * k },
+        { x: 0, y: 0.2 * k },
       ]),
     });
-    body.createFixture({ ...f, shape: new Circle({ x: 0, y: 0 }, 0.2) });
-    body.createFixture({ ...f, shape: new Circle({ x: dir * FLIP_LEN, y: 0 }, 0.09) });
+    body.createFixture({ ...f, shape: new Circle({ x: 0, y: 0 }, 0.2 * k) });
+    body.createFixture({ ...f, shape: new Circle({ x: dir * len, y: 0 }, 0.09 * k) });
     const joint = world.createJoint(
       new RevoluteJoint(
         {
@@ -284,9 +213,46 @@ export function initPinball(el: HTMLElement) {
       ),
     )!;
     return { body, joint, dir };
+  };
+  const flippers = FLIPPERS.map((f) => makeFlipper(f, FLIP_LEN, 1, 1));
+  // the staging table: its wall, pods, smoke tests, drain, its own small flippers; the lift up to it
+  fix(new Chain(STAGE_WALL, false), "wall", { filterCategoryBits: STAGE_BITS });
+  for (const p of PODS) fix(new Circle(p, POD_R), "pod", { filterCategoryBits: STAGE_BITS });
+  for (const [i, t] of SMOKE.entries())
+    fix(new Box(t.hw, t.hh, t), { smoke: i }, { filterCategoryBits: STAGE_BITS, restitution: 0.4 });
+  fix(new Box(STAGE_DRAIN.hw, STAGE_DRAIN.hh, STAGE_DRAIN), "stageDrain", {
+    isSensor: true,
+    filterCategoryBits: STAGE_BITS,
   });
-  const ball = world.createDynamicBody({ position: PLUNGER, bullet: true, allowSleep: false });
-  ball.createFixture({ shape: new Circle(R), density: 1, friction: 0.05, restitution: 0.3 });
+  fix(new Circle(LIFT, 0.26), "lift", { isSensor: true });
+  const minis = STAGE_FLIPPERS.map((f) => makeFlipper(f, STAGE_FLIP_LEN, 0.65, STAGE_BITS));
+  // the balls: one, or three during Parallel jobs
+  /** Where a ball is: on the field, on a ramp or the chute, or up on the staging table (each its own layer). */
+  type Mode = "field" | "ramp" | "stage";
+  type BallState = { mode: Mode; held: number; hole: number; still: number };
+  const balls: Body[] = [];
+  const state = new Map<Body, BallState>();
+  function addBall(position: P) {
+    const b = world.createDynamicBody({ position, bullet: true, allowSleep: false });
+    b.createFixture({ shape: new Circle(R), density: 1, friction: 0.05, restitution: 0.3, filterMaskBits: FIELD_MASK });
+    balls.push(b);
+    state.set(b, { mode: "field", held: 0, hole: -1, still: 0 });
+    return b;
+  }
+  function removeBall(b: Body) {
+    world.destroyBody(b);
+    balls.splice(balls.indexOf(b), 1);
+    state.delete(b);
+  }
+  function setMode(b: Body, mode: Mode) {
+    state.get(b)!.mode = mode;
+    const maskBits = mode === "ramp" ? RAMP_BITS : mode === "stage" ? STAGE_BITS : FIELD_MASK;
+    b.getFixtureList()!.setFilterData({ groupIndex: 0, categoryBits: 1, maskBits });
+  }
+  addBall(PLUNGER);
+  const launches: number[] = [];
+  /** When each cache hole (0, 1) and the lift (2) may take a ball again. */
+  const holeFree = [0, 0, 0];
 
   // ---------- state ----------
   let game: Game = newGame(opts.players);
@@ -297,7 +263,6 @@ export function initPinball(el: HTMLElement) {
   let launchedAt = 0;
   let saveUsed = false;
   let tiltedAt = 0;
-  let still = 0;
   let plungeHeld = 0;
   let spin = 0;
   let spinSpeed = 0;
@@ -332,6 +297,12 @@ export function initPinball(el: HTMLElement) {
   }
 
   function resetBall() {
+    while (balls.length > 1) removeBall(balls[1]);
+    launches.length = 0;
+    const ball = balls[0];
+    setMode(ball, "field");
+    Object.assign(state.get(ball)!, { held: 0, hole: -1, still: 0 });
+    ball.setActive(true);
     ball.setTransform(PLUNGER, 0);
     ball.setLinearVelocity({ x: 0, y: 0 });
     ball.setAngularVelocity(0);
@@ -360,39 +331,51 @@ export function initPinball(el: HTMLElement) {
   const ballIn = (c: Contact) => {
     const a = c.getFixtureA();
     const b = c.getFixtureB();
-    if (a.getBody() === ball) return { other: b, sign: 1 };
-    if (b.getBody() === ball) return { other: a, sign: -1 };
+    if (state.has(a.getBody())) return { ball: a.getBody(), other: b, sign: 1 };
+    if (state.has(b.getBody())) return { ball: b.getBody(), other: a, sign: -1 };
     return null;
   };
   world.on("pre-solve", (c) => {
     const hit = ballIn(c);
-    if (hit?.other.getUserData() === "gate" && ball.getLinearVelocity().y < 0) c.setEnabled(false);
+    if (hit?.other.getUserData() === "gate" && hit.ball.getLinearVelocity().y < 0) c.setEnabled(false);
   });
   world.on("begin-contact", (c) => {
     const hit = ballIn(c);
-    if (hit) after.push(() => touch(hit.other, c, hit.sign));
+    if (hit) after.push(() => state.has(hit.ball) && touch(hit.other, c, hit.sign, hit.ball));
   });
 
   function score(h: Hit) {
     const msgs = toHit(game, h);
     say(...msgs);
-    if (msgs.some((m) => m.startsWith("GREEN"))) sound("jackpot");
+    if (msgs.some((m) => m.startsWith("GREEN") || m === "Parallel jobs!")) sound("jackpot");
     else if (msgs.includes("Extra Ball")) sound("extra");
+    if (game.startMultiball) {
+      game.startMultiball = false;
+      // the other jobs come up the plunger lane, one after another
+      for (let i = 1; i < MULTIBALL; i++) launches.push(simTime + 0.4 + i * 0.8);
+    }
   }
 
-  function touch(f: Fixture, c: Contact, sign: number) {
-    const tag = f.getUserData();
+  function touch(f: Fixture, c: Contact, sign: number, ball: Body) {
+    const tag = f.getUserData() as unknown;
+    const st = state.get(ball)!;
     const v = ball.getLinearVelocity();
     const up = v.y < 0;
-    if (tag === "bumper") {
-      const center = BUMPERS.find((b) => Math.hypot(b.x - ball.getPosition().x, b.y - ball.getPosition().y) < 1)!;
+    if (tag === "bumper" || tag === "pod") {
+      const list = tag === "pod" ? PODS : BUMPERS;
+      const center = list.find((b) => Math.hypot(b.x - ball.getPosition().x, b.y - ball.getPosition().y) < 1)!;
       const d = { x: ball.getPosition().x - center.x, y: ball.getPosition().y - center.y };
       const len = Math.hypot(d.x, d.y) || 1;
       const speed = Math.max(13, v.length());
       ball.setLinearVelocity({ x: (d.x / len) * speed, y: (d.y / len) * speed });
       flash.set(center, simTime);
       sound("bumper");
-      score({ kind: "bumper" });
+      score({ kind: tag });
+    } else if (tag && typeof tag === "object" && "dir" in tag) {
+      // a wall kicker: back towards the middle, a little up the table
+      ball.setLinearVelocity({ x: (tag.dir as number) * 7, y: Math.min(v.y * 0.4, 0) - 3 });
+      flash.set(tag, simTime);
+      sound("bumper");
     } else if (tag === "sling") {
       const n = c.getWorldManifold(null)?.normal;
       // kick only off the long edge that faces the middle of the table
@@ -402,7 +385,40 @@ export function initPinball(el: HTMLElement) {
         flash.set(SLINGS[left ? 0 : 1], simTime);
         sound("bumper");
       }
-    } else if (tag && typeof tag === "object") {
+    } else if (tag && typeof tag === "object" && "lane" in tag) {
+      flash.set(`lane${tag.lane}`, simTime);
+      score({ kind: "rollover", i: tag.lane as number });
+    } else if (tag && typeof tag === "object" && "cache" in tag) {
+      const i = tag.cache as number;
+      if (st.mode !== "field" || st.held || simTime < holeFree[i]) return;
+      // the hole takes the ball, keeps it a moment, and shoots it back out
+      ball.setLinearVelocity({ x: 0, y: 0 });
+      ball.setTransform(CACHES[i], 0);
+      ball.setActive(false);
+      Object.assign(st, { held: simTime + 1.2, hole: i });
+      sound("target");
+      score({ kind: "cache" });
+    } else if (tag && typeof tag === "object" && "smoke" in tag) {
+      flash.set(`smoke${tag.smoke}`, simTime);
+      sound("target");
+      score({ kind: "smoke", i: tag.smoke as number });
+    } else if (tag === "lift") {
+      if (st.mode !== "field" || st.held || simTime < holeFree[2]) return;
+      // the lift takes the ball up to the staging table
+      ball.setLinearVelocity({ x: 0, y: 0 });
+      ball.setTransform(LIFT, 0);
+      ball.setActive(false);
+      Object.assign(st, { held: simTime + 0.9, hole: 2 });
+      sound("launch");
+      flash.set("lift", simTime);
+      score({ kind: "stage" });
+    } else if (tag === "stageDrain" && st.mode === "stage") {
+      // into the chute, wherever along the bottom edge it dropped off
+      setMode(ball, "ramp");
+      ball.setTransform({ x: 2.6, y: ball.getPosition().y }, 0);
+      ball.setLinearVelocity({ x: 0, y: Math.max(2, v.y) });
+    } else if (tag === "chuteEnd" && st.mode === "ramp") setMode(ball, "field");
+    else if (tag && typeof tag === "object") {
       const t = tag as Target;
       sound("target");
       score({ kind: "target", bank: t.bank, i: t.i });
@@ -415,15 +431,25 @@ export function initPinball(el: HTMLElement) {
       const n = Math.min(12, Math.max(1, Math.round(v.length() / 3)));
       spinSpeed = n * 6;
       score({ kind: "spin", n });
-    } else if (tag === "ramp" && up) {
+    } else if (tag === "ramp") {
+      // onto the ramp going up, back onto the field if it rolls back down
+      if (up !== (st.mode === "ramp")) setMode(ball, up ? "ramp" : "field");
+    } else if (tag === "rampEnd" && st.mode === "ramp") {
+      setMode(ball, "field");
       flash.set("ramp", simTime);
       score({ kind: "ramp" });
     } else if (tag === "outlane") score({ kind: "outlane" });
-    else if (tag === "drain") onDrain();
+    else if (tag === "drain") onDrain(ball);
   }
 
-  function onDrain() {
+  function onDrain(ball: Body) {
     if (phase !== "play") return;
+    if (balls.length > 1) {
+      // a job of the multiball ends; the last ball left is the one that counts
+      removeBall(ball);
+      if (balls.length === 1 && !launches.length) say("Parallel jobs done");
+      return;
+    }
     const t = simTime - launchedAt;
     const saved = !saveUsed && !game.tilted && t < BALL_SAVE;
     const d = toDrain(game, saveUsed ? Number.POSITIVE_INFINITY : t);
@@ -446,10 +472,15 @@ export function initPinball(el: HTMLElement) {
     if (pressed[a] === on) return;
     pressed[a] = on;
     if (a === "plunger" && !on) release();
-    if (!on || !a.startsWith("nudge") || phase !== "play" || game.tilted) return;
-    const v = ball.getLinearVelocity();
+    if (!on || phase !== "play" || game.tilted) return;
+    // the flipper keys also move the lit code review lanes (lane change)
+    if (a === "left" || a === "right") return shiftLanes(player(game), a === "left" ? -1 : 1);
+    if (!a.startsWith("nudge")) return;
     const kick = { nudgeR: { x: 3, y: 0 }, nudgeL: { x: -3, y: 0 }, nudgeU: { x: 0, y: -4 } }[a as "nudgeR"];
-    ball.setLinearVelocity({ x: v.x + kick.x, y: v.y + kick.y });
+    for (const ball of balls) {
+      const v = ball.getLinearVelocity();
+      ball.setLinearVelocity({ x: v.x + kick.x, y: v.y + kick.y });
+    }
     const level = nudge(game, simTime);
     if (level === "careful") say("Careful…");
     if (level === "tilt") {
@@ -460,13 +491,14 @@ export function initPinball(el: HTMLElement) {
     }
   }
 
-  const inLane = () =>
+  const inLane = (ball: Body) =>
     ball.getPosition().x > 9 && ball.getPosition().y > H - 3 && ball.getLinearVelocity().length() < 1;
 
   function release() {
     const strength = plungerStrength(plungeHeld);
     plungeHeld = 0;
-    if (!inLane() || phase === "over" || game.tilted) return;
+    const ball = balls.find(inLane);
+    if (!ball || phase === "over" || game.tilted) return;
     ball.setLinearVelocity({ x: 0, y: -launchSpeed(strength, Math.random) });
     if (phase === "ready") {
       phase = "play";
@@ -522,7 +554,7 @@ export function initPinball(el: HTMLElement) {
     acc += Math.min(0.05, (t - last) / 1000);
     last = t;
     let n = 0;
-    while (acc >= STEP && n++ < 8) {
+    while (acc >= STEP && n++ < 16) {
       tick();
       acc -= STEP;
     }
@@ -544,25 +576,62 @@ export function initPinball(el: HTMLElement) {
     simTime += STEP;
     if (demo) think();
     if (pressed.plunger) plungeHeld += STEP;
-    if (game.tilted && simTime - tiltedAt > TILT_TIMEOUT) onDrain();
-    for (const [i, f] of flippers.entries()) {
-      const up = (i === 0 ? pressed.left : pressed.right) && !game.tilted && phase !== "over";
-      f.joint.setMotorSpeed(f.dir * (up ? -22 : 12));
+    if (game.tilted && simTime - tiltedAt > TILT_TIMEOUT) {
+      while (balls.length > 1) removeBall(balls[1]);
+      onDrain(balls[0]);
     }
-    world.step(STEP, 8, 3);
+    if (launches.length && launches[0] <= simTime && phase === "play") {
+      launches.shift();
+      addBall({ x: PLUNGER.x, y: H - 2.5 }).setLinearVelocity({ x: 0, y: -30 });
+      sound("launch");
+    }
+    // A and D work the main flippers and the staging table's together
+    for (const set of [flippers, minis])
+      for (const [i, f] of set.entries()) {
+        const up = (i === 0 ? pressed.left : pressed.right) && !game.tilted && phase !== "over";
+        f.joint.setMotorSpeed(f.dir * (up ? -22 : 12));
+      }
+    world.step(STEP, 10, 6);
     for (const fn of after.splice(0)) fn();
-    const p = ball.getPosition();
-    const v = ball.getLinearVelocity();
-    if (v.length() > 42) ball.setLinearVelocity({ x: (v.x * 42) / v.length(), y: (v.y * 42) / v.length() });
-    if (p.y > H + 1 || p.x < 0 || p.x > W || p.y < 0) {
-      if (phase === "play") onDrain();
-      else resetBall();
-    }
-    // a ball resting somewhere on the field gets a small shake, so a game never sticks
-    still = phase === "play" && v.length() < 0.05 && !inLane() && p.y < 14.5 ? still + STEP : 0;
-    if (still > 3) {
-      ball.setLinearVelocity({ x: Math.random() * 4 - 2, y: -3 });
-      still = 0;
+    for (const ball of [...balls]) {
+      const st = state.get(ball)!;
+      if (st.held) {
+        if (st.held > simTime) continue;
+        ball.setActive(true);
+        holeFree[st.hole] = simTime + 0.6;
+        st.held = 0;
+        if (st.hole === 2) {
+          // out on top of the staging table
+          holeFree[2] = simTime + 2;
+          setMode(ball, "stage");
+          ball.setTransform(STAGE_ENTRY, 0);
+          ball.setLinearVelocity({ x: -2.5, y: 0.5 });
+          continue;
+        }
+        const out = CACHES[st.hole].out;
+        const l = Math.hypot(out.x, out.y);
+        ball.setActive(true);
+        ball.setLinearVelocity({ x: (out.x / l) * 15, y: (out.y / l) * 15 });
+        holeFree[st.hole] = simTime + 0.6;
+        st.held = 0;
+        continue;
+      }
+      const p = ball.getPosition();
+      const v = ball.getLinearVelocity();
+      if (v.length() > 36) ball.setLinearVelocity({ x: (v.x * 36) / v.length(), y: (v.y * 36) / v.length() });
+      if (p.y > H + 1 || p.x < 0 || p.x > W || p.y < 0) {
+        if (phase === "play") onDrain(ball);
+        else resetBall();
+        continue;
+      }
+      // a ball resting somewhere on the field gets a small shake, so a game never sticks
+      // (a ball held up on a flipper is cradled on purpose, so not while a flipper key is down)
+      const cradled = p.y > 14.5 && (pressed.left || pressed.right);
+      st.still = phase === "play" && v.length() < 0.05 && !inLane(ball) && !cradled ? st.still + STEP : 0;
+      if (st.still > 3) {
+        ball.setLinearVelocity({ x: Math.random() * 4 - 2, y: -3 });
+        st.still = 0;
+      }
     }
     spin += spinSpeed * STEP;
     spinSpeed = Math.max(0, spinSpeed - 10 * STEP);
@@ -570,15 +639,20 @@ export function initPinball(el: HTMLElement) {
 
   /** Demo: flip when the ball comes down onto a flipper, pull the plunger when the ball waits on it. */
   function think() {
-    const p = ball.getPosition();
-    const v = ball.getLinearVelocity();
     for (const [i, { pivot, dir }] of FLIPPERS.entries()) {
-      const near = Math.hypot(p.x - (pivot.x + dir * 0.9), p.y - (pivot.y + 0.3)) < 0.95 && v.y > -1;
+      const mini = STAGE_FLIPPERS[i];
+      const near = balls.some((b) => {
+        const p = b.getPosition();
+        const down = b.getLinearVelocity().y > -1;
+        if (state.get(b)!.mode === "stage")
+          return down && Math.hypot(p.x - (mini.pivot.x + mini.dir * 0.55), p.y - (mini.pivot.y + 0.2)) < 0.6;
+        return down && Math.hypot(p.x - (pivot.x + dir * 0.9), p.y - (pivot.y + 0.3)) < 0.95;
+      });
       if (near && demoHold[i] <= 0) demoHold[i] = 0.25;
       demoHold[i] -= STEP;
       press(i === 0 ? "left" : "right", demoHold[i] > 0);
     }
-    if (inLane() && !pressed.plunger) {
+    if (balls.some(inLane) && !pressed.plunger) {
       demoPlunge = 0.6 + Math.random() * 0.5;
       press("plunger", true);
     } else if (pressed.plunger && plungeHeld >= demoPlunge) press("plunger", false);
@@ -594,349 +668,74 @@ export function initPinball(el: HTMLElement) {
     }
   }
 
-  // ---------- drawing: a cabinet seen from the player's end (the canvas is tilted in 3D by CSS) ----------
-  const COLORS: Record<Bank, string> = { BUILD: "#3d8bfd", TEST: "#f0b429", DEPLOY: "#c77dff" };
-  let S = 40;
-  // static parts (cabinet, playfield art, rails, labels) are drawn once per size into their own canvas
-  const layer = document.createElement("canvas");
-  const g0 = layer.getContext("2d")!;
-  new ResizeObserver(() => {
-    // client size, not the bounding box: the 3D tilt makes that smaller
-    if (!canvas.clientWidth) return;
-    canvas.width = layer.width = Math.round(canvas.clientWidth * devicePixelRatio);
-    canvas.height = layer.height = Math.round(canvas.clientHeight * devicePixelRatio);
-    S = canvas.width / W;
-    drawStill();
-    paint();
-  }).observe(canvas);
-
+  // ---------- drawing: the table in 3D (pinball-3d.ts, loaded with this module) ----------
   const lit = (key: unknown, ms = 150) => simTime - (flash.get(key) ?? -9) < ms / 1000;
   const blink = (hz = 3) => Math.sin(simTime * hz * 2 * Math.PI) > 0;
-  function text(s: string, x: number, y: number, size: number, color: string, angle = 0, c = g2) {
-    c.save();
-    c.translate(x * S, y * S);
-    c.rotate(angle);
-    c.fillStyle = color;
-    c.font = `bold ${size * S}px Tahoma, Verdana, sans-serif`;
-    c.textAlign = "center";
-    c.textBaseline = "middle";
-    c.fillText(s, 0, 0);
-    c.restore();
+  let view: View | null = null;
+  try {
+    view = createView(canvas);
+    new ResizeObserver(() => {
+      view?.resize();
+      paint();
+    }).observe(canvas);
+  } catch {
+    say("This browser can't draw the 3D table (WebGL is off).");
   }
-  function path(ps: P[], close = false, c = g2) {
-    c.beginPath();
-    for (const [i, p] of ps.entries()) c[i ? "lineTo" : "moveTo"](p.x * S, p.y * S);
-    if (close) c.closePath();
-  }
-  /** A chrome rail: shadow, dark edge, bright body, a thin highlight. */
-  function rail(ps: P[], w: number, c = g2) {
-    c.lineCap = "round";
-    c.lineJoin = "round";
-    c.save();
-    c.translate(0.06 * S, 0.09 * S);
-    path(ps, false, c);
-    c.strokeStyle = "rgb(0 0 0 / 0.45)";
-    c.lineWidth = w * S;
-    c.stroke();
-    c.restore();
-    for (const [color, k] of [
-      ["#4a515c", 1],
-      ["#c9d0da", 0.62],
-      ["#ffffff", 0.18],
-    ] as const) {
-      path(ps, false, c);
-      c.strokeStyle = color;
-      c.lineWidth = w * k * S;
-      c.stroke();
-    }
-  }
-  /** A lamp insert in the playfield: dim when off, glowing when on. */
-  function lamp(ps: P[], on: boolean, color: string) {
-    path(ps, true);
-    g2.save();
-    g2.globalAlpha = on ? 1 : 0.28;
-    if (on) {
-      g2.shadowColor = color;
-      g2.shadowBlur = 0.5 * S;
-    }
-    g2.fillStyle = color;
-    g2.fill();
-    g2.restore();
-    g2.strokeStyle = "rgb(0 0 0 / 0.5)";
-    g2.lineWidth = 0.03 * S;
-    g2.stroke();
-  }
-  const arrow = (x: number, y: number, a: number, s = 0.45): P[] =>
-    [
-      [0, -1],
-      [0.8, 0.6],
-      [0, 0.15],
-      [-0.8, 0.6],
-    ].map(([u, v]) => ({
-      x: x + s * (u * Math.cos(a) - v * Math.sin(a)),
-      y: y + s * (u * Math.sin(a) + v * Math.cos(a)),
-    }));
-  const disc = (x: number, y: number, r: number): P[] => arc(x, y, r, 0, 2 * Math.PI, 20);
-  const shadow = (x: number, y: number, rx: number, ry: number, a = 0.45) => {
-    g2.beginPath();
-    g2.ellipse((x + 0.08) * S, (y + 0.13) * S, rx * S, ry * S, 0, 0, 7);
-    g2.fillStyle = `rgb(0 0 0 / ${a})`;
-    g2.fill();
-  };
+  const overlay = $("[data-overlay]");
 
-  function drawStill() {
-    const c = g0;
-    // the cabinet: dark brushed metal with a lit edge
-    const cab = c.createLinearGradient(0, 0, W * S, 0);
-    for (const [o, col] of [
-      [0, "#14171d"],
-      [0.015, "#6b7280"],
-      [0.03, "#262b34"],
-      [0.97, "#262b34"],
-      [0.985, "#6b7280"],
-      [1, "#14171d"],
-    ] as const)
-      cab.addColorStop(o, col);
-    c.fillStyle = cab;
-    c.fillRect(0, 0, W * S, H * S);
-    // the playfield: a deep blue night, lighter in the middle
-    c.save();
-    path(WALLS[0], true, c);
-    c.clip();
-    const bg = c.createRadialGradient(4.6 * S, 9.5 * S, 0, 4.6 * S, 9.5 * S, 11 * S);
-    bg.addColorStop(0, "#2459a8");
-    bg.addColorStop(0.45, "#123266");
-    bg.addColorStop(1, "#060f24");
-    c.fillStyle = bg;
-    c.fillRect(0, 0, W * S, H * S);
-    // printed art: circuit traces, as on a server board
-    c.strokeStyle = "rgb(120 190 255 / 0.16)";
-    c.fillStyle = "rgb(120 190 255 / 0.22)";
-    c.lineWidth = 0.04 * S;
-    for (const t of TRACES) {
-      path(t, false, c);
-      c.stroke();
-      for (const e of [t[0], t[t.length - 1]]) {
-        c.beginPath();
-        c.arc(e.x * S, e.y * S, 0.08 * S, 0, 7);
-        c.fill();
+  /** Height of a ramp's floor under a point: that of the nearest point of any ramp's centre line. */
+  function rampHeight(p: P) {
+    let best = Number.POSITIVE_INFINITY;
+    let h = 0;
+    for (const rp of RAMPS)
+      for (const [i, q] of rp.path.entries()) {
+        const d = Math.hypot(q.x - p.x, q.y - p.y);
+        if (d < best) [best, h] = [d, rp.heights[i]];
       }
-    }
-    // the plunger lane and the green pipeline ramp: clear plastic over the field
-    c.fillStyle = "rgb(190 225 255 / 0.1)";
-    c.fillRect(5.4 * S, 2.3 * S, 1.2 * S, 1.9 * S);
-    c.fillRect(9 * S, 6 * S, 0.7 * S, (H - 6) * S);
-    text("GREEN PIPELINE", 6, 1.75, 0.3, "#b7ffcb", 0, c);
-    text("RENOVATE BOT", 0.82, 6, 0.24, "#cfe6ff", -Math.PI / 2, c);
-    text("HELM UPGRADE", 8.47, 6.9, 0.22, "#cfe6ff", -Math.PI / 2, c);
-    text("git push", 9.35, 11.5, 0.26, "#cfe6ff", -Math.PI / 2, c);
-    text("MERGE CONFLICT", 0.75, 14.2, 0.2, "#ff9c9c", -Math.PI / 2, c);
-    text("MERGE CONFLICT", 8.55, 14.2, 0.2, "#ff9c9c", Math.PI / 2, c);
-    for (const [b, x, y, a] of [
-      ["BUILD", 1.0, 9.1, -Math.PI / 2],
-      ["TEST", 3.9, 7.85, 0],
-      ["DEPLOY", 8.35, 9.6, Math.PI / 2],
-    ] as const)
-      text(b, x, y, 0.3, COLORS[b], a, c);
-    // the rank plaque
-    c.fillStyle = "rgb(0 0 0 / 0.35)";
-    c.beginPath();
-    c.roundRect(3.25 * S, 10.25 * S, 2.8 * S, 0.95 * S, 0.2 * S);
-    c.fill();
-    text("RANK", 4.65, 10.5, 0.2, "#9fb8d8", 0, c);
-    c.restore();
-    for (const w of WALLS) rail(w, 0.16, c);
-    rail(GATE, 0.07, c);
+    return h;
+  }
+
+  function lampOn(id: string): boolean {
+    const p = player(game);
+    const n = Number(id.at(-1));
+    if (id.startsWith("mult")) return p.mult > n;
+    if (id === "orbit") return p.mult === MULTIPLIERS.length - 1 ? blink() : lit("orbit", 800);
+    if (id === "spinner") return lit("spinner", 800);
+    if (id.startsWith("green")) return (rampLit(p) && (blink(4) || n === 1)) || lit("ramp", 600);
+    if (id.startsWith("lift")) return (TICKETS[p.ticket].on === "staging" && blink(2)) || lit("lift", 600);
+    if (id.startsWith("lane")) return p.lanes[n] || lit(id, 300);
+    if (id.startsWith("cache")) return p.multiballLit && blink(2);
+    if (id.startsWith("stage")) return p.lit[BANKS[n]];
+    if (id.startsWith("ticket")) return Number(id.slice(6)) < Math.round((p.progress / TICKETS[p.ticket].goal) * 10);
+    if (id === "again")
+      return p.shootAgain || (phase === "play" && !saveUsed && simTime - launchedAt < BALL_SAVE && blink(2));
+    return false;
   }
 
   function paint() {
     const p = player(game);
-    g2.drawImage(layer, 0, 0);
-    // lamps: multiplier, lane arrows, the three stages, the ramp
-    for (const [i, m] of MULTIPLIERS.slice(1).entries()) {
-      lamp(disc(2.1, 6.55 + i * 0.5, 0.2), p.mult > i, "#7dff9b");
-      text(`×${m}`, 2.1, 6.55 + i * 0.5, 0.17, p.mult > i ? "#05320f" : "#cfe6ff");
-    }
-    const maxed = p.mult === MULTIPLIERS.length - 1;
-    lamp(arrow(1.75, 8.1, -0.35), maxed ? blink() : lit("orbit", 800), maxed ? "#ffd84d" : "#7dff9b");
-    lamp(arrow(7.55, 8.7, 0.35), lit("spinner", 800), "#7fd8ff");
-    const on = rampLit(p);
-    for (const k of [0, 1, 2]) lamp(arrow(6, 3.75 - k * 0.55, 0, 0.32), on && (blink(4) || k === 1), "#2ee86f");
-    lamp(arrow(6, 5, 0, 0.42), on || lit("ramp", 600), "#2ee86f");
-    for (const [i, b] of BANKS.entries()) {
-      const x = 3.75 + i * 0.9;
-      lamp(
-        [
-          { x: x - 0.4, y: 11.75 },
-          { x: x + 0.15, y: 11.75 },
-          { x: x + 0.45, y: 12.15 },
-          { x: x + 0.15, y: 12.55 },
-          { x: x - 0.4, y: 12.55 },
-          { x: x - 0.1, y: 12.15 },
-        ],
-        p.lit[b],
-        COLORS[b],
-      );
-    }
-    text(RANKS[p.rank].toUpperCase(), 4.65, 10.88, 0.3, "#ffffff");
-
-    // the spinner plate
-    const sy = 5.6;
-    g2.strokeStyle = "#e9edf3";
-    g2.lineWidth = 0.08 * S;
-    path([
-      { x: 8.05, y: sy + 0.18 * Math.sin(spin) },
-      { x: 8.9, y: sy - 0.18 * Math.sin(spin) },
-    ]);
-    g2.stroke();
-    // plunger: a spring that squeezes as the strength builds
-    const k = plungerStrength(plungeHeld);
-    const top = H - 0.85 + k * 0.55;
-    g2.fillStyle = "#b9c0cc";
-    g2.fillRect((PLUNGER.x - 0.06) * S, top * S, 0.12 * S, (H - top) * S);
-    g2.strokeStyle = "#e9edf3";
-    g2.lineWidth = 0.04 * S;
-    path(
-      Array.from({ length: 9 }, (_, i) => ({
-        x: PLUNGER.x + (i % 2 ? 0.22 : -0.22),
-        y: top + 0.2 + (i * (H - top - 0.2)) / 8,
-      })),
-    );
-    g2.stroke();
-    g2.fillStyle = "#c0392b";
-    g2.beginPath();
-    g2.roundRect((PLUNGER.x - 0.3) * S, top * S, 0.6 * S, 0.18 * S, 0.06 * S);
-    g2.fill();
-
-    // slingshots: white plastic, a red rubber on the kicking edge
-    for (const s of SLINGS) {
-      path(s, true);
-      const pl = g2.createLinearGradient(s[0].x * S, s[0].y * S, s[2].x * S, s[2].y * S);
-      pl.addColorStop(0, "#f7f9fc");
-      pl.addColorStop(1, "#9aa6b8");
-      g2.fillStyle = pl;
-      g2.fill();
-      path([s[0], s[2]]);
-      g2.strokeStyle = lit(s) ? "#ffe066" : "#d63a2a";
-      g2.lineWidth = 0.1 * S;
-      g2.stroke();
-    }
-    // flaky-test bumpers: a shadow, a metal skirt and a lit cap
-    for (const b of BUMPERS) {
-      const on = lit(b);
-      shadow(b.x, b.y, BUMPER_R * 1.05, BUMPER_R * 0.95);
-      g2.beginPath();
-      g2.arc(b.x * S, b.y * S, BUMPER_R * S, 0, 7);
-      g2.fillStyle = "#8f1d1d";
-      g2.fill();
-      g2.lineWidth = 0.08 * S;
-      g2.strokeStyle = "#d9dee6";
-      g2.stroke();
-      const cap = g2.createRadialGradient((b.x - 0.12) * S, (b.y - 0.15) * S, 0, b.x * S, b.y * S, BUMPER_R * 0.8 * S);
-      cap.addColorStop(0, on ? "#fffbe0" : "#ff8c8c");
-      cap.addColorStop(1, on ? "#ffc400" : "#c0201a");
-      g2.beginPath();
-      g2.arc((b.x - 0.03) * S, (b.y - 0.05) * S, BUMPER_R * 0.78 * S, 0, 7);
-      g2.fillStyle = cap;
-      if (on) {
-        g2.shadowColor = "#ffd84d";
-        g2.shadowBlur = 0.6 * S;
-      }
-      g2.fill();
-      g2.shadowBlur = 0;
-      text("FLAKY", b.x - 0.03, b.y - 0.05, 0.16, on ? "#6b1a00" : "#fff");
-    }
-    // drop targets: a raised block, or an empty slot when down
-    for (const [i, t] of TARGETS.entries()) {
-      const x = (t.x - t.hw) * S;
-      const y = (t.y - t.hh) * S;
-      if (!targetBodies[i].isActive()) {
-        g2.fillStyle = "rgb(0 0 0 / 0.5)";
-        g2.fillRect(x, y, 2 * t.hw * S, 2 * t.hh * S);
-        continue;
-      }
-      g2.fillStyle = "rgb(0 0 0 / 0.5)";
-      g2.fillRect(x + 0.06 * S, y + 0.09 * S, 2 * t.hw * S, 2 * t.hh * S);
-      g2.fillStyle = COLORS[t.bank];
-      g2.fillRect(x, y, 2 * t.hw * S, 2 * t.hh * S);
-      g2.fillStyle = "rgb(255 255 255 / 0.45)";
-      g2.fillRect(x, y, 2 * t.hw * S, 0.035 * S);
-    }
-    // flippers: white bats with red rubber and a bolt
-    for (const f of flippers) {
-      const pos = f.body.getPosition();
-      g2.save();
-      g2.translate(pos.x * S, pos.y * S);
-      g2.rotate(f.body.getAngle());
-      const bat: P[] = [
-        ...arc(0, 0, 0.2, Math.PI / 2, (3 * Math.PI) / 2, 10).map((q) => ({ x: q.x * f.dir, y: q.y })),
-        ...arc(f.dir * FLIP_LEN, 0, 0.09, -Math.PI / 2, Math.PI / 2, 8).map((q) => ({
-          x: f.dir * FLIP_LEN + (q.x - f.dir * FLIP_LEN) * f.dir,
-          y: q.y,
-        })),
-      ];
-      g2.save();
-      g2.translate(0.07 * S, 0.11 * S);
-      path(bat, true);
-      g2.fillStyle = "rgb(0 0 0 / 0.45)";
-      g2.fill();
-      g2.restore();
-      path(bat, true);
-      const body = g2.createLinearGradient(0, -0.2 * S, 0, 0.2 * S);
-      body.addColorStop(0, game.tilted ? "#8a93a6" : "#ffffff");
-      body.addColorStop(1, game.tilted ? "#4d5566" : "#b8c2d4");
-      g2.fillStyle = body;
-      g2.fill();
-      g2.strokeStyle = game.tilted ? "#5b2a2a" : "#d63a2a";
-      g2.lineWidth = 0.07 * S;
-      g2.stroke();
-      g2.beginPath();
-      g2.arc(0, 0, 0.08 * S, 0, 7);
-      g2.fillStyle = "#7d8696";
-      g2.fill();
-      g2.restore();
-    }
-    // the ball: chrome, with its shadow on the field
-    const b = ball.getPosition();
-    shadow(b.x, b.y, R * 1.05, R * 0.85, 0.5);
-    const shine = g2.createRadialGradient((b.x - 0.08) * S, (b.y - 0.09) * S, 0, b.x * S, b.y * S, R * S);
-    shine.addColorStop(0, "#ffffff");
-    shine.addColorStop(0.35, "#dfe4ec");
-    shine.addColorStop(0.8, "#7a8494");
-    shine.addColorStop(1, "#3e4552");
-    g2.beginPath();
-    g2.arc(b.x * S, b.y * S, R * S, 0, 7);
-    g2.fillStyle = shine;
-    g2.fill();
-    // the apron: the ball drains under it
-    path(
-      [
-        { x: 0.3, y: 16.95 },
-        { x: 3.4, y: 17.45 },
-        { x: 5.9, y: 17.45 },
-        { x: 9, y: 16.95 },
-        { x: 9, y: H },
-        { x: 0.3, y: H },
-      ],
-      true,
-    );
-    const ap = g2.createLinearGradient(0, 16.9 * S, 0, H * S);
-    ap.addColorStop(0, "#3a4250");
-    ap.addColorStop(1, "#151a22");
-    g2.fillStyle = ap;
-    g2.fill();
-    rail(
-      [
-        { x: 0.3, y: 16.95 },
-        { x: 3.4, y: 17.45 },
-        { x: 5.9, y: 17.45 },
-        { x: 9, y: 16.95 },
-      ],
-      0.08,
-    );
-    text("PIPELINE PINBALL", 4.65, 17.75, 0.26, "#9fb8d8");
-    if (game.tilted) text("TILT", 4.65, 9, 1.2, "rgb(255 80 80 / 0.9)");
-    if (userPaused) text("PAUSED", 4.65, 9, 0.9, "rgb(255 255 255 / 0.9)");
+    view?.draw({
+      flippers: [...flippers, ...minis].map((f) => ({ ...f.body.getPosition(), angle: f.body.getAngle() })),
+      pods: PODS.map((q) => lit(q)),
+      smoke: p.smoke.map((on, i) => on || lit(`smoke${i}`, 300)),
+      balls: balls.map((b) => {
+        const st = state.get(b)!;
+        const q = b.getPosition();
+        const h = st.mode === "stage" ? STAGE_H : st.mode === "ramp" ? rampHeight(q) : 0;
+        return { x: q.x, y: q.y, h: st.held ? -R * 0.8 : h };
+      }),
+      bumpers: BUMPERS.map((b) => lit(b)),
+      slings: SLINGS.map((s) => lit(s)),
+      kickers: KICKERS.map((k) => lit(k)),
+      targets: targetBodies.map((t) => t.isActive()),
+      lamps: LAMPS.map((l) => lampOn(l.id)),
+      spin,
+      plunger: plungerStrength(plungeHeld),
+      tilted: game.tilted,
+      rank: RANKS[p.rank],
+    });
+    const over = game.tilted ? "TILT" : userPaused ? "PAUSED" : "";
+    if (overlay.textContent !== over) overlay.textContent = over;
     panel();
   }
 
@@ -967,6 +766,8 @@ export function initPinball(el: HTMLElement) {
     $("[data-rank]").textContent = RANKS[p.rank];
     for (const [i, li] of ladder.entries()) li.classList.toggle("on", i === p.rank);
     $("[data-mult]").textContent = `×${MULTIPLIERS[p.mult]}`;
+    const t = TICKETS[p.ticket];
+    $("[data-ticket]").textContent = `${t.name} ${p.progress}/${t.goal}`;
     el.dataset.phase = demo ? "demo" : phase;
   }
 

@@ -877,12 +877,12 @@ test("Pipeline Pinball: hold Space to launch, the ball count shows, Player Contr
   await win.getByRole("menuitem", { name: "Options" }).click();
   await page.getByRole("menuitem", { name: /Player Controls/ }).click();
   const dialog = page.locator("[data-controls]");
-  await expect(dialog.locator('[data-bind="left"]')).toHaveText("Z");
-  await dialog.locator('[data-bind="left"]').click();
-  await page.keyboard.press("a");
   await expect(dialog.locator('[data-bind="left"]')).toHaveText("A");
+  await dialog.locator('[data-bind="left"]').click();
+  await page.keyboard.press("q");
+  await expect(dialog.locator('[data-bind="left"]')).toHaveText("Q");
   await dialog.getByRole("button", { name: "Default" }).click();
-  await expect(dialog.locator('[data-bind="left"]')).toHaveText("Z");
+  await expect(dialog.locator('[data-bind="left"]')).toHaveText("A");
   await dialog.getByRole("button", { name: "Cancel" }).click();
   await expect(dialog).toBeHidden();
 });
