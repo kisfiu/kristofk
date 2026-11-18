@@ -924,6 +924,44 @@ test("Game Zone: Internet Checkers, pick a piece and step forward, Offer Draw to
   await expect(win.getByRole("button", { name: "Offer Draw" })).toHaveAttribute("aria-pressed", "true");
 });
 
+test("Game Zone: Internet Backgammon, roll for the start, then move a stone onto a green diamond", async ({
+  page,
+  isMobile,
+}) => {
+  test.setTimeout(60_000);
+  await skipBoot(page);
+  await openIcon(page, "Internet", isMobile);
+  const win = page.getByRole("dialog", { name: /Internet/ });
+  await win.getByRole("button", { name: "Skip" }).click();
+  await win.getByRole("button", { name: /Surf with me/ }).click();
+  await win.getByRole("button", { name: /KK Game Zone/ }).click();
+  await win.getByRole("button", { name: /Internet Backgammon/ }).click();
+  await page.getByRole("button", { name: "Play" }).click();
+  await expect(win.locator("[data-ie-address]")).toHaveValue("kk://zone/backgammon");
+  await expect(win.locator(".bg-board .bg-pt")).toHaveCount(24, { timeout: 8000 });
+  await expect(win.locator(".bg-pt .bg-st")).toHaveCount(30);
+  const score = win.locator("[data-bg-score]");
+  await expect(score).toContainText("Pips: You 167");
+  const status = win.locator("[data-ie-status]");
+  // the opening roll: one die each, a tie rolls again
+  do await win.getByRole("button", { name: "Roll" }).click();
+  while (/Tie/.test((await status.textContent()) ?? ""));
+  await expect(status).toHaveText(/Your move|Your turn/, { timeout: 20_000 });
+  if (/Your turn/.test((await status.textContent()) ?? "")) await win.getByRole("button", { name: "Roll" }).click();
+  await expect(status).toHaveText(/Your move/);
+  const pips = await score.textContent();
+  // pick up the first stone that can move: green diamonds appear, a hollow one on its point
+  for (let p = 24; p > 0; p--) {
+    await win.locator(`[data-bg="${p}"]`).click();
+    if (await win.locator(".bg-dia.from").count()) break;
+  }
+  const target = win.locator(".bg-board button", { has: page.locator(".bg-dia:not(.from)") }).first();
+  await expect(target).toBeVisible();
+  await target.click();
+  await expect(score).not.toHaveText(pips!);
+  await expect(win.locator(".bg-die.used")).not.toHaveCount(0);
+});
+
 test("pipeline game starts its timer on the first click", async ({ page, isMobile }) => {
   await skipBoot(page);
   await openIcon(page, "Games", isMobile);
