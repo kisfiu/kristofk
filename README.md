@@ -36,4 +36,4 @@ npm test           # lint, type check, unit tests, build, Playwright
 ## Deploy
 Push to `main`; `.github/workflows/deploy.yml` builds, tests, runs Lighthouse and publishes to GitHub Pages (Settings → Pages → Source: GitHub Actions). The base path (`/kristofk/`) comes from the repository name.
 
-Window styles: [XP.css](https://github.com/botoxparty/XP.css) (MIT). Icons and Racka are drawn for this site; the Hortobágy wallpapers are AI-generated for it. Live weather: [Open-Meteo](https://open-meteo.com/). Pinball physics: [planck.js](https://github.com/piqnt/planck.js) (MIT, see `THIRD_PARTY_NOTICES.md`).
+Window styles: [XP.css](https://github.com/botoxparty/XP.css) (MIT). Icons and Racka are drawn for this site; the Hortobágy wallpapers are AI-generated for it. Live weather: [Open-Meteo](https://open-meteo.com/). Pinball physics: [planck.js](https://github.com/piqnt/planck.js), 3D: [three.js](https://threejs.org/) (both MIT, see `THIRD_PARTY_NOTICES.md`).

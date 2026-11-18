@@ -30,9 +30,35 @@ export const POINTS = {
   orbit: 2_500,
   spin: 100,
   ramp: 5_000,
+  stage: 5_000,
+  pod: 1_000,
+  smoke: 2_500,
+  staging: 25_000,
   outlane: 2_000,
   jackpot: 100_000,
+  rollover: 1_000,
+  review: 10_000,
+  cache: 5_000,
+  ticket: 25_000,
 } as const;
+
+/** Code review rollover lanes at the top; all lit = approved, which lights Parallel jobs (multiball). */
+export const LANES = 3;
+/** Balls in play during Parallel jobs. */
+export const MULTIBALL = 3;
+/** Tickets are our missions: one is open at a time, in this order. Every third one closed is an extra ball. */
+export const TICKETS = [
+  { name: "Fix flaky tests", goal: 10, on: "bumper" },
+  { name: "Speed up the build", goal: 1, on: "BUILD" },
+  { name: "Bump dependencies", goal: 3, on: "orbit" },
+  { name: "Clear the cache", goal: 2, on: "cache" },
+  { name: "Fix the test suite", goal: 1, on: "TEST" },
+  { name: "Roll out the chart", goal: 2, on: "spin" },
+  { name: "Review the PR", goal: 1, on: "review" },
+  { name: "Test on staging", goal: 1, on: "staging" },
+  { name: "Ship it", goal: 1, on: "DEPLOY" },
+] as const;
+type TicketEvent = (typeof TICKETS)[number]["on"];
 
 /** Plunger: strength builds one step every 0.025 s while the key is held, up to a maximum. */
 export const PLUNGE_STEP = 0.025;
@@ -60,6 +86,16 @@ export interface Player {
   /** A replay held: the next drain is played again. One at a time. */
   shootAgain: boolean;
   nextReplay: number;
+  /** Smoke tests passed on the staging table. Stay through a drain. */
+  smoke: boolean[];
+  /** Code review lanes lit. Stay through a drain. */
+  lanes: boolean[];
+  /** The cache holes start Parallel jobs. */
+  multiballLit: boolean;
+  /** The open ticket (index into TICKETS), its progress and how many are closed. */
+  ticket: number;
+  progress: number;
+  closed: number;
 }
 
 export interface Game {
@@ -71,6 +107,8 @@ export interface Game {
   tilt: number;
   lastNudge: number;
   tilted: boolean;
+  /** Set by a hit that starts Parallel jobs; the table launches the extra balls and clears it. */
+  startMultiball: boolean;
 }
 
 const fresh = (): Player => ({
@@ -83,6 +121,12 @@ const fresh = (): Player => ({
   extraBalls: 0,
   shootAgain: false,
   nextReplay: REPLAY_EVERY,
+  lanes: [false, false, false],
+  smoke: [false, false, false],
+  multiballLit: false,
+  ticket: 0,
+  progress: 0,
+  closed: 0,
 });
 
 export function newGame(players: number): Game {
@@ -94,6 +138,7 @@ export function newGame(players: number): Game {
     tilt: 0,
     lastNudge: 0,
     tilted: false,
+    startMultiball: false,
   };
 }
 
@@ -114,13 +159,40 @@ function add(g: Game, points: number, msgs: string[]) {
   }
 }
 
+/** The open ticket moves on when its kind of shot is made; closing it pays and opens the next one. */
+function work(g: Game, on: TicketEvent, msgs: string[]) {
+  const p = player(g);
+  const t = TICKETS[p.ticket];
+  if (t.on !== on || ++p.progress < t.goal) return;
+  add(g, POINTS.ticket * (p.rank + 1), msgs);
+  msgs.push(`Ticket closed: ${t.name}`);
+  p.closed++;
+  if (p.closed % 3 === 0) {
+    p.extraBalls++;
+    msgs.push("Extra Ball");
+  }
+  p.ticket = (p.ticket + 1) % TICKETS.length;
+  p.progress = 0;
+  msgs.push(`New ticket: ${TICKETS[p.ticket].name}`);
+}
+
+/** Lane change: the flipper keys move the lit review lanes one step left (-1) or right (1). */
+export function shiftLanes(p: Player, dir: -1 | 1) {
+  p.lanes = dir < 0 ? [...p.lanes.slice(1), p.lanes[0]] : [p.lanes[LANES - 1], ...p.lanes.slice(0, -1)];
+}
+
 export type Hit =
   | { kind: "bumper" }
   | { kind: "target"; bank: Bank; i: number }
   | { kind: "orbit" }
   | { kind: "spin"; n: number }
   | { kind: "ramp" }
-  | { kind: "outlane" };
+  | { kind: "outlane" }
+  | { kind: "rollover"; i: number }
+  | { kind: "cache" }
+  | { kind: "stage" }
+  | { kind: "pod" }
+  | { kind: "smoke"; i: number };
 
 /** Score what the ball hit; returns the messages to show. A tilted table scores nothing. */
 export function hit(g: Game, h: Hit): string[] {
@@ -132,6 +204,7 @@ export function hit(g: Game, h: Hit): string[] {
     case "bumper":
       add(g, POINTS.bumper * m, msgs);
       p.bonus += POINTS.bumper / 5;
+      work(g, "bumper", msgs);
       break;
     case "target": {
       const bank = p.down[h.bank];
@@ -144,6 +217,7 @@ export function hit(g: Game, h: Hit): string[] {
         add(g, POINTS.bank * m, msgs);
         p.bonus += POINTS.bank;
         msgs.push(`${h.bank} passed`);
+        work(g, h.bank, msgs);
         if (!p.lit[h.bank]) {
           p.lit[h.bank] = true;
           if (rampLit(p)) msgs.push("Green pipeline lit");
@@ -160,10 +234,12 @@ export function hit(g: Game, h: Hit): string[] {
         msgs.push("Extra Ball");
       }
       add(g, POINTS.orbit * m, msgs);
+      work(g, "orbit", msgs);
       break;
     case "spin":
       add(g, POINTS.spin * h.n * m, msgs);
       msgs.push("Helm upgrade");
+      work(g, "spin", msgs);
       break;
     case "ramp":
       if (rampLit(p)) {
@@ -180,6 +256,50 @@ export function hit(g: Game, h: Hit): string[] {
     case "outlane":
       add(g, POINTS.outlane * m, msgs);
       msgs.push("Merge conflict");
+      break;
+    case "rollover":
+      if (p.lanes[h.i]) break;
+      p.lanes[h.i] = true;
+      add(g, POINTS.rollover * m, msgs);
+      if (p.lanes.every(Boolean)) {
+        p.lanes.fill(false);
+        add(g, POINTS.review * m, msgs);
+        msgs.push("Code review approved");
+        if (!p.multiballLit) msgs.push("Parallel jobs ready");
+        p.multiballLit = true;
+        work(g, "review", msgs);
+      }
+      break;
+    case "stage":
+      add(g, POINTS.stage * m, msgs);
+      msgs.push("Deployed to staging");
+      break;
+    case "pod":
+      add(g, POINTS.pod * m, msgs);
+      p.bonus += POINTS.pod / 5;
+      break;
+    case "smoke":
+      if (p.smoke[h.i]) break;
+      p.smoke[h.i] = true;
+      add(g, POINTS.smoke * m, msgs);
+      if (p.smoke.every(Boolean)) {
+        p.smoke.fill(false);
+        const pay = POINTS.staging * (p.rank + 1) * m;
+        add(g, pay, msgs);
+        p.bonus += POINTS.staging / 5;
+        msgs.push(`Staging is green! ${fmt(pay)}`);
+        work(g, "staging", msgs);
+      }
+      break;
+    case "cache":
+      add(g, POINTS.cache * m, msgs);
+      msgs.push("Cache hit");
+      work(g, "cache", msgs);
+      if (p.multiballLit) {
+        p.multiballLit = false;
+        g.startMultiball = true;
+        msgs.push("Parallel jobs!");
+      }
       break;
   }
   return msgs;
