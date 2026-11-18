@@ -20,7 +20,7 @@ import {
   wet,
 } from "./renovation-logic";
 import { CELL, type Ctl, makeGame } from "./renovation-play";
-import { beep, soundOn, toggleSound } from "./renovation-sound";
+import { beep, soundOn, toggleSound } from "./sound";
 
 const ft = (n: number) => `${n.toLocaleString("hu-HU")} Ft`;
 const clock = (s: number) => `${Math.floor(s / 60)}:${String(s % 60).padStart(2, "0")}`;

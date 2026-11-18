@@ -1453,6 +1453,272 @@
     justify-content: space-between;
   }
 
+  /* ---------- Game menu bar (XP application menus) ---------- */
+  .menubar {
+    display: flex;
+    justify-self: stretch;
+    margin: 0 0 6px;
+    padding: 1px 2px;
+    background: #ece9d8;
+    border-bottom: 1px solid #fff;
+    box-shadow: 0 1px #aca899;
+    & > button {
+      all: unset;
+      padding: 2px 7px;
+      cursor: default;
+      &:hover,
+      &[aria-expanded="true"] {
+        background: #316ac5;
+        color: #fff;
+      }
+      &:focus-visible {
+        outline: 1px dotted #000;
+        outline-offset: -2px;
+      }
+    }
+  }
+  .menu {
+    position: fixed;
+    inset: auto;
+    margin: 0;
+    padding: 2px;
+    min-width: 170px;
+    border: 1px solid #aca899;
+    background: #fff;
+    box-shadow: 2px 2px 3px rgb(0 0 0 / 0.35);
+    font: inherit;
+    & hr {
+      margin: 3px 1px;
+      border: 0;
+      border-top: 1px solid #aca899;
+    }
+    & button {
+      all: unset;
+      box-sizing: border-box;
+      display: grid;
+      grid-template-columns: 18px 1fr auto;
+      gap: 0 4px;
+      width: 100%;
+      padding: 3px 8px 3px 0;
+      cursor: default;
+      white-space: nowrap;
+      &::before {
+        content: "";
+        text-align: center;
+      }
+      &[aria-checked="true"]::before {
+        content: "✓";
+      }
+      &[role="menuitemradio"][aria-checked="true"]::before {
+        content: "●";
+        font-size: 8px;
+        line-height: 14px;
+      }
+      &:hover,
+      &:focus {
+        background: #316ac5;
+        color: #fff;
+        outline: none;
+      }
+      &:disabled {
+        color: #aca899;
+        background: none;
+      }
+      & kbd {
+        font: inherit;
+        padding-left: 18px;
+      }
+    }
+  }
+
+  /* ---------- Wall Sweeper (XP Minesweeper on plaster) ---------- */
+  .sweeper {
+    display: grid;
+    justify-items: start;
+  }
+  .sw-frame {
+    position: relative;
+    display: grid;
+    gap: 9px;
+    padding: 9px;
+    background: #d8ccb6;
+    border: 4px outset #f4ede0;
+  }
+  .sw-top {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 6px 8px;
+    border: 3px inset #f4ede0;
+  }
+  .sw-led {
+    width: 62px;
+    height: 38px;
+    padding: 2px;
+    box-sizing: border-box;
+    background: #000;
+    border: 1px inset #888;
+    & svg {
+      display: block;
+      width: 100%;
+      height: 100%;
+      fill: #2a0000;
+    }
+    & .on {
+      fill: #ff1a1a;
+    }
+  }
+  .sw-face {
+    all: unset;
+    width: 39px;
+    height: 39px;
+    display: grid;
+    place-items: center;
+    background: #e8dccb;
+    border: 3px outset #fffaf0;
+    box-sizing: border-box;
+    &:active {
+      border-style: inset;
+    }
+    &:focus-visible {
+      outline: 1px dotted #000;
+    }
+    & svg {
+      width: 33px;
+      height: 33px;
+    }
+    & g[class^="f-"] {
+      display: none;
+    }
+    &[data-face="smile"] .f-smile,
+    &[data-face="wow"] .f-wow,
+    &[data-face="cool"] .f-cool,
+    &[data-face="dead"] .f-dead {
+      display: inline;
+    }
+  }
+  .sw-board {
+    container-type: inline-size;
+    display: grid;
+    width: calc(var(--cols, 9) * 24px);
+    max-width: calc(100vw - 48px);
+    border: 4px inset #f4ede0;
+    touch-action: none;
+    user-select: none;
+    & [role="row"] {
+      display: grid;
+      grid-template-columns: repeat(var(--cols, 9), 1fr);
+    }
+    & [role="gridcell"] {
+      aspect-ratio: 1;
+      display: grid;
+      place-items: center;
+      box-sizing: border-box;
+      font:
+        bold min(19px, 75cqi / var(--cols, 9)) / 1 Verdana,
+        sans-serif;
+      background: #f4ede0 no-repeat center / 80%;
+      border: 0.5px solid #cbbfa9;
+      &:focus-visible {
+        outline: 1px dotted #000;
+        outline-offset: -3px;
+      }
+    }
+    /* a raised plaster tile, light from the top left */
+    & .h {
+      background-color: #e8dccb;
+      border: 3px solid;
+      border-color: #fffaf0 #a8977a #a8977a #fffaf0;
+    }
+    & .n1 {
+      color: #0000ff;
+    }
+    & .n2 {
+      color: #008000;
+    }
+    & .n3 {
+      color: #ff0000;
+    }
+    & .n4 {
+      color: #000080;
+    }
+    & .n5 {
+      color: #800000;
+    }
+    & .n6 {
+      color: #008080;
+    }
+    & .n7 {
+      color: #000;
+    }
+    & .n8 {
+      color: #808080;
+    }
+    /* red chalk mark */
+    & .flag {
+      background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 16 16'%3E%3Cpath d='M3 3l10 10M13 3L3 13' stroke='%23c41f12' stroke-width='2.4' stroke-linecap='round' opacity='.9'/%3E%3Ccircle cx='8' cy='8' r='6.2' fill='none' stroke='%23c41f12' stroke-width='1.2' opacity='.6'/%3E%3C/svg%3E");
+    }
+    & .q {
+      color: #6b5a44;
+    }
+    /* a hollow spot: a dark hole with cracks */
+    & .mine {
+      background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 16 16'%3E%3Cpath d='M11 6l4-3M5 11l-4 3M10 11l2 4' stroke='%235a4630' stroke-width='.9'/%3E%3Cpath d='M4 6l2-2.5 3 .8 2.6 1.6-.8 3 .9 2.2-3 1.2-2-1-2.4.8-1-3z' fill='%23281c10' stroke='%23a8977a' stroke-width='.8'/%3E%3C/svg%3E");
+    }
+    & .boom {
+      background-color: #ff1a1a;
+    }
+    & .bad::after {
+      content: "";
+      width: 100%;
+      height: 100%;
+      background: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 16 16'%3E%3Cpath d='M2 2l12 12M14 2L2 14' stroke='%23e00' stroke-width='1.6'/%3E%3C/svg%3E");
+    }
+  }
+  /* phones: tiles fill the width to tap; desktop uses 24 px (XP 16 px × 1.5) */
+  @media (max-width: 600px) {
+    .sweeper,
+    .sw-frame {
+      justify-items: stretch;
+    }
+    .sw-board {
+      width: min(calc(var(--cols, 9) * 36px), calc(100vw - 52px));
+      justify-self: center;
+    }
+  }
+  /* Game ▸ Color off: XP's black-and-white look */
+  .sw-mono :is(.sw-board, .sw-led, .sw-face) {
+    filter: grayscale(1);
+  }
+  .sw-xyzzy {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 2px;
+    height: 2px;
+    background: #fff;
+    &.hit {
+      background: #000;
+    }
+  }
+  .sw-custom label {
+    display: grid;
+    grid-template-columns: 7em 5em;
+    align-items: center;
+  }
+  .sw-best th {
+    text-align: left;
+    padding-right: 12px;
+  }
+  .sw-best td {
+    padding-right: 12px;
+  }
+  .sw-help ul {
+    margin: 0;
+    padding-left: 18px;
+    max-width: 46ch;
+  }
+
   /* ---------- Renovator XP ---------- */
   .reno {
     display: grid;
@@ -1640,7 +1906,8 @@
     min-height: 1.5em;
     font-weight: bold;
   }
-  .reno-dialog {
+  .reno-dialog,
+  .xp-dialog {
     padding: 0;
     max-width: min(560px, 95vw);
     border: 3px solid #0831d9;
@@ -1650,14 +1917,16 @@
       background: rgb(0 0 0 / 0.25);
     }
   }
-  .reno-dtitle {
+  .reno-dtitle,
+  .xp-dtitle {
     padding: 4px 8px;
     color: #fff;
     font-weight: bold;
     text-shadow: 1px 1px #0f1089;
     background: linear-gradient(#0997ff, #0053ee 8%, #0050ee 40%, #06f 88%, #0055eb);
   }
-  .reno-dialog-body {
+  .reno-dialog-body,
+  .xp-dialog-body {
     padding: 12px;
     display: grid;
     gap: 10px;
@@ -1683,7 +1952,8 @@
       border: 1px solid #999;
     }
   }
-  .reno-dialog-buttons {
+  .reno-dialog-buttons,
+  .xp-dialog-buttons {
     display: flex;
     justify-content: flex-end;
     gap: 6px;

@@ -1,0 +1,111 @@
+---
+// Wall Sweeper: the XP Minesweeper rules on an old Budapest wall. Rules: src/scripts/sweeper-logic.ts, UI: sweeper-ui.ts
+import MenuBar from "./MenuBar.astro";
+---
+<div class="sweeper" data-sweeper>
+  <MenuBar
+    label="Wall Sweeper"
+    menus={[
+      {
+        title: "Game",
+        items: [
+          { id: "new", label: "New", key: "F2" },
+          "-",
+          { id: "beginner", label: "Beginner", group: "level", on: true },
+          { id: "intermediate", label: "Intermediate", group: "level" },
+          { id: "expert", label: "Expert", group: "level" },
+          { id: "custom", label: "Custom…", group: "level" },
+          "-",
+          { id: "marks", label: "Marks (?)", check: true, on: true },
+          { id: "color", label: "Color", check: true, on: true },
+          { id: "sound", label: "Sound", check: true },
+          "-",
+          { id: "best", label: "Best Times…" },
+          "-",
+          { id: "exit", label: "Exit" },
+        ],
+      },
+      {
+        title: "Help",
+        items: [{ id: "help", label: "How to play", key: "F1" }, "-", { id: "about", label: "About Wall Sweeper" }],
+      },
+    ]}
+  />
+  <div class="sw-frame">
+    <div class="sw-top">
+      <span class="sw-led" data-left role="img" aria-label="Hollow spots left"></span>
+      <button type="button" class="sw-face" data-face="smile" aria-label="New game">
+        {/* Racka the sheep in four moods; CSS shows the one matching data-face */}
+        <svg viewBox="0 0 24 24" aria-hidden="true">
+          <path d="M8 7C4 6 2 3 3 1M16 7c4-1 6-4 5-6" fill="none" stroke="#6b5a44" stroke-width="1.6" stroke-linecap="round" />
+          <circle cx="12" cy="13" r="8" fill="#f3ead8" stroke="#4a3d2c" />
+          <g fill="#f3ead8" stroke="#4a3d2c" stroke-width=".8"><circle cx="7" cy="7.5" r="2.2" /><circle cx="12" cy="5.5" r="2.4" /><circle cx="17" cy="7.5" r="2.2" /></g>
+          <g class="f-smile"><circle cx="9.2" cy="12.5" r="1" /><circle cx="14.8" cy="12.5" r="1" /><path d="M9 16q3 2.6 6 0" fill="none" stroke="#000" /></g>
+          <g class="f-wow"><circle cx="9.2" cy="12.5" r="1.4" fill="none" stroke="#000" /><circle cx="14.8" cy="12.5" r="1.4" fill="none" stroke="#000" /><circle cx="12" cy="17" r="1.4" fill="none" stroke="#000" /></g>
+          <g class="f-cool"><path d="M6.5 11.2h11v1.2l-1.2 2.2h-3l-1-1.6-1 1.6h-3l-1.8-2.2z" /><path d="M9 16.2q3 2.4 6 0" fill="none" stroke="#000" /></g>
+          <g class="f-dead" stroke="#000" stroke-width=".9"><path d="M8 11.5l2.4 2.4m0-2.4L8 13.9M13.6 11.5l2.4 2.4m0-2.4l-2.4 2.4M9.5 17.3q2.5-1.6 5 0" fill="none" /></g>
+        </svg>
+      </button>
+      <span class="sw-led" data-time role="img" aria-label="Seconds"></span>
+    </div>
+    <div class="sw-board" data-board role="grid" aria-label="Wall: open the sound plaster, mark the hollow spots"></div>
+    <span class="sw-xyzzy" data-xyzzy hidden></span>
+  </div>
+  <p class="visually-hidden" data-status role="status" aria-live="polite"></p>
+
+  <dialog class="xp-dialog" data-custom aria-labelledby="sw-custom-t">
+    <div class="xp-dtitle" id="sw-custom-t">Custom Field</div>
+    <form method="dialog" class="xp-dialog-body sw-custom">
+      <label>Height: <input name="h" type="number" inputmode="numeric" min="9" max="24" /></label>
+      <label>Width: <input name="w" type="number" inputmode="numeric" min="9" max="30" /></label>
+      <label>Hollow spots: <input name="mines" type="number" inputmode="numeric" min="10" max="667" /></label>
+      <div class="xp-dialog-buttons"><button value="ok">OK</button><button value="cancel" formnovalidate>Cancel</button></div>
+    </form>
+  </dialog>
+
+  <dialog class="xp-dialog" data-name aria-labelledby="sw-name-t">
+    <div class="xp-dtitle" id="sw-name-t">New record</div>
+    <form method="dialog" class="xp-dialog-body">
+      <p data-name-text></p>
+      <input name="who" maxlength="32" aria-label="Your name" />
+      <div class="xp-dialog-buttons"><button value="ok">OK</button></div>
+    </form>
+  </dialog>
+
+  <dialog class="xp-dialog" data-best aria-labelledby="sw-best-t">
+    <div class="xp-dtitle" id="sw-best-t">Fastest Wall Knockers</div>
+    <form method="dialog" class="xp-dialog-body">
+      <table class="sw-best"><tbody data-best-rows></tbody></table>
+      <div class="xp-dialog-buttons"><button type="button" data-reset>Reset Scores</button><button value="ok">OK</button></div>
+    </form>
+  </dialog>
+
+  <dialog class="xp-dialog" data-help aria-labelledby="sw-help-t">
+    <div class="xp-dtitle" id="sw-help-t">Wall Sweeper — How to play</div>
+    <form method="dialog" class="xp-dialog-body sw-help">
+      <p>Every old Budapest wall hides hollow plaster. Knock carefully, mark the hollow spots, and don't put your hammer through one.</p>
+      <ul>
+        <li><b>Left-click</b> knocks a tile open. A number tells how many hollow spots touch it.</li>
+        <li><b>Right-click</b> puts a red chalk mark on a tile; again for <b>?</b> (if Marks is on), again to clear it.</li>
+        <li><b>Both buttons</b> (or the middle button, or Shift+click) on a number opens its neighbours once you've marked enough spots around it.</li>
+        <li>Open every sound tile to win. The first knock is always safe.</li>
+        <li>Phones: tap to knock, hold to mark, tap a number to open around it. Keyboard: arrows, Enter knocks, Space marks.</li>
+      </ul>
+      <div class="xp-dialog-buttons"><button value="ok">OK</button></div>
+    </form>
+  </dialog>
+
+  <dialog class="xp-dialog" data-about aria-labelledby="sw-about-t">
+    <div class="xp-dtitle" id="sw-about-t">About Wall Sweeper</div>
+    <form method="dialog" class="xp-dialog-body">
+      <p>Wall Sweeper 1.0 for the KK desktop.<br />The classic Windows XP rules, retold on Kristóf's flat renovation. Drawn for this site; not affiliated with Microsoft.</p>
+      <div class="xp-dialog-buttons"><button value="ok">OK</button></div>
+    </form>
+  </dialog>
+</div>
+<script>
+  import { whenOpen } from "../scripts/lazy";
+
+  for (const el of document.querySelectorAll<HTMLElement>("[data-sweeper]"))
+    whenOpen(el, () => import("../scripts/sweeper-ui").then((m) => m.initSweeper(el)));
+</script>

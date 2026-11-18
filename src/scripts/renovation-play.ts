@@ -26,7 +26,7 @@ import {
   touches,
 } from "./renovation-games";
 import { COLS, fine, type Game, GW, JOBS, L, MARK, type MiniGame, OPEN, ROWS, targets } from "./renovation-logic";
-import { beep } from "./renovation-sound";
+import { beep } from "./sound";
 
 export const CELL = 16;
 const C2 = CELL * 2;

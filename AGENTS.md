@@ -43,7 +43,9 @@ npm run build && npm run lighthouse                      # perf/a11y/BP/SEO must
 | Live weather fetch, tray, Weather window, lightning bolt mover | `src/scripts/weather.ts` |
 | WMO code → look (`clear partly cloudy fog rain snow storm`), labels, icons | `src/scripts/weather-codes.ts` (+ test) |
 | Pipeline Green game | `pipeline-logic.ts` (+ test), `pipeline-ui.ts`, `components/Pipeline.astro` |
-| Renovator XP game (walk-in, tool picking, one mini-game per job, budget/stars) | `renovation-logic.ts` (jobs, budget), `renovation-games.ts` (pure mini-game rules), `renovation-play.ts` (one controller per mini-game), `renovation-ui.ts` (window, wall drawing, loop), `renovation-sound.ts` (beeps, off until turned on), tests next to them, `components/Renovation.astro` |
+| Games folder: the Windows XP games remade (plan: `~/.claude/plans/i-d-like-to-copy-effervescent-boole.md`; XP rules exactly, own art and text) | `content/items/games.md` + items with `parent: games`. Shared: `components/MenuBar.astro` + `menubar.ts` (XP menus, F-key shortcuts while the window is active), `lazy.ts` (`whenOpen`: a game's code loads on first open), `sound.ts` (beeps, off until turned on), `scores.ts` (records, own try/catch), `.xp-dialog` styles |
+| Wall Sweeper (XP Minesweeper) | `sweeper-logic.ts` (+ test, one per XP rule), `sweeper-ui.ts` (mouse chords via `buttons`, touch long-press marks), `components/Sweeper.astro` |
+| Renovator XP game: **hidden** since 2026-11-18 (no content item), code kept for reuse | `renovation-logic.ts`, `renovation-games.ts`, `renovation-play.ts`, `renovation-ui.ts`, tests next to them, `components/Renovation.astro` |
 | Internet window (dial-up → surf → favorites) | `internet-ui.ts`, `components/Internet.astro`, `public/surf/` (made by `tools/make-surf.py`) |
 | All styles | `src/styles/os.css` (one file, sections marked `/* ---------- name ---------- */`) |
 | Icon sprite | `src/components/Icons.astro` (`<symbol id="i-…">`) |
@@ -52,7 +54,7 @@ npm run build && npm run lighthouse                      # perf/a11y/BP/SEO must
 | CI/deploy | `.github/workflows/deploy.yml`, `lighthouserc.json`, `.github/dependabot.yml` |
 
 Storage keys: sessionStorage `kk-booted`, `kk-role`, `kk-balloon`, `kk-helper` (`off`/`greeted`);
-localStorage `kk-visits`, `kk-icons` (`kk-icons-phone` on phones), `kk-reno-sound` (`on`/`off`; own try/catch so the game modules stay testable without the desktop). Always go through `store.get/set` (private mode throws).
+localStorage `kk-visits`, `kk-icons` (`kk-icons-phone` on phones), `kk-sound` (`on`/`off`, all games), `kk-sweeper` (options), `kk-sweeper-best` (records); game keys use `scores.ts`/`sound.ts`, which have their own try/catch so the game modules stay testable without the desktop. Always go through `store.get/set` (private mode throws).
 
 ## How common requests are done
 - **New window or text change:** add or edit a Markdown file in `src/content/items/`. A new icon goes in `Icons.astro`.

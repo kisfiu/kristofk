@@ -101,21 +101,12 @@ test("deep link opens the resume without the boot screen", async ({ page }) => {
 
 test("every desktop icon and folder item opens its window", async ({ page, isMobile }) => {
   await skipBoot(page);
-  const desktop = [
-    "My Resume",
-    "Hobbies",
-    "NGOs",
-    "Other Stuff",
-    "Internet",
-    "Weather",
-    "Recycle Bin",
-    "Pipeline Green",
-    "Renovator XP",
-  ];
+  const desktop = ["My Resume", "Hobbies", "NGOs", "Other Stuff", "Internet", "Weather", "Recycle Bin", "Games"];
   const folders: Record<string, string[]> = {
     Hobbies: ["Books", "Marketplace", "Travel", "Renovation", "Baseball"],
     NGOs: ["Invisible School", "Rotary Club"],
     "Other Stuff": ["Address Book", "Side Projects", "readme.txt"],
+    Games: ["Wall Sweeper", "Pipeline Green"],
   };
   for (const name of desktop) {
     await openIcon(page, name, isMobile);
@@ -265,7 +256,7 @@ test("dragging on the desktop draws a selection rectangle; Enter opens the selec
   // during the ~250 ms login View Transition the browser hit-tests the page root; wait until the desktop takes input
   await page.waitForFunction(() => document.elementFromPoint(400, 20)?.matches(".icons"));
   const selected = page.locator(".desktop > .icons .icon.selected");
-  // drags start at x 97: between the first icon column (ends at 92) and the second (Renovator XP, from 102)
+  // drags start at x 97: between the first icon column (ends at 92) and the second (from 102)
   await page.mouse.move(97, 20);
   await page.mouse.down();
   await page.mouse.move(20, 170, { steps: 6 });
@@ -682,35 +673,64 @@ test("NGOs is the second desktop icon and the Recycle Bin sits bottom right", as
   expect(bin.y + bin.height).toBeGreaterThan(size.height - 140);
 });
 
-test("renovation game: walk in, wrong tool scolds, hammer starts the knock-sweeper", async ({ page, isMobile }) => {
+test("Wall Sweeper: first knock starts the clock, right-click marks, Expert and F2 from the menu", async ({
+  page,
+  isMobile,
+}) => {
   await skipBoot(page);
-  await openIcon(page, "Renovator XP", isMobile);
+  await openIcon(page, "Games", isMobile);
+  await openIcon(page, "Wall Sweeper", isMobile);
   const win = page.locator(".window.active");
-  await win.getByRole("button", { name: "Open the flat door" }).click();
-  await win.getByRole("button", { name: "Open the door on the right" }).click();
-  await expect(win).toContainText("next year");
-  await win.getByRole("button", { name: "Open the door on the left" }).click();
-  await expect(win.locator("[data-budget]")).toHaveText(/150.000 Ft/);
-  await expect(win.locator("[data-sound]")).toContainText("Sound off");
-  const wall = win.locator(".reno-wall");
-  await win.getByRole("button", { name: "Paint roller" }).click();
-  await wall.click({ position: { x: 5, y: 5 } });
-  await expect(page.locator(".reno-dialog")).toContainText("peeled off");
-  await page.keyboard.press("Enter"); // Enter works like OK
-  await expect(page.locator(".reno-dialog")).toBeHidden();
-  await expect(win.locator("[data-budget]")).toHaveText(/125.000 Ft/);
-  await win.getByRole("button", { name: "Hammer" }).click();
-  await wall.click({ position: { x: 5, y: 5 } });
-  await expect(win.locator("[data-banner]")).toHaveText("KNOCK!");
-  await expect(win.locator("[data-banner]")).toBeHidden();
-  await expect(win.getByRole("button", { name: /Mode: Knock/ })).toBeVisible();
-  await expect(win.locator("[data-note]")).toContainText("Left-click knocks");
+  const left = win.locator("[data-left]");
+  const time = win.locator("[data-time]");
+  const cells = win.locator('[role="gridcell"]');
+  await expect(cells).toHaveCount(81);
+  await expect(left).toHaveAttribute("aria-label", "10 hollow spots left");
+  await expect(time).toHaveAttribute("aria-label", "0 seconds");
+  await (isMobile ? cells.nth(40).tap() : cells.nth(40).click());
+  await expect(cells.nth(40)).not.toHaveAttribute("aria-label", "hidden"); // the first knock is always safe
+  await expect(time).not.toHaveAttribute("aria-label", "0 seconds");
+  if (!isMobile) {
+    await win.locator('[role="gridcell"][aria-label="hidden"]').first().click({ button: "right" });
+    await expect(left).toHaveAttribute("aria-label", "9 hollow spots left");
+    // both buttons on a number: XP presses its 3×3 block down and Racka looks surprised
+    const n = await win.evaluate((w) => {
+      const all = [...w.querySelectorAll<HTMLElement>('[role="gridcell"]')];
+      return all.findIndex(
+        (c, i) =>
+          /^[1-8]$/.test(c.textContent!) &&
+          [-10, -9, -8, -1, 1, 8, 9, 10].some(
+            (d) => all[i + d]?.classList.contains("h") && Math.abs(((i + d) % 9) - (i % 9)) <= 1,
+          ),
+      );
+    });
+    if (n >= 0) {
+      const box = (await cells.nth(n).boundingBox())!;
+      await page.mouse.move(box.x + box.width / 2, box.y + box.height / 2);
+      await page.mouse.down();
+      await page.mouse.down({ button: "right" });
+      await expect(win.locator("[data-face]")).toHaveAttribute("data-face", "wow");
+      await expect(win.locator('[role="gridcell"].o[aria-label="hidden"]').first()).toBeVisible();
+      await page.mouse.up({ button: "right" });
+      await page.mouse.up();
+    }
+  }
+  await win.getByRole("menuitem", { name: "Game" }).click();
+  await page.getByRole("menuitemradio", { name: "Expert" }).click();
+  await expect(cells).toHaveCount(480);
+  await expect(left).toHaveAttribute("aria-label", "99 hollow spots left");
+  await page.keyboard.press("F2");
+  await expect(time).toHaveAttribute("aria-label", "0 seconds");
+  await win.getByRole("menuitem", { name: "Game" }).click();
+  await page.getByRole("menuitemradio", { name: "Beginner" }).click();
+  await expect(cells).toHaveCount(81);
 });
 
 test("pipeline game starts its timer on the first click", async ({ page, isMobile }) => {
   await skipBoot(page);
+  await openIcon(page, "Games", isMobile);
   await openIcon(page, "Pipeline Green", isMobile);
-  const time = page.locator("[data-time]");
+  const time = page.locator(".window.active [data-time]");
   await expect(time).toHaveText("Time: 60s");
   await page.locator(".pipe").first().click();
   await expect(time).not.toHaveText("Time: 60s", { timeout: 3000 });
@@ -752,6 +772,7 @@ test("screenshots for review", async ({ page, isMobile }, info) => {
   await settled();
   await page.screenshot({ path: `${dir}-3-ngos.png` });
   if (isMobile) await page.locator(".window.active").getByRole("button", { name: "Minimize" }).click();
+  await openIcon(page, "Games", isMobile);
   await openIcon(page, "Pipeline Green", isMobile);
   await settled();
   await page.screenshot({ path: `${dir}-4-game.png` });
