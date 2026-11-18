@@ -10,6 +10,7 @@ import Internet from "../components/Internet.astro";
 import Pipeline from "../components/Pipeline.astro";
 import Renovation from "../components/Renovation.astro";
 import Solitaire from "../components/Solitaire.astro";
+import Spider from "../components/Spider.astro";
 import Sweeper from "../components/Sweeper.astro";
 import Window from "../components/Window.astro";
 
@@ -124,6 +125,8 @@ const description =
             <Solitaire />
           ) : data.app === "freecell" ? (
             <FreeCell />
+          ) : data.app === "spider" ? (
+            <Spider />
           ) : (
             <article class="doc"><Content /></article>
           )}

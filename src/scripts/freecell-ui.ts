@@ -1,3 +1,4 @@
+import { ask as askBox } from "./ask";
 import { CH, CW, face } from "./card-art";
 import { type Card, cardName } from "./cards";
 import {
@@ -132,14 +133,7 @@ export function initFreeCell(el: HTMLElement) {
   }
 
   /* ---------- Dialogs ---------- */
-  function ask(title: string, text: string, buttons: string[]): Promise<string> {
-    const d = $<HTMLDialogElement>("[data-ask]");
-    $("[data-ask-title]").textContent = title;
-    $("[data-ask-text]").textContent = text;
-    $("[data-ask-buttons]").innerHTML = buttons.map((b) => `<button value="${b}">${b}</button>`).join("");
-    d.showModal();
-    return new Promise((done) => d.addEventListener("close", () => done(d.returnValue), { once: true }));
-  }
+  const ask = (title: string, text: string, buttons: string[]) => askBox(el, title, text, buttons);
   const say = (t: string) => {
     $("[data-live]").textContent = t;
   };

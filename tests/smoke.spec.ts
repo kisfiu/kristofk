@@ -106,7 +106,7 @@ test("every desktop icon and folder item opens its window", async ({ page, isMob
     Hobbies: ["Books", "Marketplace", "Travel", "Renovation", "Baseball"],
     NGOs: ["Invisible School", "Rotary Club"],
     "Other Stuff": ["Address Book", "Side Projects", "readme.txt"],
-    Games: ["Wall Sweeper", "Solitaire", "FreeCell", "Pipeline Green"],
+    Games: ["Wall Sweeper", "Solitaire", "FreeCell", "Spider Solitaire", "Pipeline Green"],
   };
   for (const name of desktop) {
     await openIcon(page, name, isMobile);
@@ -700,7 +700,7 @@ test("Wall Sweeper: first knock starts the clock, right-click marks, Expert and 
         (c, i) =>
           /^[1-8]$/.test(c.textContent!) &&
           [-10, -9, -8, -1, 1, 8, 9, 10].some(
-            (d) => all[i + d]?.classList.contains("h") && Math.abs(((i + d) % 9) - (i % 9)) <= 1,
+            (d) => all[i + d]?.getAttribute("aria-label") === "hidden" && Math.abs(((i + d) % 9) - (i % 9)) <= 1,
           ),
       );
     });
@@ -793,6 +793,34 @@ test("FreeCell: numbered deal, click-to-move into a free cell, Select Game, stat
   await expect(page.getByRole("dialog", { name: "FreeCell Statistics" })).toContainText("lost 1");
   await page.getByRole("button", { name: "Clear", exact: true }).click();
   await expect(page.getByRole("dialog", { name: "FreeCell Statistics" })).toContainText("lost 0");
+  await page.getByRole("button", { name: "OK" }).click();
+});
+
+test("Spider: one-suit deal, deal a row, hint, difficulty", async ({ page, isMobile }) => {
+  await skipBoot(page);
+  await openIcon(page, "Games", isMobile);
+  await openIcon(page, "Spider Solitaire", isMobile);
+  const win = page.locator(".window.active");
+  const up = win.locator('.sol-card[data-id]:not([hidden]):not([data-look="back"])');
+  await expect(win.locator(".sol-card[data-id]:not([hidden])")).toHaveCount(54);
+  await expect(up).toHaveCount(10);
+  await expect(win.locator("[data-score]")).toContainText("Score: 500");
+  await win.locator("[data-stock]").click();
+  await expect(win.locator(".sol-card[data-id]:not([hidden])")).toHaveCount(64);
+  await expect(win.locator("[data-stock]")).toHaveAttribute("aria-label", "Deal next row (4 left)");
+  await page.keyboard.press("m");
+  await expect(win.locator(".sp-hint").first()).toBeVisible();
+  await win.getByRole("menuitem", { name: "Game" }).click();
+  await page.getByRole("menuitem", { name: "Difficulty…" }).click();
+  await page.locator("label", { hasText: "Advanced: four suits" }).click();
+  await page.getByRole("button", { name: "OK" }).click();
+  await expect(win.locator("[data-stock]")).toHaveAttribute("aria-label", "Deal next row (5 left)");
+  const suits = await up.evaluateAll((cs) => new Set(cs.map((c) => (c as HTMLElement).dataset.look![0])).size);
+  expect(suits).toBeGreaterThan(1);
+  // back to Beginner for the next run
+  await win.getByRole("menuitem", { name: "Game" }).click();
+  await page.getByRole("menuitem", { name: "Difficulty…" }).click();
+  await page.locator("label", { hasText: "Beginner: one suit" }).click();
   await page.getByRole("button", { name: "OK" }).click();
 });
 
