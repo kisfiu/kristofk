@@ -2166,6 +2166,36 @@
     outline: 2px dashed #ffd34d;
     outline-offset: 4px;
   }
+  /* Internet Spades: Rotary gold and royal blue teams, bag counter, bid buttons */
+  .hz-name.isp-gold {
+    color: #f7c04a;
+  }
+  .hz-name.isp-blue {
+    color: #bcd4ff;
+  }
+  .isp-score {
+    & b.isp-gold {
+      color: #a8700a;
+    }
+    & b.isp-blue {
+      color: #17458f;
+    }
+  }
+  .isp-bags {
+    letter-spacing: -1px;
+    font-size: 10px;
+    color: #555;
+  }
+  .isp-buttons {
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: center;
+    gap: 4px;
+    max-width: 300px;
+    & button {
+      min-width: 36px;
+    }
+  }
 
   /* ---------- KK Game Zone (inside the Internet window) ---------- */
   .ie-zone {

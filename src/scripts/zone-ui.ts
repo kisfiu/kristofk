@@ -61,6 +61,14 @@ const GAMES: Record<string, ZoneGame> = {
     help: `<p>Same table as offline Hearts, but your rivals are on the line from 2003. Somebody always tries to shoot the moon.</p><ul><li>Pass three cards: left, right, across, then no pass every fourth hand. The 2 of clubs leads the first trick.</li><li>Follow suit if you can. No hearts or Queen of Spades on the first trick, and no heart lead until hearts are broken.</li><li>Every heart you take costs 1 point, the Queen of Spades 13. Take all of them (shoot the moon) and everyone else gets 26.</li><li>The game ends when someone reaches 100. The lowest score wins.</li><li>Double-click a card, or click it and press Play. Auto-Play plays your cards for you, Last Trick shows the trick just taken, and Game ▸ Show Score lists every hand.</li></ul>`,
     load: () => import("./internet-hearts-ui").then((m) => m.startHearts),
   },
+  spades: {
+    title: "Internet Spades",
+    players: 4,
+    web: "rotary",
+    score: true,
+    help: `<p>Partners sit opposite, like a club president and the project chair. Bid what your team can make, and watch the bags.</p><ul><li>Team Gold is you and your partner (top); Team Blue sits left and right.</li><li>Before you see your cards, choose Show Cards, or Double Nil to bet you won't take a single trick. Then everyone bids once, from the dealer's left: 1–13 tricks, or Nil. Partners' bids add up to the team's contract.</li><li>Follow suit if you can. Spades are trumps, and they can't be led until one has been played.</li><li>A made contract scores 10 a bid trick plus 1 for each extra trick (a bag); a missed one loses 10 a bid trick. Every 10 bags cost 100 points.</li><li>Nil scores ±100, Double Nil ±200. The first team to 500 wins; a team at −200 loses.</li><li>Double-click a card, or click it and press Play. Auto-Play bids and plays for you, Last Trick shows the trick just taken, and Game ▸ Show Score lists every hand.</li></ul>`,
+    load: () => import("./internet-spades-ui").then((m) => m.startSpades),
+  },
 };
 
 const KEY = "kk-zone";
