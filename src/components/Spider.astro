@@ -1,0 +1,111 @@
+---
+// Spider Solitaire: XP rules (src/scripts/spider-logic.ts), our own cards. UI: spider-ui.ts
+import MenuBar from "./MenuBar.astro";
+---
+<div class="spider" data-spider>
+  <MenuBar
+    label="Spider Solitaire"
+    menus={[
+      {
+        title: "Game",
+        items: [
+          { id: "new", label: "New Game", key: "F2" },
+          { id: "restart", label: "Restart This Game" },
+          "-",
+          { id: "undo", label: "Undo", key: "Ctrl+Z" },
+          { id: "deal", label: "Deal Next Row", key: "D" },
+          { id: "hint", label: "Show an Available Move", key: "M" },
+          "-",
+          { id: "difficulty", label: "Difficulty…" },
+          { id: "stats", label: "Statistics…" },
+          { id: "options", label: "Options…" },
+          "-",
+          { id: "save", label: "Save This Game", key: "Ctrl+S" },
+          { id: "open", label: "Open Last Saved Game", key: "Ctrl+O" },
+          "-",
+          { id: "exit", label: "Exit" },
+        ],
+      },
+      {
+        title: "Help",
+        items: [{ id: "help", label: "How to play", key: "F1" }, "-", { id: "about", label: "About Spider Solitaire" }],
+      },
+    ]}
+  />
+  <div class="sp-table sol-table" data-table tabindex="0" role="application" aria-label="Spider table. Arrow keys choose a column, Enter picks up or puts down, D deals, M shows a move." aria-describedby="sp-live">
+    <div class="sp-done" data-done aria-label="Finished runs"></div>
+    <button type="button" class="sp-stock" data-stock aria-label="Deal next row"></button>
+    <button type="button" class="sp-score" data-score title="Show an available move">Score: 500<br />Moves: 0</button>
+  </div>
+  <p class="visually-hidden" id="sp-live" data-live role="status" aria-live="polite"></p>
+
+  <dialog class="xp-dialog" data-ask aria-labelledby="sp-ask-t">
+    <div class="xp-dtitle" id="sp-ask-t" data-ask-title>Spider</div>
+    <form method="dialog" class="xp-dialog-body">
+      <p data-ask-text></p>
+      <div class="xp-dialog-buttons" data-ask-buttons></div>
+    </form>
+  </dialog>
+
+  <dialog class="xp-dialog" data-difficulty aria-labelledby="sp-diff-t">
+    <div class="xp-dtitle" id="sp-diff-t">Difficulty</div>
+    <form method="dialog" class="xp-dialog-body sol-options">
+      <fieldset>
+        <legend>How difficult should the game be?</legend>
+        <label><input type="radio" name="level" value="1" /> Beginner: one suit</label>
+        <label><input type="radio" name="level" value="2" /> Intermediate: two suits</label>
+        <label><input type="radio" name="level" value="4" /> Advanced: four suits</label>
+      </fieldset>
+      <div class="xp-dialog-buttons"><button value="ok">OK</button><button value="cancel">Cancel</button></div>
+    </form>
+  </dialog>
+
+  <dialog class="xp-dialog" data-stats aria-labelledby="sp-stats-t">
+    <div class="xp-dtitle" id="sp-stats-t">Statistics</div>
+    <form method="dialog" class="xp-dialog-body">
+      <table class="sw-best" data-stats-rows></table>
+      <div class="xp-dialog-buttons"><button type="button" data-reset>Reset</button><button value="ok">OK</button></div>
+    </form>
+  </dialog>
+
+  <dialog class="xp-dialog" data-options aria-labelledby="sp-opt-t">
+    <div class="xp-dtitle" id="sp-opt-t">Options</div>
+    <form method="dialog" class="xp-dialog-body sol-options">
+      <label><input type="checkbox" name="sound" /> Play sounds</label>
+      <label><input type="checkbox" name="animate" /> Animate deal</label>
+      <label><input type="checkbox" name="winAnim" /> Show animation on win</label>
+      <label><input type="checkbox" name="saveOnExit" /> Save game on exit (without asking)</label>
+      <label><input type="checkbox" name="openSaved" /> Open last saved game (without asking)</label>
+      <div class="xp-dialog-buttons"><button value="ok">OK</button><button value="cancel">Cancel</button></div>
+    </form>
+  </dialog>
+
+  <dialog class="xp-dialog" data-help aria-labelledby="sp-help-t">
+    <div class="xp-dtitle" id="sp-help-t">Spider Solitaire — How to play</div>
+    <form method="dialog" class="xp-dialog-body sw-help">
+      <p>Ten columns, two decks, one web of connections — like Rotary clubs across the world. Build full King-to-Ace runs in one suit to clear them away.</p>
+      <ul>
+        <li><b>Drag</b> a card onto any card one higher, whatever the suit. A run of one suit moves together.</li>
+        <li>A full run from King down to Ace in one suit leaves the table (+100). Clear all eight to win.</li>
+        <li>Click the deck (bottom right) to deal a new card onto every column. You can't deal while a column is empty.</li>
+        <li>Score starts at 500; every move and every undo costs 1.</li>
+        <li><b>M</b> or a click on the score box shows a move. Keys: arrows choose a column, Enter picks up and puts down, D deals.</li>
+      </ul>
+      <div class="xp-dialog-buttons"><button value="ok">OK</button></div>
+    </form>
+  </dialog>
+
+  <dialog class="xp-dialog" data-about aria-labelledby="sp-about-t">
+    <div class="xp-dtitle" id="sp-about-t">About Spider Solitaire</div>
+    <form method="dialog" class="xp-dialog-body">
+      <p>Spider Solitaire 1.0 for the KK desktop.<br />The Windows XP rules and scoring, with cards drawn for this site. Not affiliated with Microsoft.</p>
+      <div class="xp-dialog-buttons"><button value="ok">OK</button></div>
+    </form>
+  </dialog>
+</div>
+<script>
+  import { whenOpen } from "../scripts/lazy";
+
+  for (const el of document.querySelectorAll<HTMLElement>("[data-spider]"))
+    whenOpen(el, () => import("../scripts/spider-ui").then((m) => m.initSpider(el)));
+</script>

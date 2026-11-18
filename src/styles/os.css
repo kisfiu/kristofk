@@ -1893,6 +1893,82 @@
     }
   }
 
+  /* ---------- Spider Solitaire ---------- */
+  .spider {
+    display: grid;
+  }
+  /* a faint web of club dots on the felt (Rotary's clubs around the world) */
+  .sp-table {
+    background:
+      radial-gradient(circle at 50% 50%, rgb(255 255 255 / 0.07) 0 2px, transparent 2.5px) 0 0 / 46px 46px,
+      repeating-linear-gradient(60deg, transparent 0 45px, rgb(255 255 255 / 0.04) 45px 46px),
+      repeating-linear-gradient(-60deg, transparent 0 45px, rgb(255 255 255 / 0.04) 45px 46px),
+      #007f0e;
+  }
+  .sp-animate .sol-card {
+    transition: transform 0.15s ease-out;
+  }
+  .sp-animate .sol-lift {
+    transition: none;
+  }
+  .sp-done,
+  .sp-stock,
+  .sp-score {
+    position: absolute;
+    top: 0;
+    left: 0;
+  }
+  .sp-done .sol-card {
+    position: absolute;
+  }
+  .sp-stock {
+    all: unset;
+    position: absolute;
+    top: 0;
+    left: 0;
+    height: var(--ch, 114px);
+    cursor: pointer;
+    & span {
+      position: absolute;
+      top: 0;
+      width: var(--cw, 84px);
+      height: var(--ch, 114px);
+    }
+    & svg {
+      display: block;
+      width: 100%;
+      height: 100%;
+    }
+    &:focus-visible {
+      outline: 2px dotted #fff;
+    }
+  }
+  .sp-score {
+    all: unset;
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 120px;
+    padding: 4px 0;
+    text-align: center;
+    background: #2f6b1c;
+    border: 2px solid #b6f28a;
+    border-radius: 4px;
+    color: #fff;
+    font:
+      bold 12px / 1.4 Tahoma,
+      Verdana,
+      sans-serif;
+    cursor: pointer;
+    &:focus-visible {
+      outline: 2px dotted #fff;
+      outline-offset: 2px;
+    }
+  }
+  .sp-hint {
+    filter: invert(1);
+  }
+
   /* ---------- Renovator XP ---------- */
   .reno {
     display: grid;

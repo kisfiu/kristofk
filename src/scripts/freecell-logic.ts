@@ -173,23 +173,4 @@ export function undo(g: FreeCell): boolean {
   return true;
 }
 
-/** Streak-aware win/loss record, as in XP's Statistics box. */
-export interface Stats {
-  won: number;
-  lost: number;
-  bestWins: number;
-  bestLosses: number;
-  /** > 0: wins in a row, < 0: losses in a row. */
-  current: number;
-}
-export const NO_STATS: Stats = { won: 0, lost: 0, bestWins: 0, bestLosses: 0, current: 0 };
-export function record(s: Stats, win: boolean): Stats {
-  const current = win ? Math.max(0, s.current) + 1 : Math.min(0, s.current) - 1;
-  return {
-    won: s.won + (win ? 1 : 0),
-    lost: s.lost + (win ? 0 : 1),
-    current,
-    bestWins: Math.max(s.bestWins, current),
-    bestLosses: Math.max(s.bestLosses, -current),
-  };
-}
+export { NO_STATS, record, type Stats } from "./scores";
