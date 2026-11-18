@@ -29,7 +29,7 @@ const playing = (hands: Card[][], o: Partial<Hearts> = {}): Hearts => ({
 });
 
 /** Play a whole game with four bots; returns the finished game. */
-function botGame(seed: number) {
+function botGame(seed: number, skill = 2) {
   const rnd = seeded(seed);
   const g = newGame();
   for (let guard = 0; guard < 100 && g.phase !== "gameover"; guard++) {
@@ -37,7 +37,7 @@ function botGame(seed: number) {
     if (g.phase === "pass") pass(g, g.hands.map(botPass));
     while (g.phase === "play") {
       if (g.turn < 0) collect(g);
-      else expect(play(g, g.turn, botPlay(g, g.turn, 2, rnd))).toBe(true);
+      else expect(play(g, g.turn, botPlay(g, g.turn, skill, rnd))).toBe(true);
     }
   }
   return g;
@@ -129,5 +129,10 @@ describe("Hearts (XP rules)", () => {
         true,
       );
     }
+  });
+
+  it("Internet Hearts: bots at every skill level play only legal cards, and their games finish", () => {
+    for (const skill of [0, 1, 2])
+      for (let seed = 1; seed <= 10; seed++) expect(botGame(seed * 7 + skill, skill).phase).toBe("gameover");
   });
 });
