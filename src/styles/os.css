@@ -1969,6 +1969,234 @@
     filter: invert(1);
   }
 
+  /* ---------- Pipeline Pinball (XP 3D Pinball's window: a tilted table, a panel on the right) ---------- */
+  .pinball {
+    display: grid;
+    &:fullscreen {
+      align-content: center;
+      background: #000;
+      & .pb-view {
+        --h: min(1400px, calc((100vh - 24px) / 0.72), calc((100vw - 320px) * 1.8));
+      }
+    }
+  }
+  .pb-main {
+    display: grid;
+    grid-template-columns: auto minmax(200px, 250px);
+    justify-content: center;
+    align-items: stretch;
+    gap: 6px;
+    padding: 6px;
+    background: #000;
+  }
+  /* the table leans back from the player, as in the XP game: --h is the canvas height before the tilt */
+  .pb-view {
+    --h: min(900px, calc((100dvh - var(--taskbar) - 104px) / 0.72), calc((100cqi - 280px) * 1.8));
+    display: flex;
+    justify-content: center;
+    align-items: flex-end;
+    height: calc(var(--h) * 0.72);
+    overflow: hidden;
+    perspective: calc(var(--h) * 1.5);
+    perspective-origin: 50% 100%;
+    background: radial-gradient(ellipse at 50% 0, #1b2433, #000 70%);
+  }
+  .pb-table {
+    display: block;
+    flex: none;
+    height: var(--h);
+    aspect-ratio: 10 / 18;
+    transform: rotateX(24deg);
+    transform-origin: 50% 100%;
+    touch-action: none;
+  }
+  .pb-panel {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+    padding: 8px;
+    color: #cfe0f5;
+    font-size: 13px;
+    background: linear-gradient(#0d1a30, #04070d);
+    border: 2px solid;
+    border-color: #3c4a60 #0b0f16 #0b0f16 #3c4a60;
+  }
+  .pb-logo {
+    display: block;
+    width: 100%;
+    height: auto;
+  }
+  .pb-lcd {
+    display: grid;
+    gap: 6px;
+    padding: 8px;
+    background: #03120d;
+    border: 3px solid;
+    border-color: #0b0f16 #4c5a70 #4c5a70 #0b0f16;
+    border-radius: 4px;
+    color: #3dffb0;
+    font:
+      bold 14px / 1.3 "Lucida Console",
+      "Courier New",
+      monospace;
+    text-shadow: 0 0 6px rgb(61 255 176 / 0.6);
+  }
+  .pb-score {
+    display: grid;
+    justify-items: end;
+    font-size: 26px;
+    /* the unlit segments of the display behind the digits */
+    &::before {
+      content: attr(data-ghost);
+      grid-area: 1 / 1;
+      color: rgb(61 255 176 / 0.08);
+      text-shadow: none;
+    }
+    & span {
+      grid-area: 1 / 1;
+    }
+  }
+  .pb-bp {
+    display: flex;
+    justify-content: space-between;
+    text-transform: uppercase;
+    & b {
+      font-size: 20px;
+      margin-left: 4px;
+    }
+  }
+  .pb-msg {
+    margin: 0;
+    min-height: 2.6em;
+    padding-top: 4px;
+    border-top: 1px solid rgb(61 255 176 / 0.25);
+  }
+  .pb-scores {
+    margin: 0;
+    padding: 0;
+    list-style: none;
+    font:
+      bold 13px "Lucida Console",
+      "Courier New",
+      monospace;
+    & li {
+      display: flex;
+      justify-content: space-between;
+      gap: 8px;
+      padding: 2px 4px;
+    }
+    & .on {
+      background: #1d3557;
+      color: #ffe08a;
+    }
+  }
+  .pb-info {
+    display: grid;
+    grid-template-columns: auto 1fr;
+    gap: 2px 10px;
+    margin: 0;
+    & dt {
+      color: #7f9cc0;
+    }
+    & dd {
+      margin: 0;
+      font-weight: bold;
+    }
+  }
+  .pb-ladder {
+    margin: 0;
+    padding: 6px 8px;
+    list-style: none;
+    border-top: 1px solid #1d3557;
+    color: #3c5a80;
+    & .on {
+      color: #7dff9b;
+      font-weight: bold;
+      &::before {
+        content: "▶ ";
+      }
+    }
+  }
+  .pb-touch {
+    display: none;
+    grid-column: 1 / -1;
+    grid-template-columns: repeat(4, 1fr);
+    gap: 6px;
+    width: 100%;
+    & button {
+      min-height: 48px;
+      font-size: 14px;
+      touch-action: none;
+      -webkit-user-select: none;
+      user-select: none;
+    }
+  }
+  @media (pointer: coarse) {
+    .pb-touch {
+      display: grid;
+    }
+  }
+  @container (max-width: 620px) {
+    .pb-main {
+      grid-template-columns: 1fr;
+      justify-items: center;
+      padding: 4px;
+      gap: 4px;
+    }
+    .pb-view {
+      --h: min(900px, calc((100dvh - var(--taskbar) - 300px) / 0.72), calc((100cqi - 8px) * 1.8));
+    }
+    .pb-panel {
+      order: -1;
+      width: 100%;
+      box-sizing: border-box;
+      display: grid;
+      grid-template-columns: 1fr 1.3fr;
+      align-items: center;
+      gap: 4px 8px;
+      padding: 4px 6px;
+      font-size: 12px;
+    }
+    .pb-lcd {
+      padding: 4px 6px;
+      gap: 2px;
+      font-size: 12px;
+    }
+    .pb-score {
+      font-size: 18px;
+    }
+    .pb-bp b {
+      font-size: 14px;
+    }
+    .pb-msg {
+      min-height: 1.3em;
+    }
+    .pb-scores,
+    .pb-info {
+      grid-column: 1 / -1;
+    }
+    .pb-info {
+      display: none;
+    }
+    .pb-ladder {
+      display: none;
+    }
+  }
+  .pb-hs td:first-child {
+    text-align: center;
+  }
+  .pb-keys {
+    margin: 8px 0;
+    & th {
+      text-align: left;
+      font-weight: normal;
+      padding-right: 16px;
+    }
+    & button {
+      min-width: 110px;
+    }
+  }
+
   /* ---------- Hearts ---------- */
   .hearts {
     display: grid;

@@ -106,7 +106,15 @@ test("every desktop icon and folder item opens its window", async ({ page, isMob
     Hobbies: ["Books", "Marketplace", "Travel", "Renovation", "Baseball"],
     NGOs: ["Invisible School", "Rotary Club"],
     "Other Stuff": ["Address Book", "Side Projects", "readme.txt"],
-    Games: ["Wall Sweeper", "Solitaire", "FreeCell", "Spider Solitaire", "Hearts", "Pipeline Green"],
+    Games: [
+      "Wall Sweeper",
+      "Solitaire",
+      "FreeCell",
+      "Spider Solitaire",
+      "Hearts",
+      "Pipeline Pinball",
+      "Pipeline Green",
+    ],
   };
   for (const name of desktop) {
     await openIcon(page, name, isMobile);
@@ -847,6 +855,36 @@ test("Spider: one-suit deal, deal a row, hint, difficulty", async ({ page, isMob
   await page.getByRole("menuitem", { name: "Difficulty…" }).click();
   await page.locator("label", { hasText: "Beginner: one suit" }).click();
   await page.getByRole("button", { name: "OK" }).click();
+});
+
+test("Pipeline Pinball: hold Space to launch, the ball count shows, Player Controls has Default", async ({
+  page,
+  isMobile,
+}) => {
+  await skipBoot(page);
+  await openIcon(page, "Games", isMobile);
+  await openIcon(page, "Pipeline Pinball", isMobile);
+  const win = page.locator(".window.active");
+  const pb = win.locator("[data-pinball]");
+  await expect(pb).toHaveAttribute("data-phase", "ready"); // planck loaded on open, ball on the plunger
+  await expect(win.locator("[data-ball]")).toHaveText("1");
+  await expect(win.locator("[data-msg]")).toContainText("Hold Space to git push");
+  await page.keyboard.down(" ");
+  await page.waitForTimeout(400);
+  await page.keyboard.up(" ");
+  await expect(pb).toHaveAttribute("data-phase", "play");
+  await page.keyboard.press("F3");
+  await win.getByRole("menuitem", { name: "Options" }).click();
+  await page.getByRole("menuitem", { name: /Player Controls/ }).click();
+  const dialog = page.locator("[data-controls]");
+  await expect(dialog.locator('[data-bind="left"]')).toHaveText("Z");
+  await dialog.locator('[data-bind="left"]').click();
+  await page.keyboard.press("a");
+  await expect(dialog.locator('[data-bind="left"]')).toHaveText("A");
+  await dialog.getByRole("button", { name: "Default" }).click();
+  await expect(dialog.locator('[data-bind="left"]')).toHaveText("Z");
+  await dialog.getByRole("button", { name: "Cancel" }).click();
+  await expect(dialog).toBeHidden();
 });
 
 test("Hearts: name, pass three left, accept, the 2 of clubs leads and the bots answer", async ({ page, isMobile }) => {

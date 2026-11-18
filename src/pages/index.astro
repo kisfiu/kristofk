@@ -8,6 +8,7 @@ import Helper from "../components/Helper.astro";
 import Icon from "../components/Icon.astro";
 import Icons from "../components/Icons.astro";
 import Internet from "../components/Internet.astro";
+import Pinball from "../components/Pinball.astro";
 import Pipeline from "../components/Pipeline.astro";
 import Renovation from "../components/Renovation.astro";
 import Solitaire from "../components/Solitaire.astro";
@@ -130,6 +131,8 @@ const description =
             <Spider />
           ) : data.app === "hearts" ? (
             <Hearts />
+          ) : data.app === "pinball" ? (
+            <Pinball />
           ) : (
             <article class="doc"><Content /></article>
           )}

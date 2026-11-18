@@ -16,7 +16,7 @@ Every window is one Markdown file in `src/content/items/`. The front matter (che
 | `order` | sort order inside its parent |
 | `folder` | makes this item a folder that lists the items with that `parent`; any text in the file shows as a note above the icons |
 | `opens` | shortcut: opens another item instead |
-| `app` | a built-in app instead of text: `pipeline`, `internet`, `renovation` (hidden: no item uses it), `sweeper`, `solitaire`, `freecell`, `spider`, `hearts` |
+| `app` | a built-in app instead of text: `pipeline`, `internet`, `renovation` (hidden: no item uses it), `sweeper`, `solitaire`, `freecell`, `spider`, `hearts`, `pinball` |
 | `width`, `links` | window width in px; link buttons pinned at the bottom |
 
 Deep links open a window directly and skip the boot screen, e.g. https://kisfiu.github.io/kristofk/#resume
@@ -36,4 +36,4 @@ npm test           # lint, type check, unit tests, build, Playwright
 ## Deploy
 Push to `main`; `.github/workflows/deploy.yml` builds, tests, runs Lighthouse and publishes to GitHub Pages (Settings → Pages → Source: GitHub Actions). The base path (`/kristofk/`) comes from the repository name.
 
-Window styles: [XP.css](https://github.com/botoxparty/XP.css) (MIT). Icons and Racka are drawn for this site; the Hortobágy wallpapers are AI-generated for it. Live weather: [Open-Meteo](https://open-meteo.com/).
+Window styles: [XP.css](https://github.com/botoxparty/XP.css) (MIT). Icons and Racka are drawn for this site; the Hortobágy wallpapers are AI-generated for it. Live weather: [Open-Meteo](https://open-meteo.com/). Pinball physics: [planck.js](https://github.com/piqnt/planck.js) (MIT, see `THIRD_PARTY_NOTICES.md`).
