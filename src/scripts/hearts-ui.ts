@@ -200,6 +200,7 @@ export function initHearts(el: HTMLElement) {
     $("[data-sheet-rows]").innerHTML =
       `<tr><th></th>${[0, 1, 2, 3].map((p) => `<th>${nameOf(p).replace(/[<&]/g, "")}</th>`).join("")}</tr>${rows}<tr class="hz-total"><th>Total</th>${g.scores.map((s) => `<td>${s}</td>`).join("")}</tr>`;
     const d = $<HTMLDialogElement>("[data-sheet]");
+    d.returnValue = ""; // Esc would otherwise keep the last button pressed
     d.showModal();
     return new Promise((done) => d.addEventListener("close", () => done(), { once: true }));
   }
@@ -272,6 +273,7 @@ export function initHearts(el: HTMLElement) {
         },
         { once: true },
       );
+      d.returnValue = ""; // Esc would otherwise keep the last button pressed
       d.showModal();
     } else if (cmd === "help") $<HTMLDialogElement>("[data-help]").showModal();
     else if (cmd === "about") $<HTMLDialogElement>("[data-about]").showModal();

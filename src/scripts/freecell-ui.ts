@@ -337,6 +337,7 @@ export function initFreeCell(el: HTMLElement) {
         },
         { once: true },
       );
+      d.returnValue = ""; // Esc would otherwise keep the last button pressed
       d.showModal();
       input.select();
     } else if (cmd === "restart") deal(g.deal);
@@ -364,6 +365,7 @@ export function initFreeCell(el: HTMLElement) {
         },
         { once: true },
       );
+      d.returnValue = ""; // Esc would otherwise keep the last button pressed
       d.showModal();
     } else if (cmd === "help") $<HTMLDialogElement>("[data-help]").showModal();
     else if (cmd === "about") $<HTMLDialogElement>("[data-about]").showModal();

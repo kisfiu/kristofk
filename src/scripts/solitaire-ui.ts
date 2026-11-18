@@ -427,16 +427,20 @@ export function initSolitaire(el: HTMLElement) {
     for (let r = 12; r >= 0; r--) for (let i = 0; i < 4; i++) queue.push({ c: g.found[i][r], i });
     let cur: { c: Card; x: number; y: number; vx: number; vy: number } | null = null;
     let raf = 0;
-    const stop = () => {
+    const stop = async () => {
       cancelAnimationFrame(raf);
       removeEventListener("keydown", stop);
       table.removeEventListener("pointerdown", stop);
-      askAgain();
+      // a new deal already took over; and never open the question inside a hidden window (it would block the page)
+      if (!canvas.isConnected) return;
+      while (win?.hidden) await new Promise((r) => setTimeout(r, 250));
+      if (canvas.isConnected) askAgain();
     };
     const frame = () => {
+      if (!canvas.isConnected || win?.hidden) return void stop();
       if (!cur) {
         const next = queue.shift();
-        if (!next) return stop();
+        if (!next) return void stop();
         const [x, y] = slotXY({ kind: "found", i: next.i });
         cardEls.get(next.c.id)!.hidden = true;
         cur = { c: next.c, x, y, vx: (2 + Math.random() * 5) * (Math.random() < 0.5 ? -1 : 1), vy: -Math.random() * 8 };
@@ -464,6 +468,7 @@ export function initSolitaire(el: HTMLElement) {
   function askAgain() {
     const d = $<HTMLDialogElement>("[data-again]");
     d.addEventListener("close", () => (d.returnValue === "yes" ? deal() : undefined), { once: true });
+    d.returnValue = ""; // Esc would otherwise keep the last button pressed
     d.showModal();
   }
 
@@ -518,6 +523,7 @@ export function initSolitaire(el: HTMLElement) {
       },
       { once: true },
     );
+    d.returnValue = ""; // Esc would otherwise keep the last button pressed
     d.showModal();
   }
 
@@ -546,6 +552,7 @@ export function initSolitaire(el: HTMLElement) {
       },
       { once: true },
     );
+    d.returnValue = ""; // Esc would otherwise keep the last button pressed
     d.showModal();
   }
 

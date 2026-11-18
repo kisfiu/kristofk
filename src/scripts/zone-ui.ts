@@ -79,7 +79,11 @@ export function initZone(
 ) {
   const $ = <T extends Element = HTMLElement>(s: string) => root.querySelector<T>(s)!;
   const prefs = load(KEY, { notice: true, chatOnStart: true, skill: {} as Record<string, Skill> });
-  const ask = (title: string, text: string, buttons: string[]) => askBox(root, title, text, buttons);
+  // a message box inside a minimised or closed window would be invisible yet block the whole page: wait until it's shown
+  const ask = async (title: string, text: string, buttons: string[]) => {
+    while (root.closest<HTMLElement>(".window")?.hidden) await new Promise((r) => setTimeout(r, 250));
+    return askBox(root, title, text, buttons);
+  };
   let game: string | null = null;
   let stop: (() => void) | null = null;
   let timers: number[] = [];
@@ -118,6 +122,7 @@ export function initZone(
   async function enter(id: string) {
     if (prefs.notice) {
       const d = $<HTMLDialogElement>("[data-zone-notice]");
+      d.returnValue = ""; // Esc would otherwise keep the last button pressed
       d.showModal();
       const answer = await new Promise<string>((done) =>
         d.addEventListener("close", () => done(d.returnValue), { once: true }),
