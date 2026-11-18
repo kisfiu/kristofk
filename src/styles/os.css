@@ -2166,6 +2166,19 @@
     outline: 2px dashed #ffd34d;
     outline-offset: 4px;
   }
+  .ih-stat::before {
+    content: " · ";
+  }
+  /* narrow table: the side seats show the name, then the score or tricks/bid on a line of its own */
+  @container (max-width: 560px) {
+    :is(.hz-seat-1, .hz-seat-3) .ih-stat {
+      display: block;
+      text-align: center;
+      &::before {
+        content: none;
+      }
+    }
+  }
   /* Internet Spades: Rotary gold and royal blue teams, bag counter, bid buttons */
   .hz-name.isp-gold {
     color: #f7c04a;
