@@ -2296,6 +2296,77 @@
     margin: 6px 0 0;
   }
 
+  .ck-board {
+    position: relative;
+    display: grid;
+    width: min(100%, 400px);
+    aspect-ratio: 1;
+    border: 3px solid #5a3a12;
+    & [role="row"] {
+      display: grid;
+      grid-template-columns: repeat(8, 1fr);
+    }
+    & button {
+      all: unset;
+      aspect-ratio: 1;
+      cursor: pointer;
+      &.light {
+        background: #e8d6b0;
+        cursor: default;
+      }
+      &.dark {
+        background: #7a4a1c;
+      }
+      &.sel {
+        box-shadow: inset 0 0 0 3px #ffd34d;
+      }
+      &:focus-visible {
+        outline: 2px solid #ffd34d;
+        outline-offset: -3px;
+      }
+    }
+  }
+  .ck-piece {
+    display: block;
+    width: 84%;
+    height: 84%;
+    margin: 8%;
+    filter: drop-shadow(1px 2px 1px rgb(0 0 0 / 0.45));
+    & .ring {
+      fill: none;
+      stroke-width: 1.2;
+    }
+  }
+  .ck-red circle:first-child {
+    fill: #c8102e;
+    stroke: #7a0a1c;
+  }
+  .ck-red .ring {
+    stroke: #f2c230;
+  }
+  .ck-white circle:first-child {
+    fill: #f4efe2;
+    stroke: #888;
+  }
+  .ck-white .ring {
+    stroke: #5b6b7a;
+  }
+  /* the picked-up piece, following the mouse */
+  .ck-ghost {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 12.5%;
+    aspect-ratio: 1;
+    opacity: 0.75;
+    pointer-events: none;
+  }
+  @media (pointer: coarse) {
+    .ck-ghost {
+      display: none;
+    }
+  }
+
   /* ---------- Renovator XP ---------- */
   .reno {
     display: grid;

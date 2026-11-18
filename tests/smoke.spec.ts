@@ -894,6 +894,36 @@ test("Game Zone: Internet → Favorites → Zone → Internet Reversi against a 
   await expect(win.locator("[data-ie-address]")).toHaveValue("kk://zone");
 });
 
+test("Game Zone: Internet Checkers, pick a piece and step forward, Offer Draw toggles", async ({ page, isMobile }) => {
+  test.setTimeout(45_000);
+  await skipBoot(page);
+  await openIcon(page, "Internet", isMobile);
+  const win = page.getByRole("dialog", { name: /Internet/ });
+  await win.getByRole("button", { name: "Skip" }).click();
+  await win.getByRole("button", { name: /Surf with me/ }).click();
+  await win.getByRole("button", { name: /KK Game Zone/ }).click();
+  await win.getByRole("button", { name: /Internet Checkers/ }).click();
+  await page.getByRole("button", { name: "Play" }).click();
+  await expect(win.locator("[data-ie-address]")).toHaveValue("kk://zone/checkers");
+  const cells = win.locator(".ck-board [data-v]");
+  await expect(cells).toHaveCount(64, { timeout: 8000 });
+  await expect(win.locator(".ck-board .ck-piece")).toHaveCount(24);
+  await expect(win.locator("[data-ie-status]")).toHaveText(/Your turn/, { timeout: 8000 });
+  // a picked piece goes back when clicked again, and another can be picked instead
+  await cells.nth(44).click();
+  await expect(win.locator(".ck-board .sel")).toHaveCount(1);
+  await cells.nth(44).click();
+  await expect(win.locator(".ck-board .sel")).toHaveCount(0);
+  // your front row is row 5 of the view (cells 40, 42, 44, 46); step one up-left onto the empty row 4
+  await cells.nth(46).click();
+  await expect(win.locator('.ck-board [data-v="46"].sel')).toHaveCount(1);
+  await cells.nth(37).click();
+  await expect(win.locator('.ck-board [data-v="37"] .ck-piece')).toHaveCount(1);
+  await expect(win.locator('.ck-board [data-v="46"] .ck-piece')).toHaveCount(0);
+  await win.getByRole("button", { name: "Offer Draw" }).click();
+  await expect(win.getByRole("button", { name: "Offer Draw" })).toHaveAttribute("aria-pressed", "true");
+});
+
 test("pipeline game starts its timer on the first click", async ({ page, isMobile }) => {
   await skipBoot(page);
   await openIcon(page, "Games", isMobile);

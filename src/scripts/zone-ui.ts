@@ -36,6 +36,13 @@ const GAMES: Record<string, ZoneGame> = {
     help: `<p>Black is Jenkins, White is GitLab CI. Flip the jobs over one line at a time — Kristóf moved 18 teams this way.</p><ul><li>Black moves first. Place a stone so that a straight line of your opponent's stones (across, down or diagonally) is trapped between it and one of yours: they all flip to your colour.</li><li>A move must flip at least one stone. With no legal move, your turn passes by itself.</li><li>The game ends when neither side can move. Most stones wins.</li></ul>`,
     load: () => import("./reversi-ui").then((m) => m.startReversi),
   },
+  checkers: {
+    title: "Internet Checkers",
+    players: 2,
+    web: "invisible-school",
+    help: `<p>Debrecen against Budapest: the hometown versus the home. Jumps are compulsory, so think twice.</p><ul><li>Red moves first. Pieces move one square diagonally forward, onto dark squares.</li><li>Jump over an opponent's piece to capture it. If you can jump, you must, and you must keep jumping while you can (click each landing square in turn).</li><li>A piece reaching the far row is crowned king and may then move one square backward too.</li><li>You win when your opponent has no pieces or no move left. Offer Draw sends the offer with your next move.</li></ul>`,
+    load: () => import("./checkers-ui").then((m) => m.startCheckers),
+  },
 };
 
 const KEY = "kk-zone";
