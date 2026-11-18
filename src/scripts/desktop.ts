@@ -507,7 +507,8 @@ document.addEventListener("keydown", (e) => {
   const focus = document.activeElement;
   if (e.key !== "Enter" || !(focus === document.body || focus?.closest(".desktop > .icons"))) return;
   const chosen = iconsIn(desktopIcons).filter((i) => i.classList.contains("selected"));
-  if (chosen.length < 2) return; // a single focused icon already opens through its own click
+  // a single focused icon already opens through its own click; one picked by a drag selection has no focus
+  if (!chosen.length || (chosen.length === 1 && focus !== document.body)) return;
   e.preventDefault();
   for (const i of chosen) open(i.dataset.open!);
 });

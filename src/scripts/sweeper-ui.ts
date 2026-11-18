@@ -8,9 +8,12 @@ import {
   count,
   cycleMark,
   FLAG,
+  isLevel,
+  isRecord,
   LEVELS,
   type Level,
   minesLeft,
+  neighbours,
   newBoard,
   OPEN,
   open,
@@ -68,6 +71,10 @@ export function initSweeper(el: HTMLElement) {
     Std,
     typeof NO_RECORD
   >);
+  // stored values are only trusted in shape: a damaged one must not stop the game from opening
+  if (!isLevel(opts.level)) opts.level = "beginner";
+  opts.custom = clampCustom(Number(opts.custom?.h), Number(opts.custom?.w), Number(opts.custom?.mines));
+  for (const l of STD) if (!isRecord(best[l])) best[l] = { ...NO_RECORD };
   let b: Board;
   let seconds = 0;
   let timer = 0;
@@ -247,16 +254,7 @@ export function initSweeper(el: HTMLElement) {
     const y = Math.floor(((e.clientY - r.top) / r.height) * b.h);
     return x >= 0 && x < b.w && y >= 0 && y < b.h ? y * b.w + x : -1;
   };
-  const block = (i: number) => (i < 0 ? [] : [i, ...neighboursOf(i)]);
-  const neighboursOf = (i: number) => {
-    const out: number[] = [];
-    const x = i % b.w;
-    const y = Math.floor(i / b.w);
-    for (let dy = -1; dy <= 1; dy++)
-      for (let dx = -1; dx <= 1; dx++)
-        if ((dx || dy) && x + dx >= 0 && x + dx < b.w && y + dy >= 0 && y + dy < b.h) out.push((y + dy) * b.w + x + dx);
-    return out;
-  };
+  const block = (i: number) => (i < 0 ? [] : [i, ...neighbours(b, i)]);
   let prev = 0; // buttons held on the last event
   let chording = false;
   let spent = false; // a chord already went off: ignore the rest until every button is up

@@ -3,7 +3,7 @@ import { type Card, deck, SUITS, type Suit, shuffle } from "./cards";
 
 /** Beginner: one suit (♠), Intermediate: two (♠♥), Advanced: four. */
 export type Level = 1 | 2 | 4;
-export const LEVEL_SUITS: Record<Level, Suit[]> = { 1: ["S"], 2: ["S", "H"], 4: SUITS };
+const LEVEL_SUITS: Record<Level, Suit[]> = { 1: ["S"], 2: ["S", "H"], 4: SUITS };
 export const START_SCORE = 500;
 
 interface Snapshot {

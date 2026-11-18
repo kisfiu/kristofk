@@ -170,13 +170,17 @@ export function initSpider(el: HTMLElement) {
   }
 
   function changed() {
+    held = null; // a keyboard pick-up is about the table as it was
     hintAt = 0;
     render();
     if (!won(g)) return;
     tally(true);
     beep("fanfare");
     say(`You won with ${g.score} points!`);
+    const game = g;
     (prefs.winAnim && !reduced.matches ? fireworks() : Promise.resolve()).then(async () => {
+      // F2 or Undo during the fireworks: this win is no longer on the table
+      if (g !== game || !won(g)) return;
       if (
         (await ask("Spider", `Congratulations, you won! Score: ${g.score}.\nDo you want to play again?`, [
           "Yes",
@@ -388,7 +392,8 @@ export function initSpider(el: HTMLElement) {
     } else if (cmd === "open") {
       const saved = load(SAVED, {} as Partial<Spider>);
       if (!saved.cols) return void ask("Spider", "There is no saved game.", ["OK"]);
-      begin(saved as Spider);
+      // like New Game: a game in progress counts as given up first
+      if (await resign()) begin(saved as Spider);
     } else if (cmd === "help") $<HTMLDialogElement>("[data-help]").showModal();
     else if (cmd === "about") $<HTMLDialogElement>("[data-about]").showModal();
   }

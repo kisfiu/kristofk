@@ -164,8 +164,10 @@ def away_frame(f: int) -> Image.Image:
 def save(name: str, frames: list[Image.Image], ms: int, loop: bool) -> None:
     rgb = [im.convert("RGB") for im in frames]
     rgb[0].save(OUT / f"{name}.webp", save_all=True, append_images=rgb[1:], duration=ms, lossless=True, **({"loop": 0} if loop else {"loop": 1}))
+    if not loop:
+        return  # only the loop needs a GIF (the page's <img>); the wipe is played from the WebP alone
     gif = [im.convert("P", palette=Image.Palette.ADAPTIVE, colors=64) for im in rgb]
-    gif[0].save(OUT / f"{name}.gif", save_all=True, append_images=gif[1:], duration=ms, disposal=1, **({"loop": 0} if loop else {}))
+    gif[0].save(OUT / f"{name}.gif", save_all=True, append_images=gif[1:], duration=ms, disposal=1, loop=0)
 
 
 def main() -> None:
@@ -179,7 +181,7 @@ def main() -> None:
     save("away", away, AWAY_MS, loop=False)
     loop[0].convert("RGB").save(OUT / "still.png")
 
-    for name in ["loop.webp", "loop.gif", "away.webp", "away.gif", "still.png"]:
+    for name in ["loop.webp", "loop.gif", "away.webp", "still.png"]:
         size = (OUT / name).stat().st_size
         assert size < 200_000, f"{name} is {size} bytes"
         print(f"{name:10} {size / 1024:6.1f} KB")

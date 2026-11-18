@@ -136,7 +136,9 @@ function callRacka() {
 document.getElementById("racka-call")!.addEventListener("click", callRacka);
 addEventListener("keydown", (e) => {
   const typing = (e.target as Element).closest?.("input, textarea, select, [contenteditable]");
-  if (e.key.toLowerCase() !== "r" || e.ctrlKey || e.metaKey || e.altKey || e.repeat || typing) return;
+  // defaultPrevented: a game used the key (e.g. R set as a pinball flipper)
+  if (e.key.toLowerCase() !== "r" || e.ctrlKey || e.metaKey || e.altKey || e.repeat || typing || e.defaultPrevented)
+    return;
   e.preventDefault();
   callRacka();
 });

@@ -20,7 +20,7 @@ export interface ZoneApi {
   end(text: string): void;
   ask(title: string, text: string, buttons: string[]): Promise<string>;
 }
-export interface ZoneGame {
+interface ZoneGame {
   title: string;
   players: 2 | 4;
   /** The site window that "<Game> on the Web" opens. */
@@ -191,8 +191,13 @@ export function initZone(
     if (!game) return;
     const g = GAMES[game];
     const mine = session;
-    const run = await g.load();
+    const run = await g.load().catch(() => null);
     if (mine !== session || !game) return; // left (Back, Find New Opponent…) while the code was loading
+    if (!run) {
+      // the game's code is gone (a deploy replaced it): back to the lobby, which tries again on the next click
+      home();
+      return ctx.status("Couldn't load the game. Reload the page.");
+    }
     $("[data-zone-connect]").hidden = true;
     $("[data-zone-play]").hidden = false;
     playing = true;
@@ -233,7 +238,8 @@ export function initZone(
     return {
       me,
       opponents,
-      skill: skillOf(game!),
+      // the level the opponents were found at: a change in the Game menu applies from the next opponent
+      skill: opponents[0]?.skill ?? skillOf(game!),
       chat: line,
       status: ctx.status,
       ask,

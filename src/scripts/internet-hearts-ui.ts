@@ -10,17 +10,17 @@ import {
   type Hearts,
   legal,
   newGame,
+  PLACE,
   pass,
   passOf,
   passTo,
   places,
   play,
-  points,
+  whyNot,
 } from "./hearts-logic";
 import { beep } from "./sound";
 import type { ZoneApi } from "./zone-ui";
 
-const PLACE = ["First Place", "Second Place", "Third Place", "Last Place"];
 const PANEL_MS = 3500;
 const cap = (s: string) => s[0].toUpperCase() + s.slice(1);
 
@@ -146,15 +146,7 @@ export function startHearts(host: HTMLElement, api: ZoneApi): () => void {
   function playCard(card: Card) {
     if (!play(g, 0, card)) {
       beep("error");
-      api.status(
-        g.firstTrick && !g.trick.length
-          ? "You must lead the 2 of clubs."
-          : g.trick.length && g.hands[0].some((c) => c.suit === g.trick[0].c.suit)
-            ? "You must follow suit."
-            : g.firstTrick && points(card)
-              ? "You can't play a point card on the first trick."
-              : "Hearts have not been broken yet.",
-      );
+      api.status(whyNot(g, card));
       return;
     }
     picked = [];

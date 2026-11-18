@@ -21,7 +21,7 @@ export const sheet = (rows: string[][], head: string[]) =>
     )
     .join("")}</table>`;
 
-export interface TableOptions {
+interface TableOptions {
   /** The game state the table draws and the loop drives (Hearts and Spades share these fields). */
   g: { hands: Card[][]; trick: Trick; phase: string; turn: number };
   /** HTML at the left of the bar above the table. */

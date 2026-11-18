@@ -47,7 +47,7 @@ export function runLength(col: Card[]) {
 }
 
 /** The home cell a card goes to (its suit's pile, or the first empty one for an Ace), or -1. */
-export function homeFor(g: FreeCell, c: Card) {
+function homeFor(g: FreeCell, c: Card) {
   const i = g.home.findIndex((h) => h[0]?.suit === c.suit);
   if (i >= 0) return top(g.home[i])!.rank === c.rank - 1 ? i : -1;
   return c.rank === 1 ? g.home.findIndex((h) => !h.length) : -1;
@@ -172,5 +172,3 @@ export function undo(g: FreeCell): boolean {
   g.moves = Math.max(0, g.moves - 1);
   return true;
 }
-
-export { NO_STATS, record, type Stats } from "./scores";

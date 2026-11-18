@@ -8,6 +8,13 @@ export const LEVELS = {
 } as const;
 export type Level = keyof typeof LEVELS | "custom";
 
+/** A level name read back from storage: only the real ones (`in` would also accept "toString"). */
+export const isLevel = (l: unknown): l is Level =>
+  l === "custom" || (typeof l === "string" && Object.hasOwn(LEVELS, l));
+/** A best time read back from storage: a number of seconds and a name. */
+export const isRecord = (r: unknown): r is { t: number; name: string } =>
+  typeof (r as { t?: unknown } | null)?.t === "number" && typeof (r as { name?: unknown }).name === "string";
+
 /** XP's Custom Field limits; out-of-range values are clamped without a message. */
 export function clampCustom(h: number, w: number, mines: number) {
   const c = (v: number, lo: number, hi: number) => Math.min(hi, Math.max(lo, Math.round(v) || lo));

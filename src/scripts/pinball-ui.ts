@@ -41,14 +41,7 @@ import {
 import { load, save } from "./scores";
 
 type Action = "left" | "right" | "plunger" | "nudgeR" | "nudgeL" | "nudgeU";
-const ACTIONS: [Action, string][] = [
-  ["left", "Left flipper"],
-  ["right", "Right flipper"],
-  ["plunger", "Plunger"],
-  ["nudgeR", "Nudge right"],
-  ["nudgeL", "Nudge left"],
-  ["nudgeU", "Nudge up"],
-];
+const ACTIONS: Action[] = ["left", "right", "plunger", "nudgeR", "nudgeL", "nudgeU"];
 const DEFAULT_KEYS: Record<Action, string> = {
   left: "a",
   right: "d",
@@ -58,11 +51,16 @@ const DEFAULT_KEYS: Record<Action, string> = {
   nudgeU: "n",
 };
 const OPTS = "kk-pinball";
+/** Messages waiting to be shown at most (the one on screen and the newest ones). */
+const MESSAGES_KEPT = 4;
 const SCORES = "kk-pinball-scores";
 const keyName = (k: string) =>
   ({ " ": "Space", ArrowUp: "↑", ArrowDown: "↓", ArrowLeft: "←", ArrowRight: "→" })[k] ??
   (k.length === 1 ? k.toUpperCase() : k);
 const norm = (k: string) => (k.length === 1 ? k.toLowerCase() : k);
+const actionFor = (keys: Record<Action, string>, key: string) => ACTIONS.find((a) => norm(keys[a]) === norm(key));
+/** Keys a control can't use: the menu's F-keys, and modifiers (a press with Ctrl, Alt or ⌘ is left to the browser). */
+const RESERVED = /^(F\d+|Control|Alt|AltGraph|Meta|Shift|OS)$/;
 
 import { createView, type View } from "./pinball-3d";
 import {
@@ -78,6 +76,7 @@ import {
   LAMPS,
   LANE_X,
   LIFT,
+  MID,
   type P,
   PLUNGER,
   POD_R,
@@ -261,7 +260,6 @@ export function initPinball(el: HTMLElement) {
   let userPaused = false;
   let simTime = 0;
   let launchedAt = 0;
-  let saveUsed = false;
   let tiltedAt = 0;
   let plungeHeld = 0;
   let spin = 0;
@@ -294,6 +292,15 @@ export function initPinball(el: HTMLElement) {
 
   function say(...texts: string[]) {
     for (const text of texts) messages.push({ text, until: 0 });
+    // fast repeats (orbit, spinner) mustn't push news like Extra Ball seconds behind the game: keep the newest few
+    if (messages.length > MESSAGES_KEPT) messages.splice(1, messages.length - MESSAGES_KEPT);
+  }
+
+  /** Let go of every key, the demo's held flippers and a half-pulled plunger. */
+  function releaseAll() {
+    for (const a of ACTIONS) pressed[a] = false;
+    demoHold.fill(0);
+    plungeHeld = 0;
   }
 
   function resetBall() {
@@ -316,8 +323,8 @@ export function initPinball(el: HTMLElement) {
     menu.set("demo", demo);
     game = newGame(demo ? 1 : opts.players);
     phase = "ready";
-    saveUsed = false;
     userPaused = false;
+    releaseAll();
     messages.length = 0;
     lasting = "";
     resetBall();
@@ -352,7 +359,8 @@ export function initPinball(el: HTMLElement) {
     if (game.startMultiball) {
       game.startMultiball = false;
       // the other jobs come up the plunger lane, one after another
-      for (let i = 1; i < MULTIBALL; i++) launches.push(simTime + 0.4 + i * 0.8);
+      // (started again during Parallel jobs, it only tops up to MULTIBALL: the table draws that many)
+      for (let i = balls.length + launches.length; i < MULTIBALL; i++) launches.push(simTime + 0.4 + i * 0.8);
     }
   }
 
@@ -363,7 +371,9 @@ export function initPinball(el: HTMLElement) {
     const up = v.y < 0;
     if (tag === "bumper" || tag === "pod") {
       const list = tag === "pod" ? PODS : BUMPERS;
-      const center = list.find((b) => Math.hypot(b.x - ball.getPosition().x, b.y - ball.getPosition().y) < 1)!;
+      // the nearest centre: neighbouring bumpers are closer together than one bumper's reach
+      const dist = (b: P) => Math.hypot(b.x - ball.getPosition().x, b.y - ball.getPosition().y);
+      const center = list.reduce((a, b) => (dist(b) < dist(a) ? b : a));
       const d = { x: ball.getPosition().x - center.x, y: ball.getPosition().y - center.y };
       const len = Math.hypot(d.x, d.y) || 1;
       const speed = Math.max(13, v.length());
@@ -379,7 +389,7 @@ export function initPinball(el: HTMLElement) {
     } else if (tag === "sling") {
       const n = c.getWorldManifold(null)?.normal;
       // kick only off the long edge that faces the middle of the table
-      const left = ball.getPosition().x < 4.65;
+      const left = ball.getPosition().x < MID;
       if (n && -sign * n.x * (left ? 1 : -1) > 0.3) {
         ball.setLinearVelocity({ x: v.x + n.x * -sign * 9, y: v.y + n.y * -sign * 9 });
         flash.set(SLINGS[left ? 0 : 1], simTime);
@@ -415,7 +425,7 @@ export function initPinball(el: HTMLElement) {
     } else if (tag === "stageDrain" && st.mode === "stage") {
       // into the chute, wherever along the bottom edge it dropped off
       setMode(ball, "ramp");
-      ball.setTransform({ x: 2.6, y: ball.getPosition().y }, 0);
+      ball.setTransform({ x: RAMPS[1].path[0].x, y: ball.getPosition().y }, 0);
       ball.setLinearVelocity({ x: 0, y: Math.max(2, v.y) });
     } else if (tag === "chuteEnd" && st.mode === "ramp") setMode(ball, "field");
     else if (tag && typeof tag === "object") {
@@ -450,10 +460,7 @@ export function initPinball(el: HTMLElement) {
       if (balls.length === 1 && !launches.length) say("Parallel jobs done");
       return;
     }
-    const t = simTime - launchedAt;
-    const saved = !saveUsed && !game.tilted && t < BALL_SAVE;
-    const d = toDrain(game, saveUsed ? Number.POSITIVE_INFINITY : t);
-    saveUsed = saved;
+    const d = toDrain(game, simTime - launchedAt);
     if (lasting === "TILT!") lasting = "";
     if (!d.again) say("Build broken");
     say(...d.msgs);
@@ -523,13 +530,13 @@ export function initPinball(el: HTMLElement) {
   document.addEventListener("keydown", (e) => {
     if (!playing() || e.altKey || e.ctrlKey || e.metaKey) return;
     if ((e.target as Element).closest?.(".menubar, input, textarea, select")) return;
-    const a = ACTIONS.find(([k]) => norm(opts.controls[k]) === norm(e.key))?.[0];
+    const a = actionFor(opts.controls, e.key);
     if (!a) return;
     e.preventDefault();
     if (!demo && !userPaused) press(a, true);
   });
   document.addEventListener("keyup", (e) => {
-    const a = ACTIONS.find(([k]) => norm(opts.controls[k]) === norm(e.key))?.[0];
+    const a = actionFor(opts.controls, e.key);
     if (a && !demo) press(a, false);
   });
   for (const b of el.querySelectorAll<HTMLButtonElement>("[data-hold]")) {
@@ -552,7 +559,7 @@ export function initPinball(el: HTMLElement) {
   function frame(t: number) {
     raf = 0;
     if (paused()) {
-      for (const a of Object.keys(pressed) as Action[]) pressed[a] = false;
+      releaseAll();
       return paint();
     }
     acc += Math.min(0.05, (t - last) / 1000);
@@ -714,7 +721,7 @@ export function initPinball(el: HTMLElement) {
     if (id.startsWith("stage")) return p.lit[BANKS[n]];
     if (id.startsWith("ticket")) return Number(id.slice(6)) < Math.round((p.progress / TICKETS[p.ticket].goal) * 10);
     if (id === "again")
-      return p.shootAgain || (phase === "play" && !saveUsed && simTime - launchedAt < BALL_SAVE && blink(2));
+      return p.shootAgain || (phase === "play" && !game.saveUsed && simTime - launchedAt < BALL_SAVE && blink(2));
     return false;
   }
 
@@ -857,10 +864,10 @@ export function initPinball(el: HTMLElement) {
       for (const [k, f] of fresh.entries()) if (f >= r.at) fresh[k] = f + 1;
       fresh.push(r.at);
     }
-    if (fresh.length) {
-      save(SCORES, { table: scores });
-      showScores(fresh.filter((f) => f < 5));
-    }
+    if (!fresh.length) return;
+    save(SCORES, { table: scores });
+    // a modal box in a closed or minimised window would block the whole page unseen; the names stay "Player N"
+    if (!win.hidden) showScores(fresh.filter((f) => f < 5));
   }
 
   function controls() {
@@ -889,6 +896,10 @@ export function initPinball(el: HTMLElement) {
       if (!waiting || e.key === "Escape" || e.key === "Tab" || e.key === "Enter") return;
       e.preventDefault();
       e.stopPropagation();
+      if (RESERVED.test(e.key)) return;
+      // a key already used by another control swaps with it, so no two controls share a key
+      const other = ACTIONS.find((a) => a !== waiting && norm(keys[a]) === norm(e.key));
+      if (other) keys[other] = keys[waiting];
       keys[waiting] = e.key;
       waiting = null;
       draw();

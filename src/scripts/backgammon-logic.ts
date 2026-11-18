@@ -239,7 +239,7 @@ export function botMove(
 }
 
 /** A rough chance to win for side s, who is on roll: the race lead as a share of the race. */
-export function winChance(pos: Pos, s: Side) {
+function winChance(pos: Pos, s: Side) {
   const mine = pips(pos, s) - 4; // being on roll is worth about 4 pips
   const lead = (pips(pos, other(s)) - mine) / Math.max(mine, 30);
   return Math.min(1, Math.max(0, 0.5 + lead * 2));

@@ -15,6 +15,24 @@ describe("Checkers (XP Internet Checkers rules)", () => {
     expect(moves(b, RED).every((m) => m.path[1] < m.path[0])).toBe(true); // men move up
   });
 
+  it("a king can jump a ring of four and land back on its start square, but never jumps a piece twice", () => {
+    const b = new Uint8Array(64);
+    b[sq(4, 3)] = RED + KING;
+    for (const [r, c] of [
+      [3, 2],
+      [1, 2],
+      [1, 4],
+      [3, 4],
+    ])
+      b[sq(r, c)] = WHITE;
+    const list = moves(b, RED);
+    expect(list).toHaveLength(2); // once round each way
+    for (const m of list) {
+      expect(m.captured).toHaveLength(4);
+      expect(m.path.at(-1)).toBe(sq(4, 3));
+    }
+  });
+
   it("captures are compulsory", () => {
     const b = new Uint8Array(64);
     b[sq(5, 2)] = RED;

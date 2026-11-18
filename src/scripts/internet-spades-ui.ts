@@ -32,6 +32,8 @@ export function startSpades(host: HTMLElement, api: ZoneApi): () => void {
   let answer: ((v: string) => void) | null = null;
   /** What Auto-Play would answer to the waiting question. */
   let autoAnswer = () => "";
+  /** Auto-Play answers the waiting question after a moment, unless it was stopped meanwhile. */
+  const answerLater = () => t.later(() => t.auto && answer?.(autoAnswer()), BOT_MS);
   const bidText = (p: number) =>
     g.bids[p] === NIL ? (g.blind[p] ? "Double Nil" : "Nil") : g.bids[p] === null ? "" : String(g.bids[p]);
   const members = (team: number) => (team === 0 ? `You and ${t.name(2)}` : `${t.name(1)} and ${t.name(3)}`);
@@ -54,7 +56,7 @@ export function startSpades(host: HTMLElement, api: ZoneApi): () => void {
     onAuto(on) {
       // answer a waiting question, or play if it's your turn
       if (!on) return;
-      if (answer) t.later(() => answer?.(autoAnswer()), BOT_MS);
+      if (answer) answerLater();
       else if (g.phase === "play" && g.turn === 0 && !t.busy) yourTurn();
     },
     history() {
@@ -103,7 +105,7 @@ export function startSpades(host: HTMLElement, api: ZoneApi): () => void {
         done(v);
       };
       autoAnswer = byComputer;
-      if (t.auto) t.later(() => answer?.(autoAnswer()), BOT_MS);
+      if (t.auto) answerLater();
     });
   }
 

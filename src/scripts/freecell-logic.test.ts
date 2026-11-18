@@ -7,14 +7,13 @@ import {
   legalMoves,
   maxRun,
   move,
-  NO_STATS,
   newDeal,
-  record,
   runLength,
   safe,
   undo,
   won,
 } from "./freecell-logic";
+import { NO_STATS, record } from "./scores";
 
 let id = 100;
 const c = (suit: Suit, rank: number): Card => ({ id: id++, suit, rank, up: true });

@@ -16,7 +16,6 @@ export const RANKS = [
 export const MULTIPLIERS = [1, 2, 3, 5, 10] as const;
 export const BANKS = ["BUILD", "TEST", "DEPLOY"] as const;
 export type Bank = (typeof BANKS)[number];
-export const TARGETS = 3;
 export const BALLS = 3;
 /** Seconds after the launch in which a drain gives the ball back. */
 export const BALL_SAVE = 15;
@@ -109,6 +108,8 @@ export interface Game {
   tilted: boolean;
   /** Set by a hit that starts Parallel jobs; the table launches the extra balls and clears it. */
   startMultiball: boolean;
+  /** The ball save gave this ball back already: once per ball. */
+  saveUsed: boolean;
 }
 
 const fresh = (): Player => ({
@@ -139,6 +140,7 @@ export function newGame(players: number): Game {
     lastNudge: 0,
     tilted: false,
     startMultiball: false,
+    saveUsed: false,
   };
 }
 
@@ -329,7 +331,8 @@ export function drain(g: Game, ballTime: number): Drain {
   const tilted = g.tilted;
   g.tilt = 0;
   g.tilted = false;
-  if (!tilted && ballTime < BALL_SAVE) return { msgs: [`${who} Shoot Again`], bonus: 0, again: true };
+  g.saveUsed = !tilted && !g.saveUsed && ballTime < BALL_SAVE;
+  if (g.saveUsed) return { msgs: [`${who} Shoot Again`], bonus: 0, again: true };
   const msgs: string[] = [];
   const bonus = tilted ? 0 : p.bonus * multiplier(p);
   if (bonus) {

@@ -192,6 +192,7 @@ export function initSolitaire(el: HTMLElement) {
     if (celebrating) return false;
     const ok = !!fn();
     if (!ok) return false;
+    held = null; // a keyboard pick-up is about the table as it was (a draw changes the waste's top card)
     started = true;
     startClock();
     if (g.opts.scoring === "vegas" && g.opts.keepScore) save(VEGAS, { total: g.score });

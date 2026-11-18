@@ -29,7 +29,7 @@ export interface Game extends Snapshot {
 }
 
 export const DEFAULTS: Options = { draw: 3, scoring: "standard", timed: true, keepScore: false };
-export const VEGAS_BUYIN = 52;
+const VEGAS_BUYIN = 52;
 
 /** Seven columns of 1–7 cards, the top one face up; the rest is the stock. Vegas starts $52 down (plus any kept score). */
 export function newGame(opts: Options = DEFAULTS, rnd: () => number = Math.random, carry = 0): Game {
@@ -145,7 +145,7 @@ export function flip(g: Game, i: number): boolean {
 }
 
 /** The foundation that takes this single card, or -1. */
-export const foundationFor = (g: Game, c: Card) => g.found.findIndex((_, i) => canPlace(g, [c], { kind: "found", i }));
+const foundationFor = (g: Game, c: Card) => g.found.findIndex((_, i) => canPlace(g, [c], { kind: "found", i }));
 
 /** Double-click / right-click: send the top card of `from` to its foundation. */
 export function toFoundation(g: Game, from: Pile, keepUndo = false): boolean {

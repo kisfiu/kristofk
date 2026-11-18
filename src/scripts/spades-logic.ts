@@ -4,11 +4,11 @@
 import { type Card, deck, type Suit, shuffle } from "./cards";
 import { sortHand } from "./hearts-logic";
 
-export const WIN_AT = 500;
-export const LOSE_AT = -200;
+const WIN_AT = 500;
+const LOSE_AT = -200;
 export const NIL = 0;
 
-export interface NilResult {
+interface NilResult {
   p: number;
   blind: boolean;
   made: boolean;
@@ -47,7 +47,7 @@ export interface Spades {
 }
 
 export const teamOf = (p: number) => p % 2;
-export const partnerOf = (p: number) => (p + 2) % 4;
+const partnerOf = (p: number) => (p + 2) % 4;
 const hi = (c: Card) => (c.rank === 1 ? 14 : c.rank);
 
 export function newGame(dealer = 3): Spades {

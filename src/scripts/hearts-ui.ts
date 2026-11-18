@@ -10,11 +10,12 @@ import {
   type Hearts,
   legal,
   newGame,
+  PLACE,
   pass,
   passOf,
   places,
   play,
-  points,
+  whyNot,
 } from "./hearts-logic";
 import { initMenuBar } from "./menubar";
 import { load, save } from "./scores";
@@ -22,7 +23,6 @@ import { beep, soundOn, toggleSound } from "./sound";
 
 const KEY = "kk-hearts";
 const SPEED = { slow: 900, normal: 550, fast: 250 } as const;
-const PLACE = ["First Place", "Second Place", "Third Place", "Last Place"];
 /** What the animals say, in the site's voice (seat 1 Racka, 2 stork, 3 grey cattle by default). */
 const LINES: Record<number, { queen: string; broken: string; moon: string }> = {
   1: {
@@ -223,15 +223,7 @@ export function initHearts(el: HTMLElement) {
     const card = g.hands[0].find((c) => c.id === id)!;
     if (!play(g, 0, card)) {
       beep("error");
-      msg(
-        g.firstTrick && !g.trick.length
-          ? "You must lead the 2 of clubs."
-          : g.trick.length && g.hands[0].some((c) => c.suit === g.trick[0].c.suit)
-            ? "You must follow suit."
-            : g.firstTrick && points(card)
-              ? "You can't play a point card on the first trick."
-              : "Hearts have not been broken yet.",
-      );
+      msg(whyNot(g, card));
       return;
     }
     render();

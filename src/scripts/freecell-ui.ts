@@ -10,17 +10,14 @@ import {
   MAX_DEAL,
   maxRun,
   move,
-  NO_STATS,
   newDeal,
-  record,
   runLength,
-  type Stats,
   top,
   undo,
   won,
 } from "./freecell-logic";
 import { initMenuBar } from "./menubar";
-import { load, save } from "./scores";
+import { load, NO_STATS, record, type Stats, save } from "./scores";
 import { beep } from "./sound";
 
 const KEY = "kk-freecell";

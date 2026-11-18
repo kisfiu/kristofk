@@ -49,6 +49,7 @@ import {
   KICKERS,
   LAMPS,
   LIFT,
+  MID,
   MULT_Y,
   type P,
   PLUNGER,
@@ -60,6 +61,7 @@ import {
   RAMPS,
   SLINGS,
   SMOKE,
+  SPINNER,
   STAGE_FLIP_LEN,
   STAGE_FLIPPERS,
   STAGE_H,
@@ -159,7 +161,7 @@ function drawFloor(c: CanvasRenderingContext2D, S: number) {
     }
   }
   // the big picture in the middle: a pipeline status ring, one arc per stage, with tick marks
-  const cx = 4.65 * S;
+  const cx = MID * S;
   const cy = 10.75 * S;
   c.lineWidth = 0.05 * S;
   c.strokeStyle = "rgb(160 210 255 / 0.25)";
@@ -225,8 +227,8 @@ function drawFloor(c: CanvasRenderingContext2D, S: number) {
   text("git push", 9.35, 11.5, 0.26, "#cfe6ff", -Math.PI / 2);
   text("MERGE CONFLICT", 0.55, 14.4, 0.15, "#ff9c9c", -Math.PI / 2);
   text("MERGE CONFLICT", 8.75, 14.4, 0.15, "#ff9c9c", Math.PI / 2);
-  text("TICKET", 4.65, 13.75, 0.17, "#9fd8ff");
-  text("SHOOT AGAIN", 4.65, 15.62, 0.15, "#ffb0b0");
+  text("TICKET", MID, 13.75, 0.17, "#9fd8ff");
+  text("SHOOT AGAIN", MID, 15.62, 0.15, "#ffb0b0");
   for (const [b, x, y, a] of [
     ["BUILD", 1.0, 9.1, -Math.PI / 2],
     ["TEST", 4.3, 7.85, 0],
@@ -237,7 +239,7 @@ function drawFloor(c: CanvasRenderingContext2D, S: number) {
   c.beginPath();
   c.roundRect(3.25 * S, 10.25 * S, 2.8 * S, 0.95 * S, 0.2 * S);
   c.fill();
-  text("RANK", 4.65, 10.48, 0.2, "#9fb8d8");
+  text("RANK", MID, 10.48, 0.2, "#9fb8d8");
   c.restore();
 }
 
@@ -273,7 +275,7 @@ export function createView(canvas: HTMLCanvasElement): View {
   key.shadow.bias = -0.0004;
   scene.add(key, key.target, new HemisphereLight("#c8dcff", "#0b0d14", 0.6));
   const glow = new PointLight("#ffd9a0", 6, 9, 1.6);
-  glow.position.set(4.65, 2.2, 15.5);
+  glow.position.set(MID, 2.2, 15.5);
   scene.add(glow);
 
   const chrome = new MeshStandardMaterial({ color: "#e4e9f0", metalness: 1, roughness: 0.18 });
@@ -388,7 +390,7 @@ export function createView(canvas: HTMLCanvasElement): View {
     const mid = { x: (s[0].x + s[2].x) / 2, y: (s[0].y + s[2].y) / 2 };
     // just outside the edge, on the side that faces the middle
     const n = { x: (s[2].y - s[0].y) / len, y: -(s[2].x - s[0].x) / len };
-    const side = n.x * (4.65 - mid.x) > 0 ? 1 : -1;
+    const side = n.x * (MID - mid.x) > 0 ? 1 : -1;
     band.position.set(mid.x + n.x * side * 0.05, 0.2, mid.y + n.y * side * 0.05);
     band.rotation.y = -Math.atan2(s[2].y - s[0].y, s[2].x - s[0].x);
     add(band);
@@ -621,7 +623,7 @@ export function createView(canvas: HTMLCanvasElement): View {
 
   // spinner plate, plunger, apron
   const spinner = add(new Mesh(new BoxGeometry(0.85, 0.32, 0.03), chrome));
-  spinner.position.set(8.47, 0.42, 5.6);
+  spinner.position.set(SPINNER.x, 0.42, SPINNER.y);
   const plunger = new Group();
   const knob = new Mesh(new CylinderGeometry(0.17, 0.17, 0.3, 24), rubber);
   knob.rotation.x = Math.PI / 2;
@@ -640,7 +642,7 @@ export function createView(canvas: HTMLCanvasElement): View {
     }),
   );
   apronText.rotation.x = -Math.PI / 2;
-  apronText.position.set(4.65, 0.33, 17.75);
+  apronText.position.set(MID, 0.33, 17.75);
   scene.add(apronText);
 
   // the rank on its plaque
@@ -653,7 +655,7 @@ export function createView(canvas: HTMLCanvasElement): View {
     new MeshStandardMaterial({ map: rankTex, transparent: true }),
   );
   rankPlate.rotation.x = -Math.PI / 2;
-  rankPlate.position.set(4.65, 0.015, 10.88);
+  rankPlate.position.set(MID, 0.015, 10.88);
   scene.add(rankPlate);
   let rankShown = "";
 

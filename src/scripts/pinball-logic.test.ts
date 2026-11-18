@@ -90,6 +90,10 @@ describe("Pipeline Pinball rules", () => {
     const g = newGame(2);
     expect(drain(g, BALL_SAVE - 1)).toEqual({ msgs: ["Player 1 Shoot Again"], bonus: 0, again: true });
     expect([g.current, g.ball]).toEqual([0, 1]);
+    // once per ball: the ball it gave back drains for good, and the next ball has its own save
+    expect(drain(g, 1).again).toBe(false);
+    expect(g.current).toBe(1);
+    expect(drain(g, 1).again).toBe(true);
   });
 
   it("bonus × multiplier on the drain; rank and progress lights stay, the rest resets", () => {

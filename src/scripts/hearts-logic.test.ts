@@ -13,6 +13,7 @@ import {
   passTo,
   places,
   play,
+  whyNot,
 } from "./hearts-logic";
 import { seeded } from "./pipeline-logic";
 
@@ -84,6 +85,15 @@ describe("Hearts (XP rules)", () => {
     const follow = playing([[c("D", 5)], [c("D", 9), c("H", 9)], [], []]);
     play(follow, 0, follow.hands[0][0]);
     expect(legal(follow, 1).map((x) => x.suit)).toEqual(["D"]);
+  });
+
+  it("an illegal card gets the reason for the rule it breaks", () => {
+    const h4 = c("H", 4);
+    expect(whyNot(playing([[h4, c("D", 5)], [], [], []]), h4)).toBe("Hearts have not been broken yet.");
+    const led = playing([[h4, c("D", 5)], [], [], []], { trick: [{ p: 3, c: c("D", 9) }] });
+    expect(whyNot(led, h4)).toBe("You must follow suit.");
+    const first = playing([[h4, c("S", 5)], [], [], []], { firstTrick: true, trick: [{ p: 3, c: c("C", 2) }] });
+    expect(whyNot(first, h4)).toBe("You can't play a point card on the first trick.");
   });
 
   it("the Queen of Spades breaks hearts; the highest card of the suit led takes the trick", () => {

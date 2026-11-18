@@ -83,7 +83,8 @@ export function initInternet(el: HTMLElement) {
       m.initZone(el, { address: (u) => (address.value = u), status: (t) => (status.textContent = t), wide }),
     );
     try {
-      (await zone).home();
+      const z = await zone;
+      if (current === "zone") z.home(); // not if the visitor went elsewhere while it loaded
     } catch {
       // the code didn't load (a deploy replaced it): forget the failure, so the next click tries again
       zone = undefined;

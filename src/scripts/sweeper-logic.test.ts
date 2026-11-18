@@ -8,6 +8,8 @@ import {
   cycleMark,
   FLAG,
   HIDDEN,
+  isLevel,
+  isRecord,
   LEVELS,
   minesLeft,
   newBoard,
@@ -32,6 +34,15 @@ describe("Wall Sweeper (XP Minesweeper rules)", () => {
     expect(clampCustom(1, 99, 5)).toEqual({ h: 9, w: 30, mines: 10 });
     expect(clampCustom(24, 30, 5000)).toEqual({ h: 24, w: 30, mines: 667 });
     expect(clampCustom(9, 9, 100)).toEqual({ h: 9, w: 9, mines: 64 });
+  });
+
+  it("trusts only well-formed saved levels and best times (a damaged one falls back)", () => {
+    expect(["beginner", "custom"].every(isLevel)).toBe(true);
+    expect(["master", "toString", 3, null].some(isLevel)).toBe(false);
+    expect(isRecord({ t: 12, name: "Kristóf" })).toBe(true);
+    expect([null, {}, { t: "12", name: "x" }, { t: 5, name: 5 }].some(isRecord)).toBe(false);
+    // a damaged Custom Field comes back as the smallest one
+    expect(clampCustom(Number(undefined), Number("x"), Number(undefined))).toEqual({ h: 9, w: 9, mines: 10 });
   });
 
   it("places exactly the asked number of spots", () => {

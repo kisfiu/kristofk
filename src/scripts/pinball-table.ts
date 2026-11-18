@@ -3,7 +3,6 @@
 import { BANKS, type Bank } from "./pinball-logic";
 
 export const COLORS: Record<Bank, string> = { BUILD: "#3d8bfd", TEST: "#f0b429", DEPLOY: "#c77dff" };
-export const BANK_LIST = BANKS;
 // ---------- the table, in table units (10 × 18, y down) ----------
 export const W = 10;
 export const H = 18;
@@ -82,6 +81,9 @@ export const BUMPERS: P[] = [
   { x: 3.8, y: 5.6 },
 ];
 export const BUMPER_R = 0.45;
+/** The middle of the playfield (left of the plunger lane): the drain's centre, and which side a sling is on. */
+export const MID = 4.65;
+export const SPINNER = { x: 8.47, y: 5.6 };
 export type Target = { bank: Bank; i: number; x: number; y: number; hw: number; hh: number };
 export const TARGETS: Target[] = [
   ...[8.4, 9.1, 9.8].map((y, i) => ({ bank: "BUILD" as Bank, i, x: 0.4, y, hw: 0.08, hh: 0.28 })),
@@ -90,11 +92,11 @@ export const TARGETS: Target[] = [
 ];
 export const SENSORS: { tag: string; x: number; y: number; hw: number; hh: number }[] = [
   { tag: "orbit", x: 0.82, y: 6, hw: 0.5, hh: 0.1 },
-  { tag: "spinner", x: 8.47, y: 5.6, hw: 0.5, hh: 0.1 },
+  { tag: "spinner", ...SPINNER, hw: 0.5, hh: 0.1 },
   { tag: "ramp", x: 6, y: 3.7, hw: 0.5, hh: 0.1 },
   { tag: "outlane", x: 0.55, y: 15.2, hw: 0.24, hh: 0.1 },
   { tag: "outlane", x: 8.75, y: 15.2, hw: 0.24, hh: 0.1 },
-  { tag: "drain", x: 4.65, y: H - 0.2, hw: 4.35, hh: 0.1 },
+  { tag: "drain", x: MID, y: H - 0.2, hw: 4.35, hh: 0.1 },
 ];
 /** A ramp: a raised channel (its own physics layer, so a ball on it only touches it), its centre line, the
  *  height of its floor at each point of that line, and its two side walls. */
@@ -263,7 +265,7 @@ export const LAMPS: LampDef[] = [
     shape: disc(3.3 + i * 0.3, 13.35, 0.1),
     color: "#5ad1ff",
   })),
-  { id: "again", shape: disc(4.65, 16.05, 0.2), color: "#ff4d4d" },
+  { id: "again", shape: disc(MID, 16.05, 0.2), color: "#ff4d4d" },
 ];
 
 /** The apron across the bottom: the ball drains under it. */

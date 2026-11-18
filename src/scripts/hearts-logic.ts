@@ -3,8 +3,8 @@
 import { type Card, deck, type Suit, shuffle } from "./cards";
 
 export type Pass = "left" | "right" | "across" | "none";
-export const PASSES: Pass[] = ["left", "right", "across", "none"];
-export const GAME_OVER_AT = 100;
+const PASSES: Pass[] = ["left", "right", "across", "none"];
+const GAME_OVER_AT = 100;
 
 export interface Hearts {
   hands: Card[][];
@@ -99,6 +99,17 @@ export function legal(g: Hearts, p: number): Card[] {
   return h;
 }
 
+/** Finishing places as XP's Hearts names them, by places() index. */
+export const PLACE = ["First Place", "Second Place", "Third Place", "Last Place"];
+
+/** Why player 0 can't play `card` now (it isn't in legal()), in XP's words; both Hearts games show it. */
+export function whyNot(g: Hearts, card: Card): string {
+  if (g.firstTrick && !g.trick.length) return "You must lead the 2 of clubs.";
+  if (g.trick.length && g.hands[0].some((c) => c.suit === g.trick[0].c.suit)) return "You must follow suit.";
+  if (g.firstTrick && points(card)) return "You can't play a point card on the first trick.";
+  return "Hearts have not been broken yet.";
+}
+
 export function play(g: Hearts, p: number, card: Card): boolean {
   if (g.phase !== "play" || g.turn !== p || !legal(g, p).some((c) => c.id === card.id)) return false;
   g.hands[p] = g.hands[p].filter((c) => c.id !== card.id);
@@ -109,7 +120,7 @@ export function play(g: Hearts, p: number, card: Card): boolean {
 }
 
 /** The highest card of the suit led takes the trick. */
-export const trickWinner = (g: Hearts) => {
+const trickWinner = (g: Hearts) => {
   const lead = g.trick[0].c.suit;
   return g.trick.filter((t) => t.c.suit === lead).reduce((a, b) => (hi(b.c) > hi(a.c) ? b : a)).p;
 };
