@@ -1840,6 +1840,59 @@
     }
   }
 
+  /* ---------- FreeCell (shares the card table styles with Solitaire) ---------- */
+  .freecell {
+    display: grid;
+  }
+  .fc-table .sol-card {
+    cursor: pointer;
+    transition: transform 0.12s ease-out;
+  }
+  .fc-quick .sol-card {
+    transition: none;
+  }
+  /* XP shows a picked card inverted */
+  .fc-sel {
+    filter: invert(1);
+  }
+  /* free cells are CI runners, home cells the deploy targets */
+  .fc-cell::after,
+  .fc-home::after {
+    position: absolute;
+    inset: auto 0 6px;
+    text-align: center;
+    font:
+      10px Verdana,
+      sans-serif;
+    color: rgb(255 255 255 / 0.55);
+  }
+  .fc-cell::after {
+    content: "runner";
+  }
+  .fc-home {
+    background: rgb(182 242 138 / 0.12);
+    &::after {
+      content: "deploy";
+    }
+  }
+  .fc-racka {
+    position: absolute;
+    width: 36px;
+    height: 36px;
+    z-index: 1;
+    &.right {
+      transform: scaleX(-1);
+    }
+  }
+  .fc-flash {
+    animation: fc-flash 0.3s steps(1) 3;
+  }
+  @keyframes fc-flash {
+    50% {
+      filter: grayscale(1) brightness(1.3);
+    }
+  }
+
   /* ---------- Renovator XP ---------- */
   .reno {
     display: grid;

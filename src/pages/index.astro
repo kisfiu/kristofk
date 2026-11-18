@@ -2,6 +2,7 @@
 import "../styles/os.css";
 import { getCollection, render } from "astro:content";
 import wallpaper from "../assets/wallpaper/animals.svg?raw";
+import FreeCell from "../components/FreeCell.astro";
 import Helper from "../components/Helper.astro";
 import Icon from "../components/Icon.astro";
 import Icons from "../components/Icons.astro";
@@ -121,6 +122,8 @@ const description =
             <Sweeper />
           ) : data.app === "solitaire" ? (
             <Solitaire />
+          ) : data.app === "freecell" ? (
+            <FreeCell />
           ) : (
             <article class="doc"><Content /></article>
           )}

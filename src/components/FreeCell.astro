@@ -1,0 +1,107 @@
+---
+// FreeCell: XP rules (src/scripts/freecell-logic.ts), our own cards. UI: freecell-ui.ts
+import MenuBar from "./MenuBar.astro";
+---
+<div class="freecell" data-freecell>
+  <MenuBar
+    label="FreeCell"
+    menus={[
+      {
+        title: "Game",
+        items: [
+          { id: "new", label: "New Game", key: "F2" },
+          { id: "select", label: "Select Game…", key: "F3" },
+          { id: "restart", label: "Restart Game" },
+          "-",
+          { id: "stats", label: "Statistics…", key: "F4" },
+          { id: "options", label: "Options…", key: "F5" },
+          "-",
+          { id: "undo", label: "Undo", key: "F10" },
+          "-",
+          { id: "exit", label: "Exit" },
+        ],
+      },
+      {
+        title: "Help",
+        items: [{ id: "help", label: "How to play", key: "F1" }, "-", { id: "about", label: "About FreeCell" }],
+      },
+    ]}
+  />
+  <div class="fc-table sol-table" data-table tabindex="0" role="application" aria-label="FreeCell table. Keys 1 to 8 pick a column, 0 a free cell, 9 sends home." aria-describedby="fc-live">
+    <svg class="fc-racka" data-racka viewBox="0 0 24 24" aria-hidden="true">
+      <path d="M8 7C4 6 2 3 3 1M16 7c4-1 6-4 5-6" fill="none" stroke="#6b5a44" stroke-width="1.6" stroke-linecap="round" />
+      <circle cx="12" cy="13" r="8" fill="#f3ead8" stroke="#4a3d2c" />
+      <g fill="#f3ead8" stroke="#4a3d2c" stroke-width=".8"><circle cx="7" cy="7.5" r="2.2" /><circle cx="12" cy="5.5" r="2.4" /><circle cx="17" cy="7.5" r="2.2" /></g>
+      <circle cx="8.6" cy="12.5" r="1.1" /><circle cx="13.4" cy="12.5" r="1.1" /><path d="M8.5 16.4q2.4 1.6 4.8 0" fill="none" stroke="#000" />
+    </svg>
+  </div>
+  <div class="status-bar">
+    <p class="status-bar-field" data-left>Cards Left: 52</p>
+    <p class="status-bar-field" data-dealno>Game #1</p>
+  </div>
+  <p class="visually-hidden" id="fc-live" data-live role="status" aria-live="polite"></p>
+
+  <dialog class="xp-dialog" data-ask aria-labelledby="fc-ask-t">
+    <div class="xp-dtitle" id="fc-ask-t" data-ask-title>FreeCell</div>
+    <form method="dialog" class="xp-dialog-body">
+      <p data-ask-text></p>
+      <div class="xp-dialog-buttons" data-ask-buttons></div>
+    </form>
+  </dialog>
+
+  <dialog class="xp-dialog" data-select aria-labelledby="fc-sel-t">
+    <div class="xp-dtitle" id="fc-sel-t">Game Number</div>
+    <form method="dialog" class="xp-dialog-body">
+      <label>Select a game number from 1 to 1000000: <input name="n" type="number" inputmode="numeric" min="1" max="1000000" required /></label>
+      <div class="xp-dialog-buttons"><button value="ok">OK</button><button value="cancel" formnovalidate>Cancel</button></div>
+    </form>
+  </dialog>
+
+  <dialog class="xp-dialog" data-stats aria-labelledby="fc-stats-t">
+    <div class="xp-dtitle" id="fc-stats-t">FreeCell Statistics</div>
+    <form method="dialog" class="xp-dialog-body">
+      <table class="sw-best" data-stats-rows></table>
+      <div class="xp-dialog-buttons"><button type="button" data-clear>Clear</button><button value="ok">OK</button></div>
+    </form>
+  </dialog>
+
+  <dialog class="xp-dialog" data-options aria-labelledby="fc-opt-t">
+    <div class="xp-dtitle" id="fc-opt-t">FreeCell Options</div>
+    <form method="dialog" class="xp-dialog-body sol-options">
+      <label><input type="checkbox" name="messages" /> Display messages on illegal moves</label>
+      <label><input type="checkbox" name="quick" /> Quick play (no animation)</label>
+      <label><input type="checkbox" name="dbl" /> Double-click moves card to free cell</label>
+      <div class="xp-dialog-buttons"><button value="ok">OK</button><button value="cancel">Cancel</button></div>
+    </form>
+  </dialog>
+
+  <dialog class="xp-dialog" data-help aria-labelledby="fc-help-t">
+    <div class="xp-dtitle" id="fc-help-t">FreeCell — How to play</div>
+    <form method="dialog" class="xp-dialog-body sw-help">
+      <p>Every card is face up, like a good Developer Journey interview. Four free cells, eight columns, and nearly every deal can be won.</p>
+      <ul>
+        <li>Move all 52 cards to the four <b>home cells</b> (top right), each suit from Ace to King.</li>
+        <li>On the columns, build down in alternating colours. Any card can go into an empty column.</li>
+        <li>The four <b>free cells</b> (top left, our CI runners) each hold one card while you work.</li>
+        <li><b>Click</b> a card, then click where it should go. Click it again to cancel. <b>Double-click</b> sends a card to a free cell.</li>
+        <li>You can move several ordered cards at once if there are enough free cells and empty columns to do it card by card.</li>
+        <li>Keys: <b>1–8</b> pick a column, <b>0</b> a free cell, <b>9</b> sends to home.</li>
+      </ul>
+      <div class="xp-dialog-buttons"><button value="ok">OK</button></div>
+    </form>
+  </dialog>
+
+  <dialog class="xp-dialog" data-about aria-labelledby="fc-about-t">
+    <div class="xp-dtitle" id="fc-about-t">About FreeCell</div>
+    <form method="dialog" class="xp-dialog-body">
+      <p>FreeCell 1.0 for the KK desktop.<br />The Windows XP rules with our own numbered deals (game 1 here is not XP's game 1) and cards drawn for this site. Not affiliated with Microsoft.</p>
+      <div class="xp-dialog-buttons"><button value="ok">OK</button></div>
+    </form>
+  </dialog>
+</div>
+<script>
+  import { whenOpen } from "../scripts/lazy";
+
+  for (const el of document.querySelectorAll<HTMLElement>("[data-freecell]"))
+    whenOpen(el, () => import("../scripts/freecell-ui").then((m) => m.initFreeCell(el)));
+</script>
