@@ -249,7 +249,8 @@ export interface View {
 /** Throws when the browser has no WebGL; the caller shows a message instead. */
 export function createView(canvas: HTMLCanvasElement): View {
   const renderer = new WebGLRenderer({ canvas, antialias: true });
-  renderer.setPixelRatio(Math.min(2, devicePixelRatio));
+  // 1.5× is sharp enough for the table and much less work per frame on phones and GPU-less machines
+  renderer.setPixelRatio(Math.min(1.5, devicePixelRatio));
   renderer.shadowMap.enabled = true;
   renderer.shadowMap.type = PCFSoftShadowMap;
   renderer.toneMapping = ACESFilmicToneMapping;
