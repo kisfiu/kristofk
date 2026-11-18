@@ -16,7 +16,7 @@ Every window is one Markdown file in `src/content/items/`. The front matter (che
 | `order` | sort order inside its parent |
 | `folder` | makes this item a folder that lists the items with that `parent`; any text in the file shows as a note above the icons |
 | `opens` | shortcut: opens another item instead |
-| `app` | a built-in app instead of text: `pipeline`, `internet`, `renovation` (hidden: no item uses it), `sweeper`, `solitaire` |
+| `app` | a built-in app instead of text: `pipeline`, `internet`, `renovation` (hidden: no item uses it), `sweeper`, `solitaire`, `freecell` |
 | `width`, `links` | window width in px; link buttons pinned at the bottom |
 
 Deep links open a window directly and skip the boot screen, e.g. https://kisfiu.github.io/kristofk/#resume

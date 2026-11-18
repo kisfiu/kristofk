@@ -106,7 +106,7 @@ test("every desktop icon and folder item opens its window", async ({ page, isMob
     Hobbies: ["Books", "Marketplace", "Travel", "Renovation", "Baseball"],
     NGOs: ["Invisible School", "Rotary Club"],
     "Other Stuff": ["Address Book", "Side Projects", "readme.txt"],
-    Games: ["Wall Sweeper", "Solitaire", "Pipeline Green"],
+    Games: ["Wall Sweeper", "Solitaire", "FreeCell", "Pipeline Green"],
   };
   for (const name of desktop) {
     await openIcon(page, name, isMobile);
@@ -764,6 +764,35 @@ test("Solitaire: XP deal, Draw Three, Options redeal with Draw One, secret win a
   await win.getByRole("menuitem", { name: "Game" }).click();
   await page.getByRole("menuitem", { name: "Options…" }).click();
   await page.locator("label", { hasText: "Draw Three" }).click();
+  await page.getByRole("button", { name: "OK" }).click();
+});
+
+test("FreeCell: numbered deal, click-to-move into a free cell, Select Game, statistics", async ({ page, isMobile }) => {
+  await skipBoot(page);
+  await openIcon(page, "Games", isMobile);
+  await openIcon(page, "FreeCell", isMobile);
+  const win = page.locator(".window.active");
+  await expect(win.locator(".sol-card")).toHaveCount(52);
+  await expect(win.locator("[data-left]")).toHaveText("Cards Left: 52");
+  // a column's bottom card, then a free cell: it moves there
+  const before = await win.locator(".sol-card").evaluateAll((cs) => cs.map((c) => (c as HTMLElement).style.transform));
+  await page.keyboard.press("1");
+  await expect(win.locator(".fc-sel")).toHaveCount(1);
+  await win.locator(".fc-cell").first().click();
+  await expect(win.locator(".fc-sel")).toHaveCount(0);
+  const after = await win.locator(".sol-card").evaluateAll((cs) => cs.map((c) => (c as HTMLElement).style.transform));
+  expect(after.filter((t, i) => t !== before[i]).length).toBeGreaterThanOrEqual(1);
+  await win.getByRole("menuitem", { name: "Game" }).click();
+  await page.getByRole("menuitem", { name: "Select Game…" }).click();
+  await page.getByLabel(/Select a game number/).fill("617");
+  await page.getByRole("button", { name: "OK" }).click();
+  await page.getByRole("button", { name: "Yes" }).click(); // resign the game in progress
+  await expect(win.locator("[data-dealno]")).toHaveText("Game #617");
+  await expect(win.locator(".title-bar-text")).toContainText("FreeCell Game #617");
+  await page.keyboard.press("F4");
+  await expect(page.getByRole("dialog", { name: "FreeCell Statistics" })).toContainText("lost 1");
+  await page.getByRole("button", { name: "Clear", exact: true }).click();
+  await expect(page.getByRole("dialog", { name: "FreeCell Statistics" })).toContainText("lost 0");
   await page.getByRole("button", { name: "OK" }).click();
 });
 
