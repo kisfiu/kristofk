@@ -858,6 +858,42 @@ test("Hearts: name, pass three left, accept, the 2 of clubs leads and the bots a
   await expect(win.locator(".hz-played").first()).toBeVisible();
 });
 
+test("Game Zone: Internet → Favorites → Zone → Internet Reversi against a bot, then Exit", async ({
+  page,
+  isMobile,
+}) => {
+  test.setTimeout(45_000);
+  await skipBoot(page);
+  await openIcon(page, "Internet", isMobile);
+  const win = page.getByRole("dialog", { name: /Internet/ });
+  await win.getByRole("button", { name: "Skip" }).click();
+  await win.getByRole("button", { name: /Surf with me/ }).click();
+  await win.getByRole("button", { name: /KK Game Zone/ }).click();
+  await expect(win.locator("[data-ie-address]")).toHaveValue("kk://zone");
+  await win.getByRole("button", { name: /Internet Reversi/ }).click();
+  await page.getByRole("button", { name: "Play" }).click();
+  await expect(win.locator("[data-ie-address]")).toHaveValue("kk://zone/reversi");
+  await expect(win.locator("[data-zone-connect] li")).toHaveCount(4, { timeout: 8000 });
+  const cells = win.locator(".rv-board [data-i]");
+  await expect(cells).toHaveCount(64);
+  await expect(win.locator("[data-zone-players] li")).toHaveCount(2);
+  await expect(win.locator("[data-ie-status]")).toHaveText(/Your turn/, { timeout: 8000 });
+  const stones = () => win.locator(".rv-board svg").count();
+  const before = await stones();
+  // try squares from the keyboard (an illegal one only beeps) until a stone goes down
+  for (let i = 0; i < 64 && (await stones()) === before; i++) {
+    await cells.nth(i).focus();
+    await page.keyboard.press("Enter");
+  }
+  expect(await stones()).toBeGreaterThan(before);
+  await win.locator("[data-zone-say]").selectOption("Hello!");
+  await expect(win.locator("[data-zone-chat]")).toContainText("You: Hello!");
+  await win.getByRole("menuitem", { name: "Game" }).click();
+  await page.getByRole("menuitem", { name: "Exit" }).click();
+  await page.getByRole("button", { name: "Yes" }).click();
+  await expect(win.locator("[data-ie-address]")).toHaveValue("kk://zone");
+});
+
 test("pipeline game starts its timer on the first click", async ({ page, isMobile }) => {
   await skipBoot(page);
   await openIcon(page, "Games", isMobile);

@@ -49,6 +49,8 @@ npm run build && npm run lighthouse                      # perf/a11y/BP/SEO must
 | FreeCell (XP rules, our own deal numbers 1–1,000,000) | `freecell-logic.ts` (+ test: supermove formula, autoplay safety, legal moves, statistics), `freecell-ui.ts` (click to pick, click to drop; keys 1–8/0/9; Racka in the top row looks towards the mouse), `components/FreeCell.astro` |
 | Spider Solitaire (XP rules, 1/2/4 suits, score 500 − moves + 100 a run) | `spider-logic.ts` (+ test), `spider-ui.ts` (drag runs, deal row, M hint, save/open game, fireworks win), `components/Spider.astro`. Shared: `ask.ts` (XP message box), win/loss `Stats` + `record` in `scores.ts` |
 | Hearts (XP rules; Racka, Stork, Grey Cattle as opponents) | `hearts-logic.ts` (+ test: rules, scoring, moon, 20 whole bot games; the bots live here too, Internet Hearts reuses them), `hearts-ui.ts` (name dialog, passing, trick table, score sheet, animal lines), `components/Hearts.astro`. Hand cards overlap: tests click their left edge |
+| KK Game Zone (the XP Internet games, inside the Internet window: Favorites → KK Game Zone) | `zone.ts` (nicknames, chat phrases, bot replies; + test), `zone-ui.ts` (lobby, connecting screens, players, canned chat, skill, Play Again/New Opponent/Quit; games plug in via `ZoneApi`, listed in `GAMES`), markup in `components/Internet.astro`; `internet-ui.ts` has the `zone` screen and widens the window for games |
+| Internet Reversi (Jenkins vs GitLab CI) | `reversi-logic.ts` (+ test; alpha-beta bot, depth by skill), `reversi-ui.ts` |
 | Wall Sweeper (XP Minesweeper) | `sweeper-logic.ts` (+ test, one per XP rule), `sweeper-ui.ts` (mouse chords via `buttons`, touch long-press marks), `components/Sweeper.astro` |
 | Renovator XP game: **hidden** since 2026-11-18 (no content item), code kept for reuse | `renovation-logic.ts`, `renovation-games.ts`, `renovation-play.ts`, `renovation-ui.ts`, tests next to them, `components/Renovation.astro` |
 | Internet window (dial-up → surf → favorites) | `internet-ui.ts`, `components/Internet.astro`, `public/surf/` (made by `tools/make-surf.py`) |
@@ -59,7 +61,7 @@ npm run build && npm run lighthouse                      # perf/a11y/BP/SEO must
 | CI/deploy | `.github/workflows/deploy.yml`, `lighthouserc.json`, `.github/dependabot.yml` |
 
 Storage keys: sessionStorage `kk-booted`, `kk-role`, `kk-balloon`, `kk-helper` (`off`/`greeted`);
-localStorage `kk-visits`, `kk-icons` (`kk-icons-phone` on phones), `kk-sound` (`on`/`off`, all games), `kk-sweeper` (options), `kk-sweeper-best` (records), `kk-solitaire` (options, card back), `kk-solitaire-vegas` (Keep score total), `kk-freecell` (options), `kk-freecell-stats`, `kk-spider` (level, options), `kk-spider-stats`, `kk-spider-save`, `kk-hearts` (name, speed, opponent names); game keys use `scores.ts`/`sound.ts`, which have their own try/catch so the game modules stay testable without the desktop. Always go through `store.get/set` (private mode throws).
+localStorage `kk-visits`, `kk-icons` (`kk-icons-phone` on phones), `kk-sound` (`on`/`off`, all games), `kk-sweeper` (options), `kk-sweeper-best` (records), `kk-solitaire` (options, card back), `kk-solitaire-vegas` (Keep score total), `kk-freecell` (options), `kk-freecell-stats`, `kk-spider` (level, options), `kk-spider-stats`, `kk-spider-save`, `kk-hearts` (name, speed, opponent names), `kk-zone` (notice, chat at startup, skill per game), `kk-zone-reversi`; game keys use `scores.ts`/`sound.ts`, which have their own try/catch so the game modules stay testable without the desktop. Always go through `store.get/set` (private mode throws).
 
 ## How common requests are done
 - **New window or text change:** add or edit a Markdown file in `src/content/items/`. A new icon goes in `Icons.astro`.
@@ -96,6 +98,9 @@ localStorage `kk-visits`, `kk-icons` (`kk-icons-phone` on phones), `kk-sound` (`
 - Lighthouse in CI needs `--no-sandbox` (already in `lighthouserc.json`).
 - TypeScript 7 is blocked: `astro check` supports TS 5/6 only (Dependabot ignores TS majors).
 - On phones, a tap near an icon snaps onto it, so animal tests pick points no icon covers.
+- Astro 7 moves `astro dev` into the background (and exits) when it detects an AI agent (`CLAUDECODE`, `AI_AGENT`).
+  A launcher that watches the process then sees it die: the `kk-site` launch entry passes `--ignore-lock` to stay in
+  the foreground. Background servers: `npx astro dev status|logs|stop`.
 - XP.css draws radios and checkboxes itself; the real inputs are invisible, so tests click the `<label>`, not `.check()`.
 - Game dialogs (`<dialog>`) take Esc themselves: `desktop.ts` doesn't close the window while a `dialog[open]` exists.
 - A key or click that starts an effect must not also hit the listener the effect adds: add "any key stops it" listeners on the next frame.

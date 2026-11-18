@@ -8,7 +8,8 @@ const DIAL = [
   "Connected at 56,000 bps",
 ];
 
-type Screen = "dial" | "surf" | "away" | "favs";
+type Screen = "dial" | "surf" | "away" | "favs" | "zone";
+type Zone = ReturnType<typeof import("./zone-ui").initZone>;
 
 export function initInternet(el: HTMLElement) {
   const win = el.closest<HTMLElement>(".window");
@@ -22,6 +23,9 @@ export function initInternet(el: HTMLElement) {
   let current: Screen | "new" = "new";
   let timers: number[] = [];
   let awayBlob: Promise<Blob | null> | undefined;
+  // the Game Zone loads the first time someone opens it
+  let zone: Promise<Zone> | undefined;
+  const narrowWidth = win?.style.getPropertyValue("--w") ?? "";
 
   const later = (fn: () => void, ms: number) => timers.push(window.setTimeout(fn, ms));
   const show = (screen: Screen, url: string, text: string) => {
@@ -31,8 +35,14 @@ export function initInternet(el: HTMLElement) {
     for (const s of el.querySelectorAll<HTMLElement>("[data-ie-screen]")) s.hidden = s.dataset.ieScreen !== screen;
     address.value = url;
     status.textContent = text;
-    back.disabled = screen !== "favs";
+    back.disabled = screen !== "favs" && screen !== "zone";
+    if (screen !== "zone") {
+      void zone?.then((z) => z.leave());
+      wide(false);
+    }
   };
+  /** The games need more room than the surfer. */
+  const wide = (on: boolean) => win?.style.setProperty("--w", on ? "800px" : narrowWidth);
 
   function dial() {
     if (reduced) return surf();
@@ -67,9 +77,21 @@ export function initInternet(el: HTMLElement) {
     show("favs", "kk://favorites", "Done");
   }
 
+  async function openZone() {
+    show("zone", "kk://zone", "Opening the KK Game Zone…");
+    zone ??= import("./zone-ui").then((m) =>
+      m.initZone(el, { address: (u) => (address.value = u), status: (t) => (status.textContent = t), wide }),
+    );
+    (await zone).home();
+  }
+
   q("[data-ie-skip]").addEventListener("click", surf);
   q("[data-ie-screen=surf]").addEventListener("click", away);
-  back.addEventListener("click", surf);
+  back.addEventListener("click", async () => {
+    if (current !== "zone") return surf();
+    if (!(await (await zone!).back())) favs();
+  });
+  q("[data-ie-zone]").addEventListener("click", openZone);
   q("[data-ie-home]").addEventListener("click", dial);
 
   // Start the intro when the window opens; if it was closed mid-animation, resume at the wave.
