@@ -436,10 +436,13 @@ test("in a thunderstorm a lightning bolt strikes with each flash, somewhere new 
   await page.goto("./");
   const bolt = page.locator(".bolt");
   await expect(bolt).toHaveCSS("animation-name", "weather-bolt");
-  // jump to the flash (91.5% of the 9 s cycle): the bolt shows while the sky flashes
+  // jump to the flash's peak (91% of the 9 s cycle) and hold it there: the opacity drops fast right after it
   await page.evaluate(() => {
     for (const a of document.getAnimations())
-      if (/weather-(bolt|lightning)/.test(String((a as CSSAnimation).animationName))) a.currentTime = 8_235;
+      if (/weather-(bolt|lightning)/.test(String((a as CSSAnimation).animationName))) {
+        a.pause();
+        a.currentTime = 8_190;
+      }
   });
   expect(Number(await bolt.evaluate((b) => getComputedStyle(b).opacity))).toBeGreaterThan(0.5);
   const before = await bolt.evaluate((b) => (b as SVGElement).style.left);
