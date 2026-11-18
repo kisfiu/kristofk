@@ -106,7 +106,7 @@ test("every desktop icon and folder item opens its window", async ({ page, isMob
     Hobbies: ["Books", "Marketplace", "Travel", "Renovation", "Baseball"],
     NGOs: ["Invisible School", "Rotary Club"],
     "Other Stuff": ["Address Book", "Side Projects", "readme.txt"],
-    Games: ["Wall Sweeper", "Pipeline Green"],
+    Games: ["Wall Sweeper", "Solitaire", "Pipeline Green"],
   };
   for (const name of desktop) {
     await openIcon(page, name, isMobile);
@@ -724,6 +724,47 @@ test("Wall Sweeper: first knock starts the clock, right-click marks, Expert and 
   await win.getByRole("menuitem", { name: "Game" }).click();
   await page.getByRole("menuitemradio", { name: "Beginner" }).click();
   await expect(cells).toHaveCount(81);
+});
+
+test("Solitaire: XP deal, Draw Three, Options redeal with Draw One, secret win and Deal again", async ({
+  page,
+  isMobile,
+}) => {
+  await skipBoot(page);
+  await openIcon(page, "Games", isMobile);
+  await openIcon(page, "Solitaire", isMobile);
+  const win = page.locator(".window.active");
+  const cards = win.locator(".sol-card");
+  await expect(cards).toHaveCount(52);
+  await expect(win.locator('.sol-card:not([data-look^="back"])')).toHaveCount(7); // one face up per column
+  await expect(win.locator("[data-score]")).toHaveText("Score: 0");
+  const stock = win.locator(".sol-stock");
+  const deck = async () => {
+    const box = (await stock.boundingBox())!;
+    await page.mouse.click(box.x + box.width / 2, box.y + box.height / 2);
+  };
+  await deck();
+  await expect(win.locator('.sol-card:not([data-look^="back"])')).toHaveCount(10); // Draw Three
+  await win.getByRole("menuitem", { name: "Game" }).click();
+  await page.getByRole("menuitem", { name: "Options…" }).click();
+  await page.locator("label", { hasText: "Draw One" }).click();
+  await page.getByRole("button", { name: "OK" }).click();
+  await expect(win.locator('.sol-card:not([data-look^="back"])')).toHaveCount(7); // changing the draw deals again
+  await deck();
+  await expect(win.locator('.sol-card:not([data-look^="back"])')).toHaveCount(8);
+  await expect(win.locator("[data-time]")).not.toHaveText("Time: 0", { timeout: 3000 });
+  await win.locator(".sol-table").click({ button: "right", position: { x: 5, y: 300 } }); // send up what fits: no error
+  await page.keyboard.press("Alt+Shift+2");
+  await expect(win.locator(".sol-bounce")).toBeVisible();
+  await win.locator(".sol-table").click({ position: { x: 300, y: 300 } });
+  await expect(page.getByRole("dialog", { name: "Game Over" })).toBeVisible();
+  await page.getByRole("button", { name: "Yes" }).click();
+  await expect(win.locator('.sol-card:not([data-look^="back"])')).toHaveCount(7);
+  // put the default back for the next run in this browser profile
+  await win.getByRole("menuitem", { name: "Game" }).click();
+  await page.getByRole("menuitem", { name: "Options…" }).click();
+  await page.locator("label", { hasText: "Draw Three" }).click();
+  await page.getByRole("button", { name: "OK" }).click();
 });
 
 test("pipeline game starts its timer on the first click", async ({ page, isMobile }) => {

@@ -154,8 +154,8 @@ document.addEventListener("pointerdown", (e) => {
 });
 
 document.addEventListener("keydown", (e) => {
-  // an open Start menu takes Esc itself; balloons (manual popovers) don't, so they must not block it
-  if (e.key !== "Escape" || document.querySelector(":popover-open:not([popover=manual])")) return;
+  // an open Start menu or game dialog takes Esc itself; balloons (manual popovers) don't, so they must not block it
+  if (e.key !== "Escape" || document.querySelector(":popover-open:not([popover=manual]), dialog[open]")) return;
   const w = topWin();
   if (w) close(w);
 });
