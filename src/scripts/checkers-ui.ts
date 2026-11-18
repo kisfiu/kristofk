@@ -135,8 +135,11 @@ export function startCheckers(host: HTMLElement, api: ZoneApi): () => void {
     if (drawOffer) {
       drawOffer = false;
       host.querySelector("[data-ck-draw]")!.setAttribute("aria-pressed", "false");
-      if (acceptsDraw(b, bot)) return finish(`${opp.name} accepted your draw offer.\nDraw!`, null);
-      api.chat(null, `${opp.name} declined your draw offer.`);
+      // a move that wins the game is a win, whatever offer went with it
+      if (!lost(b, bot)) {
+        if (acceptsDraw(b, bot)) return finish(`${opp.name} accepted your draw offer.\nDraw!`, null);
+        api.chat(null, `${opp.name} declined your draw offer.`);
+      }
     }
     next();
   }

@@ -476,7 +476,7 @@ export function initSolitaire(el: HTMLElement) {
   function command(cmd: string) {
     if (cmd === "deal") deal();
     else if (cmd === "undo") {
-      if (!celebrating && undo(g)) render();
+      act(() => undo(g)); // act also saves the Vegas running total
     } else if (cmd === "deck") openDeck();
     else if (cmd === "options") openOptions();
     else if (cmd === "help") $<HTMLDialogElement>("[data-help]").showModal();
@@ -517,6 +517,8 @@ export function initSolitaire(el: HTMLElement) {
         });
         save(KEY, prefs);
         g.opts.keepScore = prefs.keepScore;
+        // Keep score switched on mid-game: the next deal goes on from this game's money, not an old total
+        if (prefs.keepScore && !redeal) save(VEGAS, { total: g.score });
         // XP deals again when the draw or the scoring changes
         if (redeal) deal();
         else render();

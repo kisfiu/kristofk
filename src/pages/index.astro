@@ -10,7 +10,6 @@ import Icons from "../components/Icons.astro";
 import Internet from "../components/Internet.astro";
 import Pinball from "../components/Pinball.astro";
 import Pipeline from "../components/Pipeline.astro";
-import Renovation from "../components/Renovation.astro";
 import Solitaire from "../components/Solitaire.astro";
 import Spider from "../components/Spider.astro";
 import Sweeper from "../components/Sweeper.astro";
@@ -119,8 +118,6 @@ const description =
             <Pipeline />
           ) : data.app === "internet" ? (
             <Internet links={data.links} />
-          ) : data.app === "renovation" ? (
-            <Renovation />
           ) : data.app === "sweeper" ? (
             <Sweeper />
           ) : data.app === "solitaire" ? (

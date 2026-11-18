@@ -67,8 +67,12 @@ export function cardTable(host: HTMLElement, api: ZoneApi, o: TableOptions) {
     }, ms);
     timers.add(t);
   };
-  // after stop() the pending timer is cleared, so the promise never settles and the game loop just ends
-  const sleep = (ms: number) => new Promise<void>((r) => later(r, ms));
+  // after stop() the pending timer is cleared, so the promise never settles and the game loop just ends;
+  // while the window is minimised or closed the game waits (no turns, no beeps nobody can see)
+  const sleep = async (ms: number) => {
+    await new Promise<void>((r) => later(r, ms));
+    while (host.closest<HTMLElement>(".window")?.hidden) await new Promise<void>((r) => later(r, 250));
+  };
   const name = (p: number) => (p === 0 ? api.me.name : api.opponents[p - 1].name);
   const seat = (p: number) => `<span class="hz-name ${o.seatClass?.(p) ?? ""}" data-name="${p}"></span>`;
 
@@ -186,10 +190,11 @@ export function cardTable(host: HTMLElement, api: ZoneApi, o: TableOptions) {
     o.onAuto(auto);
   });
   // Game ▸ Show Score (sent by the Zone menu)
-  host.addEventListener("zone-score", () => {
+  const showScore = () => {
     $("[data-history-rows]").innerHTML = o.history();
     history.showModal();
-  });
+  };
+  host.addEventListener("zone-score", showScore);
 
   return {
     $,
@@ -231,6 +236,7 @@ export function cardTable(host: HTMLElement, api: ZoneApi, o: TableOptions) {
     },
     stop() {
       stopped = true;
+      host.removeEventListener("zone-score", showScore);
       auto = false;
       for (const t of timers) clearTimeout(t);
       timers.clear();

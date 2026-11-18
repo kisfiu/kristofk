@@ -82,7 +82,14 @@ export function initInternet(el: HTMLElement) {
     zone ??= import("./zone-ui").then((m) =>
       m.initZone(el, { address: (u) => (address.value = u), status: (t) => (status.textContent = t), wide }),
     );
-    (await zone).home();
+    try {
+      (await zone).home();
+    } catch {
+      // the code didn't load (a deploy replaced it): forget the failure, so the next click tries again
+      zone = undefined;
+      favs();
+      status.textContent = "Couldn't open the KK Game Zone. Reload the page and try again.";
+    }
   }
 
   q("[data-ie-skip]").addEventListener("click", surf);

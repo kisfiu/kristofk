@@ -711,12 +711,16 @@ balloon.querySelector("[data-text]")!.addEventListener("click", () => balloon.hi
 
 // ---------- shut down / restart ----------
 const shutdown = $("#shutdown")!;
-$("#shutdown-btn")!.addEventListener("click", () => {
+/** Start ▸ Shut down and the Log off box's Turn Off: no balloon on top of "safe to turn off", none queued either. */
+function turnOff() {
   $("#start-menu")?.hidePopover();
+  if (balloon.matches(":popover-open")) balloon.hidePopover();
+  clearTimeout(nextTimer); // after the hide, which queues the next one
   vt(() => {
     shutdown.hidden = false;
   });
-});
+}
+$("#shutdown-btn")!.addEventListener("click", turnOff);
 shutdown.querySelector("button")!.addEventListener("click", () => {
   store.set(sessionStorage, "kk-booted", ""); // empty counts as "not booted", so the boot screen plays again
   location.replace(location.pathname);
@@ -760,11 +764,7 @@ for (const b of document.querySelectorAll<HTMLElement>("[data-role]")) {
   b.addEventListener("click", () => logOn(b.dataset.role as Role));
 }
 $("#logoff-btn")!.addEventListener("click", logOff);
-document.querySelector("[data-turn-off]")!.addEventListener("click", () => {
-  vt(() => {
-    shutdown.hidden = false;
-  });
-});
+document.querySelector("[data-turn-off]")!.addEventListener("click", turnOff);
 
 if (root.dataset.boot) {
   setTimeout(finishBoot, 3_200);

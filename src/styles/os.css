@@ -2888,194 +2888,7 @@
     }
   }
 
-  /* ---------- Renovator XP ---------- */
-  .reno {
-    display: grid;
-    gap: 6px;
-  }
-  .reno-cap {
-    margin: 0;
-    min-height: 1.4em;
-  }
-  .reno-art {
-    position: relative;
-    border: 2px inset #999;
-    & svg {
-      display: block;
-      width: 100%;
-      height: auto;
-    }
-  }
-  .reno-hot {
-    all: unset;
-    position: absolute;
-    cursor: pointer;
-    /* a glow filling just the door; the slanted side doors clip it to their shape */
-    &:hover,
-    &:focus-visible {
-      background: rgb(255 211 77 / 0.4);
-    }
-  }
-  .reno-room {
-    display: flex;
-    gap: 6px;
-    align-items: flex-start;
-    &[hidden] {
-      display: none;
-    }
-  }
-  .reno-tools {
-    display: grid;
-    grid-template-columns: 128px;
-    gap: 2px;
-    padding: 3px;
-    border: 1px solid #aca899;
-    background: #ece9d8;
-  }
-  .reno-tool {
-    min-width: 0;
-    min-height: 0;
-    display: flex;
-    align-items: center;
-    gap: 4px;
-    padding: 2px 4px;
-    text-align: left;
-    font-size: 11px;
-    line-height: 1.15;
-    & svg {
-      flex: none;
-      width: 22px;
-      height: 22px;
-    }
-    &[aria-pressed="true"] {
-      box-shadow: inset 1px 1px 2px #555;
-      background: #fff;
-      font-weight: bold;
-    }
-  }
-  /* phones: the toolbox goes above the wall as a wrapping grid, so the wall keeps the full width */
-  @media (max-width: 600px) {
-    .reno-room {
-      flex-direction: column;
-      align-items: stretch;
-    }
-    .reno-tools {
-      grid-template-columns: repeat(auto-fill, minmax(108px, 1fr));
-    }
-  }
-  .reno-main {
-    flex: 1;
-    min-width: 0;
-    display: grid;
-    gap: 4px;
-  }
-  .reno-steps {
-    display: flex;
-    flex-wrap: wrap;
-    gap: 2px 10px;
-    margin: 0;
-    padding: 0;
-    list-style: none;
-    font-size: 11px;
-    color: #6d6d6d;
-    & .done {
-      color: #2f7a1c;
-    }
-    & .now {
-      color: #000;
-      font-weight: bold;
-    }
-  }
-  .reno-wall {
-    box-sizing: border-box;
-    width: 100%;
-    height: auto;
-    border: 2px inset #999;
-    touch-action: none;
-    cursor: crosshair;
-  }
-  .reno-stage {
-    position: relative;
-    &.reno-shake {
-      animation: reno-shake 0.3s;
-    }
-  }
-  @keyframes reno-shake {
-    25% {
-      translate: -4px 0;
-    }
-    75% {
-      translate: 4px 0;
-    }
-  }
-  .reno-banner {
-    position: absolute;
-    inset: 40% 0 auto;
-    margin: 0;
-    text-align: center;
-    font:
-      bold italic 30px / 1.2 "Trebuchet MS",
-      Verdana,
-      sans-serif;
-    color: #ffd34d;
-    text-shadow:
-      2px 2px 0 #c41f12,
-      -1px -1px 0 #000,
-      1px 1px 0 #000;
-    pointer-events: none;
-    &[hidden] {
-      display: none;
-    }
-  }
-  .reno-extra {
-    display: flex;
-    gap: 6px;
-    &:not(:has(button:not([hidden]))) {
-      display: none;
-    }
-  }
-  .reno-palette {
-    display: flex;
-    gap: 3px;
-  }
-  .reno-swatch {
-    min-width: 0;
-    min-height: 0;
-    width: 22px;
-    height: 16px;
-    padding: 0;
-    border: 1px solid #555;
-    &[aria-pressed="true"] {
-      outline: 2px solid #000;
-      outline-offset: 1px;
-    }
-    &:disabled {
-      opacity: 0.5;
-    }
-  }
-  .reno-bar {
-    display: flex;
-    flex-wrap: wrap;
-    gap: 6px 12px;
-    align-items: center;
-    &[hidden] {
-      display: none;
-    }
-    & progress {
-      flex: 1;
-      min-width: 80px;
-    }
-  }
-  .reno-neg {
-    color: #c41f12;
-    font-weight: bold;
-  }
-  .reno-msg {
-    margin: 0;
-    min-height: 1.5em;
-    font-weight: bold;
-  }
-  .reno-dialog,
+  /* ---------- Game message boxes (XP style; every game uses .xp-dialog) ---------- */
   .xp-dialog {
     padding: 0;
     max-width: min(560px, 95vw);
@@ -3086,7 +2899,6 @@
       background: rgb(0 0 0 / 0.25);
     }
   }
-  .reno-dtitle,
   .xp-dtitle {
     padding: 4px 8px;
     color: #fff;
@@ -3094,7 +2906,6 @@
     text-shadow: 1px 1px #0f1089;
     background: linear-gradient(#0997ff, #0053ee 8%, #0050ee 40%, #06f 88%, #0055eb);
   }
-  .reno-dialog-body,
   .xp-dialog-body {
     padding: 12px;
     display: grid;
@@ -3104,24 +2915,6 @@
       white-space: pre-line;
     }
   }
-  .reno-ba {
-    display: flex;
-    gap: 8px;
-    &[hidden] {
-      display: none;
-    }
-    & figure {
-      margin: 0;
-      flex: 1;
-      text-align: center;
-    }
-    & canvas {
-      width: 100%;
-      height: auto;
-      border: 1px solid #999;
-    }
-  }
-  .reno-dialog-buttons,
   .xp-dialog-buttons {
     display: flex;
     justify-content: flex-end;

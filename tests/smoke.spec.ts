@@ -704,7 +704,9 @@ test("Wall Sweeper: first knock starts the clock, right-click marks, Expert and 
   await expect(left).toHaveAttribute("aria-label", "10 hollow spots left");
   await expect(time).toHaveAttribute("aria-label", "0 seconds");
   await (isMobile ? cells.nth(40).tap() : cells.nth(40).click());
-  await expect(cells.nth(40)).not.toHaveAttribute("aria-label", "hidden"); // the first knock is always safe
+  await expect(cells.nth(40)).not.toHaveAttribute("aria-label", "hidden");
+  // the first knock is always safe: no hollow spot under it, the face is still alive
+  await expect(win.locator("[data-face]")).not.toHaveAttribute("data-face", "dead");
   await expect(time).not.toHaveAttribute("aria-label", "0 seconds");
   if (!isMobile) {
     await win.locator('[role="gridcell"][aria-label="hidden"]').first().click({ button: "right" });
@@ -720,16 +722,18 @@ test("Wall Sweeper: first knock starts the clock, right-click marks, Expert and 
           ),
       );
     });
-    if (n >= 0) {
-      const box = (await cells.nth(n).boundingBox())!;
-      await page.mouse.move(box.x + box.width / 2, box.y + box.height / 2);
-      await page.mouse.down();
-      await page.mouse.down({ button: "right" });
-      await expect(win.locator("[data-face]")).toHaveAttribute("data-face", "wow");
-      await expect(win.locator('[role="gridcell"].o[aria-label="hidden"]').first()).toBeVisible();
-      await page.mouse.up({ button: "right" });
-      await page.mouse.up();
-    }
+    expect(n).toBeGreaterThanOrEqual(0);
+    const box = (await cells.nth(n).boundingBox())!;
+    await page.mouse.move(box.x + box.width / 2, box.y + box.height / 2);
+    await page.mouse.down();
+    await page.mouse.down({ button: "right" });
+    await expect(win.locator("[data-face]")).toHaveAttribute("data-face", "wow");
+    await expect(win.locator('[role="gridcell"].o[aria-label="hidden"]').first()).toBeVisible();
+    await page.mouse.up({ button: "right" });
+    await page.mouse.up();
+    // letting go ends the chord: the block pops back up and Racka stops looking surprised
+    await expect(win.locator('[role="gridcell"].o[aria-label="hidden"]')).toHaveCount(0);
+    await expect(win.locator("[data-face]")).not.toHaveAttribute("data-face", "wow");
   }
   await win.getByRole("menuitem", { name: "Game" }).click();
   await page.getByRole("menuitemradio", { name: "Expert" }).click();
@@ -737,6 +741,14 @@ test("Wall Sweeper: first knock starts the clock, right-click marks, Expert and 
   await expect(left).toHaveAttribute("aria-label", "99 hollow spots left");
   await page.keyboard.press("F2");
   await expect(time).toHaveAttribute("aria-label", "0 seconds");
+  // Custom…: out-of-range values are clamped quietly, as in XP (Height 50 becomes 24)
+  await win.getByRole("menuitem", { name: "Game" }).click();
+  await page.getByRole("menuitemradio", { name: "Custom…" }).click();
+  await page.getByLabel("Height:").fill("50");
+  await page.getByLabel("Width:").fill("9");
+  await page.getByLabel("Hollow spots:").fill("10");
+  await page.locator("[data-custom]").getByRole("button", { name: "OK" }).click();
+  await expect(cells).toHaveCount(24 * 9);
   await win.getByRole("menuitem", { name: "Game" }).click();
   await page.getByRole("menuitemradio", { name: "Beginner" }).click();
   await expect(cells).toHaveCount(81);

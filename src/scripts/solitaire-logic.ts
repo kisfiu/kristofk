@@ -18,6 +18,8 @@ interface Snapshot {
   tab: Card[][];
   score: number;
   recycles: number;
+  /** The clock when the move was made: an undo keeps the clock and the time penalties since. */
+  seconds: number;
 }
 export interface Game extends Snapshot {
   opts: Options;
@@ -51,7 +53,15 @@ export function newGame(opts: Options = DEFAULTS, rnd: () => number = Math.rando
 }
 
 const snap = (g: Game): Snapshot =>
-  structuredClone({ stock: g.stock, waste: g.waste, found: g.found, tab: g.tab, score: g.score, recycles: g.recycles });
+  structuredClone({
+    stock: g.stock,
+    waste: g.waste,
+    found: g.found,
+    tab: g.tab,
+    score: g.score,
+    recycles: g.recycles,
+    seconds: g.seconds,
+  });
 function remember(g: Game) {
   g.undo = snap(g);
 }
@@ -178,7 +188,11 @@ export function bonus(g: Game) {
 
 export function undo(g: Game): boolean {
   if (!g.undo) return false;
+  const now = g.seconds;
   Object.assign(g, g.undo);
+  // time doesn't go back: the clock stays, and the −2 per 10 seconds that passed since that move still counts
+  g.seconds = now;
+  if (g.opts.timed) add(g, -2 * (Math.floor(now / 10) - Math.floor(g.undo.seconds / 10)));
   g.undo = null;
   return true;
 }

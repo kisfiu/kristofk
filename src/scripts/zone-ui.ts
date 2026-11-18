@@ -79,13 +79,11 @@ export function initZone(
 ) {
   const $ = <T extends Element = HTMLElement>(s: string) => root.querySelector<T>(s)!;
   const prefs = load(KEY, { notice: true, chatOnStart: true, skill: {} as Record<string, Skill> });
-  // a message box inside a minimised or closed window would be invisible yet block the whole page: wait until it's shown
-  const ask = async (title: string, text: string, buttons: string[]) => {
-    while (root.closest<HTMLElement>(".window")?.hidden) await new Promise((r) => setTimeout(r, 250));
-    return askBox(root, title, text, buttons);
-  };
+  const ask = (title: string, text: string, buttons: string[]) => askBox(root, title, text, buttons);
   let game: string | null = null;
   let stop: (() => void) | null = null;
+  /** Goes up whenever a game is left, so a game whose code is still loading knows not to start. */
+  let session = 0;
   let timers: number[] = [];
   let chatOn = prefs.chatOnStart;
   let playing = false;
@@ -113,6 +111,7 @@ export function initZone(
   }
 
   function leaveGame() {
+    session++;
     clearTimers();
     stop?.();
     stop = null;
@@ -191,7 +190,9 @@ export function initZone(
   async function start() {
     if (!game) return;
     const g = GAMES[game];
+    const mine = session;
     const run = await g.load();
+    if (mine !== session || !game) return; // left (Back, Find New Opponent…) while the code was loading
     $("[data-zone-connect]").hidden = true;
     $("[data-zone-play]").hidden = false;
     playing = true;
@@ -199,6 +200,7 @@ export function initZone(
     players();
     const host = $("[data-zone-board]");
     host.replaceChildren();
+    stop?.(); // Play Again: the finished game lets go of its timers and listeners first
     stop = run(host, api(g));
     // bots say hello now and then
     for (const o of opponents)

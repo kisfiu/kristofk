@@ -462,7 +462,11 @@ export function initPinball(el: HTMLElement) {
       phase = "over";
       lasting = "F2 Starts New Game";
       if (demo) setTimeout(() => demo && phase === "over" && start(true), 4000);
-      else setTimeout(recordScores, 1200);
+      else {
+        // this game's scores, even if a new game has started by then (F2 straight away)
+        const ended = game;
+        setTimeout(() => recordScores(ended), 1200);
+      }
     } else phase = "ready";
     resetBall();
   }
@@ -844,9 +848,9 @@ export function initPinball(el: HTMLElement) {
     );
   }
 
-  function recordScores() {
+  function recordScores(ended: Game) {
     const fresh: number[] = [];
-    for (const [i, p] of game.players.entries()) {
+    for (const [i, p] of ended.players.entries()) {
       const r = insertScore(scores, { name: `Player ${i + 1}`, score: p.score });
       if (r.at < 0) continue;
       scores = r.table;

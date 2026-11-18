@@ -1,5 +1,6 @@
 import { ask as askBox } from "./ask";
 import { back, face } from "./card-art";
+import { esc } from "./card-table";
 import { cardName } from "./cards";
 import {
   botPass,
@@ -93,7 +94,8 @@ export function initHearts(el: HTMLElement) {
       .join("");
     $("[data-trick]").innerHTML = g.trick
       .map(
-        (t) => `<div class="hz-played hz-at-${t.p}" aria-label="${nameOf(t.p)}: ${cardName(t.c)}">${face(t.c)}</div>`,
+        (t) =>
+          `<div class="hz-played hz-at-${t.p}" aria-label="${esc(nameOf(t.p))}: ${cardName(t.c)}">${face(t.c)}</div>`,
       )
       .join("");
   }
@@ -198,7 +200,7 @@ export function initHearts(el: HTMLElement) {
       .map((h, i) => `<tr><th>Hand ${i + 1}</th>${h.map((n) => `<td>${n}</td>`).join("")}</tr>`)
       .join("");
     $("[data-sheet-rows]").innerHTML =
-      `<tr><th></th>${[0, 1, 2, 3].map((p) => `<th>${nameOf(p).replace(/[<&]/g, "")}</th>`).join("")}</tr>${rows}<tr class="hz-total"><th>Total</th>${g.scores.map((s) => `<td>${s}</td>`).join("")}</tr>`;
+      `<tr><th></th>${[0, 1, 2, 3].map((p) => `<th>${esc(nameOf(p))}</th>`).join("")}</tr>${rows}<tr class="hz-total"><th>Total</th>${g.scores.map((s) => `<td>${s}</td>`).join("")}</tr>`;
     const d = $<HTMLDialogElement>("[data-sheet]");
     d.returnValue = ""; // Esc would otherwise keep the last button pressed
     d.showModal();

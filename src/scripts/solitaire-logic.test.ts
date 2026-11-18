@@ -186,6 +186,17 @@ describe("Solitaire (XP Klondike rules)", () => {
     expect(bonus(untimed)).toBe(0);
   });
 
+  it("undo in a timed game keeps the clock and the time penalty", () => {
+    const g = newGame(opts({ draw: 1 }), seeded(8));
+    g.score = 100;
+    draw(g);
+    for (let s = 0; s < 60; s++) tick(g);
+    const after = g.score;
+    undo(g);
+    expect(g.seconds).toBe(60);
+    expect(g.score).toBe(after);
+  });
+
   it("is won when all four foundations hold 13", () => {
     const g = table();
     g.found = (["C", "D", "H", "S"] as Suit[]).map((s) => Array.from({ length: 13 }, (_, r) => card(s, r + 1)));
