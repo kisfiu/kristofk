@@ -2,7 +2,7 @@ import { defineCollection } from "astro:content";
 import { glob } from "astro/loaders";
 import { z } from "astro/zod";
 
-const place = z.enum(["desktop", "hobbies", "ngos", "other"]);
+const place = z.enum(["desktop", "hobbies", "ngos", "other", "games"]);
 
 const items = defineCollection({
   loader: glob({ pattern: "*.md", base: "./src/content/items" }),
@@ -19,7 +19,7 @@ const items = defineCollection({
     /** Shortcut: clicking opens another item instead of its own window. */
     opens: z.string().optional(),
     /** Built-in app rendered instead of Markdown. */
-    app: z.enum(["pipeline", "internet", "renovation"]).optional(),
+    app: z.enum(["pipeline", "internet", "renovation", "sweeper"]).optional(),
     width: z.number().default(460),
     links: z.array(z.object({ label: z.string(), href: z.url() })).default([]),
   }),

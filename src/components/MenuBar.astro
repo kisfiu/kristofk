@@ -1,0 +1,47 @@
+---
+// An XP-style application menu bar (Game, Help…). Behaviour: src/scripts/menubar.ts
+export interface Item {
+  id: string;
+  label: string;
+  /** Shortcut shown on the right and handled while the window is active, e.g. "F2", "Ctrl+Z", "M". */
+  key?: string;
+  /** Checkable item (a tick when on). */
+  check?: boolean;
+  /** Radio item: one of the items with the same group is ticked. */
+  group?: string;
+  on?: boolean;
+}
+interface Props {
+  label: string;
+  menus: { title: string; items: (Item | "-")[] }[];
+}
+const { label, menus } = Astro.props;
+---
+<div class="menubar" role="menubar" aria-label={label} data-menubar>
+  {menus.map((m, i) => (
+    <>
+      <button type="button" role="menuitem" aria-haspopup="menu" aria-expanded="false" tabindex={i === 0 ? 0 : -1} data-menu-trigger>{m.title}</button>
+      <div class="menu" popover="auto" role="menu" aria-label={m.title}>
+        {m.items.map((it) =>
+          it === "-" ? (
+            <hr />
+          ) : (
+            <button
+              type="button"
+              tabindex="-1"
+              role={it.group ? "menuitemradio" : it.check ? "menuitemcheckbox" : "menuitem"}
+              aria-checked={it.group || it.check ? (it.on ? "true" : "false") : undefined}
+              aria-keyshortcuts={it.key}
+              data-cmd={it.id}
+              data-group={it.group}
+              data-key={it.key}
+            >
+              <span>{it.label}</span>
+              {it.key && <kbd>{it.key}</kbd>}
+            </button>
+          ),
+        )}
+      </div>
+    </>
+  ))}
+</div>

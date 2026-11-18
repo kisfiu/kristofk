@@ -1,4 +1,4 @@
-// Tiny Web Audio beeps, no sound files. Off until the player turns it on.
+// Tiny Web Audio beeps for the games, no sound files. Off until the player turns it on; one switch for all games.
 type Kind = "knock" | "thud" | "pop" | "scrape" | "ding" | "error" | "fanfare";
 const NOTES: Record<Kind, [freq: number, ms: number, wave: OscillatorType][]> = {
   knock: [[220, 50, "square"]],
@@ -20,7 +20,7 @@ const NOTES: Record<Kind, [freq: number, ms: number, wave: OscillatorType][]> = 
     [1047, 300, "triangle"],
   ],
 };
-const KEY = "kk-reno-sound";
+const KEY = "kk-sound";
 
 let on = false;
 try {

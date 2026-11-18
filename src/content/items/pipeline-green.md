@@ -2,7 +2,7 @@
 
 title: Pipeline Green
 icon: game
-parent: desktop
+parent: games
 order: 7
 app: pipeline
 width: 420
