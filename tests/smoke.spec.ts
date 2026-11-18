@@ -106,7 +106,7 @@ test("every desktop icon and folder item opens its window", async ({ page, isMob
     Hobbies: ["Books", "Marketplace", "Travel", "Renovation", "Baseball"],
     NGOs: ["Invisible School", "Rotary Club"],
     "Other Stuff": ["Address Book", "Side Projects", "readme.txt"],
-    Games: ["Wall Sweeper", "Solitaire", "FreeCell", "Spider Solitaire", "Pipeline Green"],
+    Games: ["Wall Sweeper", "Solitaire", "FreeCell", "Spider Solitaire", "Hearts", "Pipeline Green"],
   };
   for (const name of desktop) {
     await openIcon(page, name, isMobile);
@@ -114,6 +114,11 @@ test("every desktop icon and folder item opens its window", async ({ page, isMob
     await expect(win).toBeVisible();
     for (const child of folders[name] ?? []) {
       await openIcon(page, child, isMobile);
+      // Hearts asks your name first, like XP's
+      if (child === "Hearts") {
+        await page.getByLabel("What is your name?").fill("Tester");
+        await page.getByRole("button", { name: "OK" }).click();
+      }
       await expect(page.locator(".window.active .title-bar-text")).toContainText(
         child === "Rotary Club" ? "Rotary" : child.replace("readme.txt", "readme"),
       );
@@ -822,6 +827,35 @@ test("Spider: one-suit deal, deal a row, hint, difficulty", async ({ page, isMob
   await page.getByRole("menuitem", { name: "Difficulty…" }).click();
   await page.locator("label", { hasText: "Beginner: one suit" }).click();
   await page.getByRole("button", { name: "OK" }).click();
+});
+
+test("Hearts: name, pass three left, accept, the 2 of clubs leads and the bots answer", async ({ page, isMobile }) => {
+  await skipBoot(page);
+  await openIcon(page, "Games", isMobile);
+  await openIcon(page, "Hearts", isMobile);
+  const win = page.locator(".window.active");
+  await page.getByLabel("What is your name?").fill("Tester");
+  await page.getByRole("button", { name: "OK" }).click();
+  await expect(win.locator("[data-name='0']")).toContainText("Tester");
+  const hand = win.locator("[data-hand] [data-card]");
+  await expect(hand).toHaveCount(13);
+  const act = win.locator("[data-pass]");
+  await expect(act).toHaveText("Pass Left");
+  await expect(act).toBeDisabled();
+  // cards overlap: click the visible left edge, as a player would
+  for (let i = 0; i < 3; i++) await hand.nth(i).click({ position: { x: 6, y: 30 } });
+  await act.click();
+  await expect(act).toHaveText("OK");
+  await expect(win.locator(".hz-card.up")).toHaveCount(3);
+  await act.click();
+  // either you hold the 2 of clubs and must lead it, or the bots have played up to your turn
+  await expect(win.locator("[data-msg]")).toHaveText(/Lead the 2 of clubs|Click the card you want to play/, {
+    timeout: 10000,
+  });
+  const playable = win.locator('[data-hand] [data-card]:not([aria-disabled="true"])').first();
+  await playable.click({ position: { x: 6, y: 30 } });
+  await expect(hand).toHaveCount(12);
+  await expect(win.locator(".hz-played").first()).toBeVisible();
 });
 
 test("pipeline game starts its timer on the first click", async ({ page, isMobile }) => {
