@@ -1,0 +1,155 @@
+---
+// Pipeline Pinball: XP 3D Pinball's controls and flow on our own DevEx table. Rules: src/scripts/pinball-logic.ts,
+// table and input: pinball-ui.ts (loads planck.js on first open).
+import MenuBar from "./MenuBar.astro";
+
+const controls = [
+  ["left", "Left flipper"],
+  ["right", "Right flipper"],
+  ["plunger", "Plunger"],
+  ["nudgeR", "Nudge right"],
+  ["nudgeL", "Nudge left"],
+  ["nudgeU", "Nudge up"],
+];
+---
+<div class="pinball" data-pinball>
+  <MenuBar
+    label="Pipeline Pinball"
+    menus={[
+      {
+        title: "Game",
+        items: [
+          { id: "new", label: "New Game", key: "F2" },
+          { id: "launch", label: "Launch Ball" },
+          { id: "pause", label: "Pause/Resume Game", key: "F3" },
+          "-",
+          { id: "scores", label: "High Scores…" },
+          { id: "demo", label: "Demo", check: true },
+          "-",
+          { id: "exit", label: "Exit" },
+        ],
+      },
+      {
+        title: "Options",
+        items: [
+          { id: "fullscreen", label: "Full Screen", key: "F4" },
+          "-",
+          { id: "p1", label: "1 Player", group: "players" },
+          { id: "p2", label: "2 Players", group: "players" },
+          { id: "p3", label: "3 Players", group: "players" },
+          { id: "p4", label: "4 Players", group: "players" },
+          "-",
+          { id: "sounds", label: "Sounds", check: true },
+          { id: "music", label: "Music", check: true },
+          "-",
+          { id: "controls", label: "Player Controls…", key: "F8" },
+        ],
+      },
+      {
+        title: "Help",
+        items: [{ id: "help", label: "How to play", key: "F1" }, "-", { id: "about", label: "About Pipeline Pinball" }],
+      },
+    ]}
+  />
+  <div class="pb-main">
+    <div class="pb-view">
+      <canvas class="pb-table" data-canvas role="img" aria-label="Pinball table. Z and / flip, hold Space to launch, X, full stop and ↑ nudge."></canvas>
+    </div>
+    <div class="pb-panel">
+      <svg class="pb-logo" viewBox="0 0 240 92" role="img" aria-label="Pipeline Pinball">
+        <defs>
+          <linearGradient id="pb-chrome" x1="0" y1="0" x2="0" y2="1">
+            <stop offset="0" stop-color="#ffffff" /><stop offset=".48" stop-color="#9fb3cc" /><stop offset=".52" stop-color="#4e6280" /><stop offset="1" stop-color="#dfe8f5" />
+          </linearGradient>
+        </defs>
+        <g stroke="#7f9cc0" stroke-width="3"><path d="M28 18h56M100 18h56" /></g>
+        <circle cx="20" cy="18" r="9" fill="#3d8bfd" stroke="#cfe6ff" stroke-width="2" />
+        <circle cx="92" cy="18" r="9" fill="#f0b429" stroke="#fff3c4" stroke-width="2" />
+        <circle cx="164" cy="18" r="9" fill="#c77dff" stroke="#efd9ff" stroke-width="2" />
+        <path d="M172 18h30" stroke="#2ee86f" stroke-width="3" />
+        <circle cx="214" cy="18" r="12" fill="#2ee86f" stroke="#d9ffe6" stroke-width="2" />
+        <path d="M208 18l4 5 8-9" fill="none" stroke="#05320f" stroke-width="3" stroke-linecap="round" stroke-linejoin="round" />
+        <text x="120" y="62" text-anchor="middle" font-family="Arial Black, Verdana, sans-serif" font-weight="900" font-style="italic" font-size="34" fill="url(#pb-chrome)" stroke="#0b1a33" stroke-width="1.5">PIPELINE</text>
+        <text x="120" y="86" text-anchor="middle" font-family="Arial Black, Verdana, sans-serif" font-weight="900" font-style="italic" font-size="20" letter-spacing="6" fill="#2ee86f" stroke="#05320f" stroke-width="1">PINBALL</text>
+      </svg>
+      <div class="pb-lcd">
+        <div class="pb-score" data-ghost="88,888,888"><span data-score>0</span></div>
+        <div class="pb-bp">
+          <span>Ball <b data-ball>1</b></span>
+          <span>Player <b data-player>1</b></span>
+        </div>
+        <p class="pb-msg" data-msg role="status" aria-live="polite"></p>
+      </div>
+      <ol class="pb-scores" data-scores aria-label="Scores"></ol>
+      <dl class="pb-info">
+        <dt>Rank</dt><dd data-rank>Intern</dd>
+        <dt>Renovate</dt><dd data-mult>×1</dd>
+      </dl>
+      <ol class="pb-ladder" data-ladder reversed aria-label="Ranks, from CTO down to Intern"></ol>
+    </div>
+    <div class="pb-touch" aria-hidden="true">
+      <button type="button" tabindex="-1" data-hold="left">◀ Flip</button>
+      <button type="button" tabindex="-1" data-hold="nudgeU">Nudge</button>
+      <button type="button" tabindex="-1" data-hold="plunger">Push</button>
+      <button type="button" tabindex="-1" data-hold="right">Flip ▶</button>
+    </div>
+  </div>
+
+  <dialog class="xp-dialog" data-highscores aria-labelledby="pb-hs-t">
+    <div class="xp-dtitle" id="pb-hs-t">High Scores</div>
+    <form method="dialog" class="xp-dialog-body">
+      <table class="sw-best pb-hs">
+        <thead><tr><th>Rank</th><th>Name</th><th>Score</th></tr></thead>
+        <tbody></tbody>
+      </table>
+      <div class="xp-dialog-buttons">
+        <button value="ok">OK</button><button value="cancel">Cancel</button><button type="button" data-clear>Clear</button>
+      </div>
+    </form>
+  </dialog>
+
+  <dialog class="xp-dialog" data-controls aria-labelledby="pb-ctl-t">
+    <div class="xp-dtitle" id="pb-ctl-t">Player Controls</div>
+    <form method="dialog" class="xp-dialog-body">
+      <p>Click a control, then press the key you want for it.</p>
+      <table class="pb-keys">
+        {controls.map(([id, label]) => (
+          <tr><th scope="row">{label}</th><td><button type="button" data-bind={id}></button></td></tr>
+        ))}
+      </table>
+      <div class="xp-dialog-buttons">
+        <button value="ok">OK</button><button value="cancel">Cancel</button><button type="button" data-default>Default</button>
+      </div>
+    </form>
+  </dialog>
+
+  <dialog class="xp-dialog" data-help aria-labelledby="pb-help-t">
+    <div class="xp-dtitle" id="pb-help-t">Pipeline Pinball — How to play</div>
+    <form method="dialog" class="xp-dialog-body sw-help">
+      <p>Launch a commit and keep it on the table. Light Build, Test and Deploy, and a green pipeline pays the jackpot. Drain down the middle and the build is broken.</p>
+      <ul>
+        <li><b>Hold Space</b> to pull the plunger (git push); the longer you hold, the harder the launch. <b>Z</b> and <b>/</b> work the left and right flippers.</li>
+        <li>Knock down all three targets of a bank to pass that stage. With BUILD, TEST and DEPLOY passed, the GREEN PIPELINE lane lights: shoot it for the jackpot and a promotion, from Intern up to CTO. Your rank stays when a ball drains.</li>
+        <li>The Renovate bot lane on the left raises the multiplier: ×2, ×3, ×5, ×10, then extra balls. The Helm upgrade lane on the right spins for points. The flaky-test bumpers kick the ball back.</li>
+        <li>Three balls each for 1–4 players, taking turns. A drain within 15 seconds of the launch gives the ball back. Every million points is a replay.</li>
+        <li><b>X</b>, <b>.</b> and <b>↑</b> nudge the table. Too much and it tilts: the flippers stop and the ball is lost with no bonus. Change the keys in Options ▸ Player Controls (F8).</li>
+        <li>On a phone, use the buttons under the table.</li>
+      </ul>
+      <div class="xp-dialog-buttons"><button value="ok">OK</button></div>
+    </form>
+  </dialog>
+
+  <dialog class="xp-dialog" data-about aria-labelledby="pb-about-t">
+    <div class="xp-dtitle" id="pb-about-t">About Pipeline Pinball</div>
+    <form method="dialog" class="xp-dialog-body">
+      <p>Pipeline Pinball 1.0 for the KK desktop.<br />The controls and game flow of the Windows XP pinball, on a table drawn for this site about Kristóf's Developer Experience work. Not affiliated with Microsoft.<br />Physics: planck.js (MIT).</p>
+      <div class="xp-dialog-buttons"><button value="ok">OK</button></div>
+    </form>
+  </dialog>
+</div>
+<script>
+  import { whenOpen } from "../scripts/lazy";
+
+  for (const el of document.querySelectorAll<HTMLElement>("[data-pinball]"))
+    whenOpen(el, () => import("../scripts/pinball-ui").then((m) => m.initPinball(el)));
+</script>
