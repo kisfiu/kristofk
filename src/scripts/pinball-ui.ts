@@ -673,6 +673,8 @@ export function initPinball(el: HTMLElement) {
   const blink = (hz = 3) => Math.sin(simTime * hz * 2 * Math.PI) > 0;
   let view: View | null = null;
   try {
+    // check first: without WebGL three.js would log an error before it throws
+    if (!document.createElement("canvas").getContext("webgl2")) throw new Error("no WebGL");
     view = createView(canvas);
     new ResizeObserver(() => {
       view?.resize();
@@ -714,6 +716,8 @@ export function initPinball(el: HTMLElement) {
 
   function paint() {
     const p = player(game);
+    // the panel (score, ball, game state) first: on a slow computer the 3D frame can take a while
+    panel();
     view?.draw({
       flippers: [...flippers, ...minis].map((f) => ({ ...f.body.getPosition(), angle: f.body.getAngle() })),
       pods: PODS.map((q) => lit(q)),
@@ -736,7 +740,6 @@ export function initPinball(el: HTMLElement) {
     });
     const over = game.tilted ? "TILT" : userPaused ? "PAUSED" : "";
     if (overlay.textContent !== over) overlay.textContent = over;
-    panel();
   }
 
   // ---------- the score panel (HTML, read by screen readers) ----------

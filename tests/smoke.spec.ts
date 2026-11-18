@@ -866,7 +866,8 @@ test("Pipeline Pinball: hold Space to launch, the ball count shows, Player Contr
   await openIcon(page, "Pipeline Pinball", isMobile);
   const win = page.locator(".window.active");
   const pb = win.locator("[data-pinball]");
-  await expect(pb).toHaveAttribute("data-phase", "ready"); // planck loaded on open, ball on the plunger
+  // planck and three.js load on open; without a GPU (CI) the first 3D frame takes a while
+  await expect(pb).toHaveAttribute("data-phase", "ready", { timeout: 20_000 });
   await expect(win.locator("[data-ball]")).toHaveText("1");
   await expect(win.locator("[data-msg]")).toContainText("Hold Space to git push");
   await page.keyboard.down(" ");
