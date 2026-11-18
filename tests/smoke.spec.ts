@@ -1009,6 +1009,47 @@ test("Game Zone: Internet Hearts, pass, double-click a card, Last Trick, Auto-Pl
   await expect(page.getByRole("dialog", { name: "Score History" })).toBeVisible();
 });
 
+test("Game Zone: Internet Spades, Show Cards, bid, lead a card, Last Trick, Auto-Play, Show Score", async ({
+  page,
+  isMobile,
+}) => {
+  test.setTimeout(60_000);
+  await skipBoot(page);
+  await openIcon(page, "Internet", isMobile);
+  const win = page.getByRole("dialog", { name: /Internet/ });
+  await win.getByRole("button", { name: "Skip" }).click();
+  await win.getByRole("button", { name: /Surf with me/ }).click();
+  await win.getByRole("button", { name: /KK Game Zone/ }).click();
+  await win.getByRole("button", { name: /Internet Spades/ }).click();
+  await page.getByRole("button", { name: "Play", exact: true }).click();
+  await expect(win.locator("[data-ie-address]")).toHaveValue("kk://zone/spades");
+  // your cards stay face down until you choose Show Cards (or Double Nil)
+  await expect(win.locator("[data-hand] .hz-card")).toHaveCount(13, { timeout: 8000 });
+  const hand = win.locator("[data-hand] [data-card]");
+  await expect(hand).toHaveCount(0);
+  await win.getByRole("button", { name: "Show Cards" }).click();
+  await expect(hand).toHaveCount(13);
+  // the first dealer sits on your right, so you bid first and lead first
+  await win.locator('[data-ask] [data-v="3"]').click();
+  await expect(win.locator('[data-name="0"]')).toContainText("0/3");
+  await expect(win.locator("[data-ie-status]")).toHaveText(/Your lead/, { timeout: 10000 });
+  await win
+    .locator('[data-hand] [data-card]:not([aria-disabled="true"])')
+    .first()
+    .dblclick({ position: { x: 6, y: 30 } });
+  await expect(hand).toHaveCount(12);
+  await expect(win.locator(".hz-played.hz-at-0")).toBeVisible();
+  await expect(win.locator("[data-ih-last]")).toBeEnabled({ timeout: 10000 });
+  await win.locator("[data-ih-last]").click();
+  await expect(win.locator(".ih-last .hz-played")).toHaveCount(4);
+  await win.locator("[data-ih-auto]").click();
+  await expect(win.locator("[data-ih-auto]")).toHaveText("Stop");
+  await expect(hand).toHaveCount(11, { timeout: 10000 });
+  await win.getByRole("menuitem", { name: "Game" }).click();
+  await page.getByRole("menuitem", { name: "Show Score" }).click();
+  await expect(page.getByRole("dialog", { name: "Score History" })).toBeVisible();
+});
+
 test("pipeline game starts its timer on the first click", async ({ page, isMobile }) => {
   await skipBoot(page);
   await openIcon(page, "Games", isMobile);
