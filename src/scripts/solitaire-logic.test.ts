@@ -119,6 +119,16 @@ describe("Solitaire (XP Klondike rules)", () => {
     expect(g.score).toBe(5);
   });
 
+  it("moving an Ace from one foundation to another scores nothing (Standard or Vegas)", () => {
+    for (const scoring of ["standard", "vegas"] as const) {
+      const g = table({ scoring, timed: false });
+      g.found[0] = [card("H", 1)];
+      for (let k = 0; k < 4; k++)
+        expect(move(g, { kind: "found", i: k % 2 }, undefined, { kind: "found", i: (k + 1) % 2 })).toBe(true);
+      expect(g.score).toBe(0);
+    }
+  });
+
   it("builds down in alternating colours; only a King goes into an empty column; foundations go up by suit", () => {
     const g = table();
     g.tab[0] = [card("H", 9)];

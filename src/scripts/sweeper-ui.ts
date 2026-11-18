@@ -180,6 +180,7 @@ export function initSweeper(el: HTMLElement) {
           },
           { once: true },
         );
+        d.returnValue = ""; // Esc would otherwise keep the last button pressed
         d.showModal();
       }
     }
@@ -226,6 +227,7 @@ export function initSweeper(el: HTMLElement) {
         },
         { once: true },
       );
+      d.returnValue = ""; // Esc would otherwise keep the last button pressed
       d.showModal();
     } else if (cmd === "marks" || cmd === "color") {
       opts[cmd] = menu.isOn(cmd);

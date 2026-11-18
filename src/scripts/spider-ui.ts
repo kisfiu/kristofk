@@ -408,6 +408,7 @@ export function initSpider(el: HTMLElement) {
       },
       { once: true },
     );
+    d.returnValue = ""; // Esc would otherwise keep the last button pressed
     d.showModal();
   }
 
@@ -447,6 +448,7 @@ export function initSpider(el: HTMLElement) {
       },
       { once: true },
     );
+    d.returnValue = ""; // Esc would otherwise keep the last button pressed
     d.showModal();
   }
 

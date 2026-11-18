@@ -117,9 +117,10 @@ export function move(g: Game, from: Pile, index: number | undefined, to: Pile, k
   if (!keepUndo) remember(g);
   pileCards(g, from).splice(-cards.length);
   pileCards(g, to).push(...cards);
-  if (to.kind === "found") add(g, 10, 5);
+  // one foundation to another changes nothing, so it scores nothing
+  if (to.kind === "found" && from.kind !== "found") add(g, 10, 5);
   else if (from.kind === "waste") add(g, 5);
-  else if (from.kind === "found") add(g, -15, -5);
+  else if (from.kind === "found" && to.kind !== "found") add(g, -15, -5);
   return true;
 }
 

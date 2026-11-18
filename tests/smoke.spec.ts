@@ -768,6 +768,23 @@ test("Solitaire: XP deal, Draw Three, Options redeal with Draw One, secret win a
   await expect(page.getByRole("dialog", { name: "Game Over" })).toBeVisible();
   await page.getByRole("button", { name: "Yes" }).click();
   await expect(win.locator('.sol-card:not([data-look^="back"])')).toHaveCount(7);
+  // Deal during the win animation stops it: no "Deal again?" pops up over the new game
+  await page.keyboard.press("Alt+Shift+2");
+  await expect(win.locator(".sol-bounce")).toBeVisible();
+  await page.keyboard.press("F2");
+  await expect(win.locator(".sol-bounce")).toHaveCount(0);
+  await page.waitForTimeout(800);
+  await expect(page.getByRole("dialog", { name: "Game Over" })).toBeHidden();
+  await expect(win.locator('.sol-card:not([data-look^="back"])')).toHaveCount(7);
+  // Esc cancels Options, even after an earlier OK
+  await win.getByRole("menuitem", { name: "Game" }).click();
+  await page.getByRole("menuitem", { name: "Options…" }).click();
+  await page.locator("label", { hasText: "Draw Three" }).click();
+  await page.keyboard.press("Escape");
+  await win.getByRole("menuitem", { name: "Game" }).click();
+  await page.getByRole("menuitem", { name: "Options…" }).click();
+  await expect(page.locator('[data-options] input[name="draw"][value="1"]')).toBeChecked();
+  await page.keyboard.press("Escape");
   // put the default back for the next run in this browser profile
   await win.getByRole("menuitem", { name: "Game" }).click();
   await page.getByRole("menuitem", { name: "Options…" }).click();
