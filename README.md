@@ -4,6 +4,8 @@ Kristóf Kovács's personal site, styled as an early-2000s desktop: boot screen,
 
 Live: https://kisfiu.github.io/kristofk/
 
+<img src="docs/poster.jpg" alt="Poster: star trails over the Hortobágy at night, with the Nine-hole Bridge and a racka sheep tiny on the horizon" width="400">
+
 ## Edit content
 Every window is one Markdown file in `src/content/items/`. The front matter (checked by the schema in `src/content.config.ts`):
 
