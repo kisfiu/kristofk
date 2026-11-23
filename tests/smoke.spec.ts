@@ -518,6 +518,9 @@ test("clicking the wallpaper animals tells facts about Kristóf", async ({ page,
   await click(await centreOf(".wallpaper .stork"));
   await expect(talk).toContainText("Klepp-klepp!");
   if (!isMobile) {
+    // the bridge tells its legend (phones crop the photo, so the bridge's box is never wholly on screen there)
+    await click(await centreOf(".wallpaper .bridge"));
+    await expect(talk).toContainText("ninth hole");
     // a selection drag that ends on an animal is not a click on it
     await page.reload();
     await settled(page);

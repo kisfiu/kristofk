@@ -513,8 +513,8 @@ document.addEventListener("keydown", (e) => {
   for (const i of chosen) open(i.dataset.open!);
 });
 
-// ---------- the wallpaper's animals talk: click a cow, a sheep or a stork for a fact about Kristóf ----------
-const sayings: Record<"cow" | "sheep" | "black" | "stork", string[]> = {
+// ---------- the wallpaper's animals talk: click a cow, a sheep or a stork for a fact about Kristóf (the bridge tells its legend) ----------
+const sayings: Record<"cow" | "sheep" | "black" | "stork" | "bridge", string[]> = {
   cow: [
     "Mooo! Kristóf moved 18 teams and about 50 services from Jenkins to GitLab CI.",
     "Mooo! With his setup scripts, a new developer laptop is ready to work in about 30 minutes.",
@@ -540,8 +540,12 @@ const sayings: Record<"cow" | "sheep" | "black" | "stork", string[]> = {
     "Klepp-klepp! Storks deliver babies. Kristóf delivers pipelines, setup scripts and docs to developers.",
     "Klepp-klepp! We come back to the same nest every spring. He keeps coming back to the Invisible School since 2016.",
   ],
+  bridge: [
+    "Legend says the bridge's ninth hole is the sun. On a clear day it shines right through the middle arch.",
+    "Count the arches: nine, all stone. The sun is a bonus.",
+  ],
 };
-const said = { cow: 0, sheep: 0, black: 0, stork: 0 };
+const said = { cow: 0, sheep: 0, black: 0, stork: 0, bridge: 0 };
 const talk = Object.assign(document.createElement("p"), { className: "animal-talk", hidden: true });
 $(".desktop")!.append(talk);
 let talkTimer = 0;
@@ -559,7 +563,7 @@ document.addEventListener("click", (e) => {
   // the wallpaper sits under the desktop, so look through it for an animal at the click point
   const animal = document.elementsFromPoint(e.clientX, e.clientY).find((el) => el.matches(".animal"));
   if (!animal) return;
-  const kind = (["black", "cow", "stork"] as const).find((k) => animal.classList.contains(k)) ?? "sheep";
+  const kind = (["black", "cow", "stork", "bridge"] as const).find((k) => animal.classList.contains(k)) ?? "sheep";
   const lines = sayings[kind];
   talk.textContent = lines[said[kind]++ % lines.length];
   talk.hidden = false;

@@ -6,6 +6,8 @@
     <rect class="animal stork" x="890" y="108" width="92" height="44" />
     <rect class="animal stork" x="984" y="144" width="90" height="48" />
   </g>
+  <!-- not an animal, but it talks too: the Nine-hole Bridge tells its legend -->
+  <rect class="animal bridge" x="205" y="533" width="790" height="72" />
   <rect class="animal cow" x="1018" y="592" width="78" height="60" />
   <rect class="animal cow" x="888" y="672" width="152" height="126" />
   <rect class="animal cow" x="1103" y="703" width="197" height="157" />
