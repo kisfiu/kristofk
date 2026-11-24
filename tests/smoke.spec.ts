@@ -102,7 +102,17 @@ test("deep link opens the resume without the boot screen", async ({ page }) => {
 test("every desktop icon and folder item opens its window", async ({ page, isMobile }) => {
   test.slow(); // opens every window, the 3D pinball table too: on a CI machine without a GPU that takes a while
   await skipBoot(page);
-  const desktop = ["My Resume", "Hobbies", "NGOs", "Other Stuff", "Internet", "Weather", "Globe", "Recycle Bin", "Games"];
+  const desktop = [
+    "My Resume",
+    "Hobbies",
+    "NGOs",
+    "Other Stuff",
+    "Internet",
+    "Weather",
+    "Globe",
+    "Recycle Bin",
+    "Games",
+  ];
   const folders: Record<string, string[]> = {
     Hobbies: ["Books", "Marketplace", "Travel", "Renovation", "Baseball"],
     NGOs: ["Invisible School", "Rotary Club"],
