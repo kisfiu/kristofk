@@ -1,0 +1,25 @@
+---
+// The Globe: a 3D earth with every country; Kristóf's countries are gold, and clicking one sets the wallpaper to
+// its landscape. Logic: src/scripts/globe-logic.ts, scene: globe-ui.ts (three.js, loaded on first open).
+import { places, where } from "../scripts/globe-logic";
+
+const label = (p: (typeof places)[number]) => `${where(p).replace("the USA", "USA")}: ${p.name}`;
+const sorted = [...places].sort((a, b) => label(a).localeCompare(label(b)));
+---
+<div class="globe" data-globe>
+  <div class="globe-bar">
+    <label>Go to <select data-pick><option value="" disabled selected>a country…</option>{sorted.map((p) => <option value={p.id}>{label(p)}</option>)}</select></label>
+    <button type="button" data-home>🏠 Back to Hortobágy</button>
+  </div>
+  <div class="globe-view">
+    <canvas data-canvas role="img" aria-label="A globe you can turn. Kristóf's countries are gold: click one, or use the Go to list."></canvas>
+    <p class="globe-tip" data-tip hidden></p>
+  </div>
+  <div class="status-bar"><p class="status-bar-field" data-status aria-live="polite">Loading the globe…</p></div>
+</div>
+<script>
+  import { whenOpen } from "../scripts/lazy";
+
+  for (const el of document.querySelectorAll<HTMLElement>("[data-globe]"))
+    whenOpen(el, () => import("../scripts/globe-ui").then((m) => m.initGlobe(el)));
+</script>

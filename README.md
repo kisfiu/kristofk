@@ -18,7 +18,7 @@ Every window is one Markdown file in `src/content/items/`. The front matter (che
 | `order` | sort order inside its parent |
 | `folder` | makes this item a folder that lists the items with that `parent`; any text in the file shows as a note above the icons |
 | `opens` | shortcut: opens another item instead |
-| `app` | a built-in app instead of text: `pipeline`, `internet`, `renovation` (hidden: no item uses it, and `index.astro` doesn't render it), `sweeper`, `solitaire`, `freecell`, `spider`, `hearts`, `pinball` |
+| `app` | a built-in app instead of text: `pipeline`, `internet`, `renovation` (hidden: no item uses it, and `index.astro` doesn't render it), `sweeper`, `solitaire`, `freecell`, `spider`, `hearts`, `pinball`, `globe` |
 | `width`, `links` | window width in px; link buttons pinned at the bottom |
 
 Deep links open a window directly and skip the boot screen, e.g. https://kisfiu.github.io/kristofk/#resume
@@ -38,4 +38,4 @@ npm test           # lint, type check, unit tests, build, Playwright
 ## Deploy
 Push to `main`; `.github/workflows/deploy.yml` builds, tests, runs Lighthouse and publishes to GitHub Pages (Settings → Pages → Source: GitHub Actions). The base path (`/kristofk/`) comes from the repository name.
 
-Window styles: [XP.css](https://github.com/botoxparty/XP.css) (MIT). Icons and Racka are drawn for this site; the Hortobágy wallpapers are AI-generated for it. Live weather: [Open-Meteo](https://open-meteo.com/). Pinball physics: [planck.js](https://github.com/piqnt/planck.js), 3D: [three.js](https://threejs.org/) (both MIT, see `THIRD_PARTY_NOTICES.md`).
+Window styles: [XP.css](https://github.com/botoxparty/XP.css) (MIT). Icons and Racka are drawn for this site; the Hortobágy wallpapers are AI-generated for it. Live weather: [Open-Meteo](https://open-meteo.com/). Pinball physics: [planck.js](https://github.com/piqnt/planck.js), 3D: [three.js](https://threejs.org/) (both MIT, see `THIRD_PARTY_NOTICES.md`). Globe map: [world-atlas](https://github.com/topojson/world-atlas) from [Natural Earth](https://www.naturalearthdata.com/) (public domain), read with [topojson-client](https://github.com/topojson/topojson-client) (ISC); the country landscapes are AI-generated for this site.

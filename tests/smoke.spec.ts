@@ -102,7 +102,7 @@ test("deep link opens the resume without the boot screen", async ({ page }) => {
 test("every desktop icon and folder item opens its window", async ({ page, isMobile }) => {
   test.slow(); // opens every window, the 3D pinball table too: on a CI machine without a GPU that takes a while
   await skipBoot(page);
-  const desktop = ["My Resume", "Hobbies", "NGOs", "Other Stuff", "Internet", "Weather", "Recycle Bin", "Games"];
+  const desktop = ["My Resume", "Hobbies", "NGOs", "Other Stuff", "Internet", "Weather", "Globe", "Recycle Bin", "Games"];
   const folders: Record<string, string[]> = {
     Hobbies: ["Books", "Marketplace", "Travel", "Renovation", "Baseball"],
     NGOs: ["Invisible School", "Rotary Club"],
@@ -137,6 +137,40 @@ test("every desktop icon and folder item opens its window", async ({ page, isMob
   }
   await expect(page.locator(".window:not([hidden])")).toHaveCount(0);
   await expect(page.locator("#tasks button")).toHaveCount(0);
+});
+
+test("the Globe sets a country's landscape as wallpaper, and Hortobágy comes back", async ({ page, isMobile }) => {
+  await skipBoot(page);
+  await openIcon(page, "Globe", isMobile);
+  const win = page.locator(".window.active");
+  await expect(win.locator("[data-status]")).toContainText("37 countries in gold");
+  // the layout holds still: no scrollbar, and the canvas never resizes itself frame after frame (that flickered)
+  const sizes = await page.evaluate(async () => {
+    const c = document.querySelector<HTMLCanvasElement>(".globe canvas")!;
+    const body = c.closest(".window-body")!;
+    const seen = new Set<string>();
+    for (let i = 0; i < 20; i++) {
+      seen.add(`${c.width} ${c.clientWidth} ${body.scrollHeight - body.clientHeight}`);
+      await new Promise(requestAnimationFrame);
+    }
+    return [...seen];
+  });
+  expect(sizes).toHaveLength(1);
+  expect(sizes[0].endsWith(" 0")).toBe(true);
+  await win.getByRole("combobox", { name: "Go to" }).selectOption({ label: "Portugal: Pico island in the Azores" });
+  const html = page.locator("html");
+  await expect(html).toHaveAttribute("data-place");
+  await expect(win.locator("[data-status]")).toContainText("This is Portugal!");
+  expect(await page.evaluate(() => getComputedStyle(document.querySelector(".wallpaper")!).backgroundImage)).toContain(
+    "azores",
+  );
+  // the choice stays after a reload, and the desktop menu brings Hortobágy back
+  await page.reload();
+  await expect(html).toHaveAttribute("data-place");
+  await page.locator("#wallpaper-reset").evaluate((b: HTMLElement) => b.click()); // the right-click menu's item
+  await expect(html).not.toHaveAttribute("data-place");
+  await page.reload();
+  await expect(html).not.toHaveAttribute("data-place");
 });
 
 test("shortcut in Hobbies opens the NGOs folder", async ({ page, isMobile }) => {

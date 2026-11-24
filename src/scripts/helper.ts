@@ -15,6 +15,7 @@ const tips = [
   "Windows can be resized from their bottom-right corner, and moved by their title bar.",
   "On a sunny day the sun shines right through the middle arch of the Nine-hole Bridge. Come back when it's clear!",
   "The Internet icon has a surprise. Surf's up!",
+  "Open the Globe and click a gold country: Kristóf has been there, and I'll change the wallpaper to its landscape.",
   "Press R any time to call me back, even after you said bye.",
 ];
 const tour: { text: string; spot?: string }[] = [
@@ -44,6 +45,11 @@ function say(text: string, choices: Choice[]) {
     ),
   );
   bubble.hidden = false;
+}
+
+/** Racka says something for another window (the Globe), unless the visitor sent him away. */
+export function racka(text: string, choices: Choice[]) {
+  if (!helper.hidden) say(text, [...choices, ["OK", hush]]);
 }
 
 function menu(text = "What would you like to do?") {

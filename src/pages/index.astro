@@ -3,6 +3,7 @@ import "../styles/os.css";
 import { getCollection, render } from "astro:content";
 import wallpaper from "../assets/wallpaper/animals.svg?raw";
 import FreeCell from "../components/FreeCell.astro";
+import Globe from "../components/Globe.astro";
 import Hearts from "../components/Hearts.astro";
 import Helper from "../components/Helper.astro";
 import Icon from "../components/Icon.astro";
@@ -130,6 +131,8 @@ const description =
             <Hearts />
           ) : data.app === "pinball" ? (
             <Pinball />
+          ) : data.app === "globe" ? (
+            <Globe />
           ) : (
             <article class="doc"><Content /></article>
           )}
@@ -230,6 +233,7 @@ const description =
     <!-- right-click on the empty desktop, like XP -->
     <div id="desktop-menu" class="context-menu" popover role="menu">
       <button type="button" role="menuitem" id="arrange-btn">Arrange icons</button>
+      <button type="button" role="menuitem" id="wallpaper-reset" hidden>Back to the Hortobágy wallpaper</button>
     </div>
 
     <div id="shutdown" class="shutdown" hidden><p>It is now safe to turn off your computer.</p><button type="button">Restart</button></div>

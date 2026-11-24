@@ -73,6 +73,19 @@
     display: none;
   }
 
+  /* a country's landscape, picked on the Globe (scripts/desktop.ts wallpaper()): no weather, no clickable animals */
+  html[data-place] {
+    & .wallpaper {
+      background: var(--place) 50% 100% / cover;
+      & svg {
+        display: none;
+      }
+    }
+    & .weather {
+      display: none;
+    }
+  }
+
   .sprite {
     position: absolute;
     width: 0;
@@ -2886,6 +2899,46 @@
     .bg-ghost {
       display: none;
     }
+  }
+
+  /* ---------- Globe (a three.js earth; scripts/globe-ui.ts) ---------- */
+  .globe {
+    display: grid;
+    gap: 6px;
+  }
+  .globe-bar {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+    align-items: center;
+    justify-content: space-between;
+  }
+  .globe-view {
+    position: relative;
+    height: min(560px, calc(100dvh - var(--taskbar) - 130px));
+    min-height: 260px;
+    overflow: hidden;
+    background: radial-gradient(circle at 50% 45%, #0d1f45, #02050f 75%);
+    border: 2px inset #fff;
+    /* absolute: the canvas's pixel size must never feed back into the window's layout (that flickered) */
+    & canvas {
+      position: absolute;
+      inset: 0;
+      width: 100%;
+      height: 100%;
+      touch-action: none;
+    }
+  }
+  .globe-tip {
+    position: absolute;
+    top: 0;
+    left: 0;
+    margin: 0;
+    padding: 2px 6px;
+    background: #ffffe1;
+    border: 1px solid #000;
+    white-space: nowrap;
+    pointer-events: none;
   }
 
   /* ---------- Game message boxes (XP style; every game uses .xp-dialog) ---------- */

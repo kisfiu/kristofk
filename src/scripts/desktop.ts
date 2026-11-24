@@ -374,6 +374,23 @@ document.addEventListener("contextmenu", (e) => {
   desktopMenu.showPopover();
   desktopMenu.querySelector("button")?.focus();
 });
+// the landscapes the Globe can set (only the URLs live here; a photo loads when it's shown)
+const photos = import.meta.glob<string>("../assets/places/*.avif", { query: "?url", import: "default", eager: true });
+/** Show a country's landscape (its id in src/assets/places/) instead of the weather's Hortobágy wallpaper, and
+ * remember it for the next visit; no id brings Hortobágy back. */
+export function wallpaper(id?: string) {
+  const url = id && photos[`../assets/places/${id}.avif`];
+  if (url) root.style.setProperty("--place", `url("${url}")`);
+  else root.style.removeProperty("--place");
+  root.toggleAttribute("data-place", !!url);
+  $("#wallpaper-reset")!.hidden = !url;
+  store.set(localStorage, "kk-place", url ? id : "");
+}
+wallpaper(store.get(localStorage, "kk-place") || undefined);
+$("#wallpaper-reset")!.addEventListener("click", () => {
+  desktopMenu.hidePopover();
+  wallpaper();
+});
 $("#arrange-btn")!.addEventListener("click", () => {
   desktopMenu.hidePopover();
   columnIcons();
